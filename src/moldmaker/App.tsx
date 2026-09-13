@@ -589,6 +589,9 @@ export default function App() {
       // applied via a <group scale> wrapper). Scale 1.0 is the no-op path.
       await exportFiles(
         state.moldPieces, state.fileName, format, state.scale,
+        // Silicone runs name their pieces (pour_box, mother_top, core…);
+        // rigid runs pass an empty list and keep top/bottom naming.
+        state.pieceLabels.length > 0 ? state.pieceLabels : undefined,
       );
       // Telemetry: file_exported (success only — we don't event failures here
       // because export failures are extremely rare and the signal we actually
@@ -618,7 +621,7 @@ export default function App() {
     } finally {
       if (format === 'step') setStepExporting(false);
     }
-  }, [state.moldPieces, state.fileName, state.scale, exportFiles, telemetry]);
+  }, [state.moldPieces, state.fileName, state.scale, state.pieceLabels, exportFiles, telemetry]);
 
   const handleCancelStepExport = useCallback(() => {
     cancelStepExport();
