@@ -420,6 +420,10 @@ export function useMoldGenerator() {
     fileName: string,
     format: 'stl' | 'obj' | '3mf' | 'step',
     scale: number = 1.0,
+    /** Optional per-piece filename suffixes (silicone workflows supply
+     *  meaningful names like `pour_box` / `mother_top` / `core`). When
+     *  absent or short, the historical top/bottom/part_N naming applies. */
+    labels?: string[],
   ) => {
     const baseName = (fileName.replace(/\.[^.]+$/, '') || 'mold');
 
