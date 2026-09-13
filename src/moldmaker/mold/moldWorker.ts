@@ -2,6 +2,7 @@
 /// <reference lib="webworker" />
 import * as THREE from 'three';
 import { generateMold } from './generateMold';
+import { generateSiliconeMold } from './siliconeMold';
 import {
   deserializeGeometry,
   serializeGeometry,
