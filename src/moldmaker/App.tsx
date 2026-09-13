@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';

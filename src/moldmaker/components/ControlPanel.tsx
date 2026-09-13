@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import type { AppState } from '../App';
 import type { Axis, MoldBoxShape } from '../types';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, ENABLE_OBLIQUE_PLANES } from '../mold/constants';

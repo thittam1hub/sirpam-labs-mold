@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';

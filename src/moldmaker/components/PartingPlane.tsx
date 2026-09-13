@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import type { Axis } from '../types';
