@@ -435,27 +435,54 @@ export default function App() {
       // state.additionalPlanes can't retroactively change generatedParams.
       additionalPlanes: state.additionalPlanes.map(p => ({ ...p })),
       isHollow: state.isHollow,
+      moldMode: state.moldMode,
+      siliconeType: state.siliconeType,
+      siliconeMarginMm: state.siliconeMarginMm,
+      skinThicknessMm: state.skinThicknessMm,
+      includeCore: state.includeCore,
     };
 
     try {
-      const result = await generateMold(
-        state.originalGeometry,
-        state.boundingBox,
-        params.axis,
-        params.offset,
-        {
-          wallThicknessRatio: params.wallThicknessRatio,
-          clearanceMm: params.clearanceMm,
-          sprueDiameterMm: params.sprueDiameterMm,
-          moldBoxShape: params.moldBoxShape,
-          cutAngle: params.cutAngle,
-          sprueOverride: params.sprueOverride ?? undefined,
-          additionalPlanes: params.additionalPlanes.length > 0
-            ? params.additionalPlanes
-            : undefined,
-          isHollow: params.isHollow,
-        },
-      );
+      // Two distinct pipelines behind one button. Silicone tooling produces
+      // named pieces (pour box / mother halves / core) and a material
+      // estimate; the rigid path keeps its historical shape exactly.
+      const result = params.moldMode === 'silicone'
+        ? await generateSilicone(
+            state.originalGeometry,
+            state.boundingBox,
+            params.axis,
+            params.offset,
+            {
+              siliconeType: params.siliconeType,
+              siliconeMarginMm: params.siliconeMarginMm || undefined,
+              skinThicknessMm: params.skinThicknessMm || undefined,
+              includeCore: params.includeCore,
+              wallThicknessRatio: params.wallThicknessRatio,
+              clearanceMm: params.clearanceMm,
+              sprueDiameterMm: params.sprueDiameterMm,
+              moldBoxShape: params.moldBoxShape,
+              cutAngle: params.cutAngle,
+              isHollow: params.isHollow,
+            },
+          )
+        : await generateMold(
+            state.originalGeometry,
+            state.boundingBox,
+            params.axis,
+            params.offset,
+            {
+              wallThicknessRatio: params.wallThicknessRatio,
+              clearanceMm: params.clearanceMm,
+              sprueDiameterMm: params.sprueDiameterMm,
+              moldBoxShape: params.moldBoxShape,
+              cutAngle: params.cutAngle,
+              sprueOverride: params.sprueOverride ?? undefined,
+              additionalPlanes: params.additionalPlanes.length > 0
+                ? params.additionalPlanes
+                : undefined,
+              isHollow: params.isHollow,
+            },
+          );
 
       // Surface a non-blocking info banner if the pre-flight mesh validator
       // had to drop bad triangles. summarizeRepairs returns null when nothing
