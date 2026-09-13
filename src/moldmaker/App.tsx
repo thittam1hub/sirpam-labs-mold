@@ -166,6 +166,24 @@ export interface AppState {
   /** Hollow-vessel mode (Phase 1): caps open holes so open pots/jars stop
    *  hard-failing. Does not yet generate a core — see generateMold.isHollow. */
   isHollow: boolean;
+  /**
+   * Which workflow the Generate button runs:
+   *   'rigid'    — the original two-part rigid casting mold.
+   *   'silicone' — printable silicone tooling (see siliconeType).
+   */
+  moldMode: MoldMode;
+  /** Silicone workflow: open-pour box, two-part block mold, or skin mold. */
+  siliconeType: SiliconeMoldType;
+  /** Silicone thickness around the master for block molds, mm. 0 = auto. */
+  siliconeMarginMm: number;
+  /** Skin thickness for skin/glove molds, mm. 0 = auto. */
+  skinThicknessMm: number;
+  /** Emit the printable core alongside the mother-mold halves. */
+  includeCore: boolean;
+  /** Export filename suffixes for the current pieces (silicone workflows). */
+  pieceLabels: string[];
+  /** Estimated silicone consumption of the current mold, cm³. 0 = unknown. */
+  siliconeVolumeCm3: number;
   /** Params used to generate the current mold — null when no mold exists. */
   generatedParams: GeneratedParams | null;
   explodedView: boolean;
