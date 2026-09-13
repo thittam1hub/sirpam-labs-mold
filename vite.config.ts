@@ -12,4 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // manifold-3d ships WASM and must not be pre-bundled by dep optimizer.
+    optimizeDeps: {
+      exclude: ["manifold-3d"],
+    },
+  },
 });

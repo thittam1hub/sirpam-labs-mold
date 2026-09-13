@@ -1,24 +1,53 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+// The mold generator uses WebGL, Web Workers, and WASM — browser-only APIs.
+// Lazy-load the whole app behind ClientOnly so SSR never evaluates it.
+const MoldMakerApp = lazy(() => import("../moldmaker/App"));
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Mold Maker — two-part mold generator for 3D printing" },
+      {
+        name: "description",
+        content:
+          "Load an STL or OBJ, pick a parting plane, export print-ready mold halves with auto-generated sprues, vents, and registration pins. Runs in your browser — no signup, no cloud upload.",
+      },
+      { property: "og:title", content: "Mold Maker — two-part mold generator for 3D printing" },
+      {
+        property: "og:description",
+        content:
+          "Turn 3D models into print-ready mold halves with auto-generated sprues, vents, and registration pins. Runs in your browser, offline.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <ClientOnly
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+          Loading Mold Maker…
+        </div>
+      }
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+            Loading Mold Maker…
+          </div>
+        }
+      >
+        <div className="fixed inset-0">
+          <MoldMakerApp />
+        </div>
+      </Suspense>
+    </ClientOnly>
   );
 }
