@@ -2,6 +2,7 @@
 /// <reference lib="webworker" />
 import * as THREE from 'three';
 import { generateMold } from './generateMold';
+import { generateSiliconeMold } from './siliconeMold';
 import {
   deserializeGeometry,
   serializeGeometry,
@@ -27,7 +28,7 @@ const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobal
 
 ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
   const req = ev.data;
-  if (req.type !== 'generate') {
+  if (req.type !== 'generate' && req.type !== 'silicone') {
     // Unknown message — reply with a structured error so the main thread
     // doesn't silently stall waiting on a response.
     const res: WorkerResponse = {
@@ -55,29 +56,54 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
       new THREE.Vector3(...req.payload.bboxMax),
     );
 
-    const { pieces, repairs } = await generateMold(
-      geo,
-      bbox,
-      req.payload.axis,
-      req.payload.offset,
-      {
-        wallThicknessRatio: req.payload.wallThicknessRatio,
-        clearanceMm: req.payload.clearanceMm,
-        sprueDiameterMm: req.payload.sprueDiameterMm,
-        moldBoxShape: req.payload.moldBoxShape,
-        cutAngle: req.payload.cutAngle,
-        sprueOverride: req.payload.sprueOverride,
-        additionalPlanes: req.payload.additionalPlanes,
-        isHollow: req.payload.isHollow,
-      },
-    );
+    // Two pipelines share this worker: rigid two-part casting molds and the
+    // silicone tooling workflows. Both are Manifold CSG over the same
+    // Manifold WASM singleton, so keeping them in one worker means one
+    // WASM init and no risk of two CSG graphs running concurrently.
+    const result = req.type === 'silicone'
+      ? await generateSiliconeMold(
+          geo,
+          bbox,
+          req.payload.axis,
+          req.payload.offset,
+          {
+            type: req.payload.silicone?.type ?? 'blockTwoPart',
+            siliconeMarginMm: req.payload.silicone?.siliconeMarginMm,
+            skinThicknessMm: req.payload.silicone?.skinThicknessMm,
+            includeCore: req.payload.silicone?.includeCore,
+            wallThicknessRatio: req.payload.wallThicknessRatio,
+            clearanceMm: req.payload.clearanceMm,
+            sprueDiameterMm: req.payload.sprueDiameterMm,
+            moldBoxShape: req.payload.moldBoxShape,
+            cutAngle: req.payload.cutAngle,
+            isHollow: req.payload.isHollow,
+          },
+        )
+      : await generateMold(
+          geo,
+          bbox,
+          req.payload.axis,
+          req.payload.offset,
+          {
+            wallThicknessRatio: req.payload.wallThicknessRatio,
+            clearanceMm: req.payload.clearanceMm,
+            sprueDiameterMm: req.payload.sprueDiameterMm,
+            moldBoxShape: req.payload.moldBoxShape,
+            cutAngle: req.payload.cutAngle,
+            sprueOverride: req.payload.sprueOverride,
+            additionalPlanes: req.payload.additionalPlanes,
+            isHollow: req.payload.isHollow,
+          },
+        );
 
     const res: WorkerResponse = {
       type: 'result',
       id: req.id,
       payload: {
-        pieces: pieces.map(serializeGeometry),
-        repairs,
+        pieces: result.pieces.map(serializeGeometry),
+        repairs: result.repairs,
+        labels: (result as { labels?: string[] }).labels,
+        siliconeVolumeCm3: (result as { siliconeVolumeCm3?: number }).siliconeVolumeCm3,
       },
     };
 

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape } from '../types';
+
 import { autoDetectPlane as autoDetectPlaneImpl } from '../mold/generateMold';
 import { exportSTL, exportOBJ, export3MF } from '../mold/exporters';
 import {
@@ -205,6 +206,110 @@ export function useMoldGenerator() {
     [getWorker],
   );
 
+  /**
+   * Generate printable silicone tooling (pour box, two-part block mold, or
+   * skin mold + mother mold). Runs in the same worker as the rigid pipeline
+   * — Manifold WASM is a singleton, so sharing the worker guarantees the two
+   * CSG graphs never run concurrently.
+   *
+   * Resolves with the pieces plus their export labels and an estimate of how
+   * much silicone the job will consume.
+   */
+  const generateSilicone = useCallback(
+    async (
+      geometry: THREE.BufferGeometry,
+      boundingBox: THREE.Box3,
+      axis: Axis,
+      offset: number,
+      options: {
+        siliconeType: 'blockOneWay' | 'blockTwoPart' | 'skinCore';
+        siliconeMarginMm?: number;
+        skinThicknessMm?: number;
+        includeCore?: boolean;
+        wallThicknessRatio?: number;
+        clearanceMm?: number;
+        sprueDiameterMm?: number;
+        moldBoxShape?: MoldBoxShape;
+        cutAngle?: number;
+        isHollow?: boolean;
+      },
+    ): Promise<{
+      pieces: THREE.BufferGeometry[];
+      labels: string[];
+      repairs: MeshRepairLog;
+      siliconeVolumeCm3: number;
+    }> => {
+      const worker = getWorker();
+      const id = ++requestIdRef.current;
+
+      const positionAttr = geometry.attributes.position;
+      if (!positionAttr) {
+        throw new Error('Geometry has no position attribute.');
+      }
+      const positions = new Float32Array(positionAttr.array as Float32Array);
+      const index = geometry.index
+        ? new Uint32Array(geometry.index.array as Uint16Array | Uint32Array)
+        : undefined;
+
+      const req: WorkerRequest = {
+        type: 'silicone',
+        id,
+        payload: {
+          positions,
+          index,
+          bboxMin: [boundingBox.min.x, boundingBox.min.y, boundingBox.min.z],
+          bboxMax: [boundingBox.max.x, boundingBox.max.y, boundingBox.max.z],
+          axis,
+          offset,
+          cutAngle: options.cutAngle,
+          wallThicknessRatio: options.wallThicknessRatio,
+          clearanceMm: options.clearanceMm,
+          sprueDiameterMm: options.sprueDiameterMm,
+          moldBoxShape: options.moldBoxShape,
+          isHollow: options.isHollow,
+          silicone: {
+            type: options.siliconeType,
+            siliconeMarginMm: options.siliconeMarginMm,
+            skinThicknessMm: options.skinThicknessMm,
+            includeCore: options.includeCore,
+          },
+        },
+      };
+
+      return new Promise((resolve, reject) => {
+        const onMessage = (ev: MessageEvent<WorkerResponse>) => {
+          const res = ev.data;
+          if (res.id !== id) return;
+          worker.removeEventListener('message', onMessage);
+          worker.removeEventListener('error', onError);
+
+          if (res.type === 'error') {
+            reject(new Error(res.message));
+            return;
+          }
+
+          resolve({
+            pieces: res.payload.pieces.map(deserializeGeometry),
+            labels: res.payload.labels ?? [],
+            repairs: res.payload.repairs,
+            siliconeVolumeCm3: res.payload.siliconeVolumeCm3 ?? 0,
+          });
+        };
+
+        const onError = (ev: ErrorEvent) => {
+          worker.removeEventListener('message', onMessage);
+          worker.removeEventListener('error', onError);
+          reject(new Error(ev.message || 'Mold worker crashed'));
+        };
+
+        worker.addEventListener('message', onMessage);
+        worker.addEventListener('error', onError);
+        worker.postMessage(req, collectTransferables(req));
+      });
+    },
+    [getWorker],
+  );
+
   const autoDetectPlane = useCallback(autoDetectPlaneImpl, []);
 
   // ── STEP-export cancel state ──
@@ -315,6 +420,10 @@ export function useMoldGenerator() {
     fileName: string,
     format: 'stl' | 'obj' | '3mf' | 'step',
     scale: number = 1.0,
+    /** Optional per-piece filename suffixes (silicone workflows supply
+     *  meaningful names like `pour_box` / `mother_top` / `core`). When
+     *  absent or short, the historical top/bottom/part_N naming applies. */
+    labels?: string[],
   ) => {
     const baseName = (fileName.replace(/\.[^.]+$/, '') || 'mold');
 

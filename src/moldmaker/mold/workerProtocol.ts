@@ -1,6 +1,6 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import * as THREE from 'three';
-import type { MoldBoxShape } from '../types';
+import type { MoldBoxShape, SiliconeMoldType } from '../types';
 import type { MeshRepairLog } from './validateMesh';
 
 /**
@@ -13,7 +13,8 @@ import type { MeshRepairLog } from './validateMesh';
  */
 
 export type WorkerRequest = {
-  type: 'generate';
+  /** 'generate' = rigid two-part casting mold, 'silicone' = silicone tooling. */
+  type: 'generate' | 'silicone';
   /** Client-supplied correlation id, echoed back on the response. */
   id: number;
   payload: {
@@ -87,6 +88,19 @@ export type WorkerRequest = {
      * (legacy solid-part behavior). See GenerateMoldOptions.isHollow.
      */
     isHollow?: boolean;
+    /**
+     * Silicone-workflow parameters. Present only for `type: 'silicone'`
+     * requests; ignored by the rigid path.
+     */
+    silicone?: {
+      type: SiliconeMoldType;
+      /** Silicone thickness around the master for block molds, mm. */
+      siliconeMarginMm?: number;
+      /** Skin thickness for skin/glove molds, mm. */
+      skinThicknessMm?: number;
+      /** Emit the printable core alongside the mother-mold halves. */
+      includeCore?: boolean;
+    };
   };
 };
 
@@ -106,6 +120,12 @@ export type WorkerResponse =
          * `const [top, bottom] = pieces`.
          */
         pieces: SerializedGeometry[];
+        /** Export filename suffixes, parallel to `pieces`. Silicone path
+         *  only — the rigid path leaves this undefined and callers fall
+         *  back to the historical top/bottom/part_N naming. */
+        labels?: string[];
+        /** Estimated silicone consumption in cm³ (silicone path only). */
+        siliconeVolumeCm3?: number;
         /** Mesh validation log from the pre-flight repair pass. Always
          *  present (even if no repairs were needed) so the main thread
          *  can decide whether to surface a toast. */
