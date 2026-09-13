@@ -1,0 +1,12 @@
+{
+  "source": "github: matta174/mold-maker",
+  "capabilities": [
+    { "capability": "Renderer web app (React + Three.js UI)", "source": "src/renderer", "outcome": "migrated to src/moldmaker, mounted at /", "status": "verified", "next_action": null },
+    { "capability": "CSG mold generation (Manifold WASM, web worker)", "source": "src/renderer/mold", "outcome": "preserved, worker-based generation verified with sample model", "status": "verified", "next_action": null },
+    { "capability": "STEP export (opencascade.js WASM worker)", "source": "src/renderer/mold/stepExportWorker.ts", "outcome": "preserved", "status": "implemented", "next_action": "exercise STEP export in UI if needed" },
+    { "capability": "STL/OBJ/3MF export", "source": "src/renderer/mold/exporters.ts", "outcome": "preserved", "status": "implemented", "next_action": null },
+    { "capability": "Electron desktop shell", "source": "src/main", "outcome": "deferred — desktop wrapper not applicable to web deploy; file loader already falls back to browser file picker", "status": "deferred", "next_action": "none for web; desktop builds remain in upstream repo" },
+    { "capability": "Telemetry (opt-in Umami)", "source": "src/renderer/services", "outcome": "preserved but inert — no VITE_TELEMETRY_HOST set, so no data is sent", "status": "implemented", "next_action": "set VITE_TELEMETRY_HOST to enable" },
+    { "capability": "Database / auth / records", "source": "none in source", "outcome": "absent — fully client-side app, nothing to migrate", "status": "verified", "next_action": null }
+  ]
+}
