@@ -1,6 +1,6 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import type { AppState } from '../App';
-import type { Axis, MoldBoxShape } from '../types';
+import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, ENABLE_OBLIQUE_PLANES } from '../mold/constants';
 import { MAX_CUT_ANGLE_DEGREES, hingeAxisFor } from '../mold/planeGeometry';
 import { colors, radii, spacing, fontSizes } from '../theme';
@@ -42,6 +42,16 @@ interface ControlPanelProps {
   /** Sprue top-diameter in absolute mm (roadmap #13). */
   onSprueDiameterChange: (sprueDiameterMm: number) => void;
   onMoldBoxShapeChange: (shape: MoldBoxShape) => void;
+  /** Switch between the rigid casting mold and the silicone tooling flows. */
+  onMoldModeChange: (mode: MoldMode) => void;
+  /** Pick the silicone workflow: pour box, two-part block, or skin + core. */
+  onSiliconeTypeChange: (type: SiliconeMoldType) => void;
+  /** Silicone thickness around the master, mm. 0 = auto from part size. */
+  onSiliconeMarginChange: (mm: number) => void;
+  /** Skin/glove mold wall thickness, mm. 0 = auto from part size. */
+  onSkinThicknessChange: (mm: number) => void;
+  /** Include the printable core with a skin mold. */
+  onIncludeCoreChange: (include: boolean) => void;
   onResetDimensions: () => void;
   onGenerate: () => void;
   onAutoDetect: () => void;
@@ -222,6 +232,7 @@ export default function ControlPanel({
   onToggleHollow,
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
   onWallThicknessChange, onClearanceChange, onSprueDiameterChange, onMoldBoxShapeChange, onResetDimensions,
+  onMoldModeChange, onSiliconeTypeChange, onSiliconeMarginChange, onSkinThicknessChange, onIncludeCoreChange,
   onGenerate, onAutoDetect, onExport,
   onToggleExplode, onToggleOriginal, onToggleHeatmap, onToggleWireframe, onStartOver,
   onPrinterChange, onScaleChange, onResetScale,
@@ -311,6 +322,15 @@ export default function ControlPanel({
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
     state.generatedParams.isHollow !== state.isHollow ||
+    // Silicone params only make the mold stale while silicone mode is on;
+    // switching modes is itself a change either way.
+    state.generatedParams.moldMode !== state.moldMode ||
+    (state.moldMode === 'silicone' && (
+      state.generatedParams.siliconeType !== state.siliconeType ||
+      state.generatedParams.siliconeMarginMm !== state.siliconeMarginMm ||
+      state.generatedParams.skinThicknessMm !== state.skinThicknessMm ||
+      state.generatedParams.includeCore !== state.includeCore
+    )) ||
     additionalPlanesChanged
   );
 
@@ -725,6 +745,149 @@ export default function ControlPanel({
               Reset to defaults
             </button>
           </div>
+
+          {/* Mold mode — rigid casting mold (the original flow) vs silicone
+              tooling. Silicone reveals its own workflow picker and the two
+              thickness sliders the trade actually specifies parts by. */}
+          <div style={{ marginBottom: spacing.md }}>
+            <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+              Mold Type
+            </label>
+            <div style={{ display: 'flex', gap: spacing.xs }} role="radiogroup" aria-label="Mold type">
+              {([
+                { id: 'rigid', label: 'Rigid', title: 'Two-part rigid mold printed directly (original flow)' },
+                { id: 'silicone', label: 'Silicone', title: 'Printed tooling for pouring a silicone mold' },
+              ] as { id: MoldMode; label: string; title: string }[]).map(opt => {
+                const active = state.moldMode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    title={opt.title}
+                    onClick={() => onMoldModeChange(opt.id)}
+                    style={styles.axisBtn(active)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {state.moldMode === 'silicone' && (
+            <div style={{ marginBottom: spacing.md }}>
+              <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+                Silicone Workflow
+              </label>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}
+                role="radiogroup"
+                aria-label="Silicone workflow"
+              >
+                {([
+                  {
+                    id: 'blockOneWay',
+                    label: 'Open Pour Box',
+                    title: 'Single open-top box: glue the master to the base, pour silicone, peel out. Simplest, one printed part.',
+                  },
+                  {
+                    id: 'blockTwoPart',
+                    label: 'Two-Part Block Mold',
+                    title: 'Split box with registration keys: pour each half in turn for a fully enclosed part.',
+                  },
+                  {
+                    id: 'skinCore',
+                    label: 'Skin Mold + Mother Mold',
+                    title: 'Thin silicone skin held by a rigid mother mold. Saves silicone on large parts.',
+                  },
+                ] as { id: SiliconeMoldType; label: string; title: string }[]).map(opt => {
+                  const active = state.siliconeType === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      title={opt.title}
+                      onClick={() => onSiliconeTypeChange(opt.id)}
+                      style={styles.axisBtn(active)}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 0 means "auto" — the generator derives it from the part size
+                  (industry rule of thumb: ~10 mm of silicone around a small
+                  master). The sliders let the caster override per job. */}
+              <div style={{ marginTop: spacing.md }}>
+                <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+                  Silicone Margin: {state.siliconeMarginMm === 0
+                    ? 'Auto'
+                    : `${state.siliconeMarginMm.toFixed(1)} mm`}
+                </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={40}
+                  step={0.5}
+                  value={state.siliconeMarginMm}
+                  onChange={e => onSiliconeMarginChange(parseFloat(e.target.value))}
+                  aria-label="Silicone margin in millimetres"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              {state.siliconeType === 'skinCore' && (
+                <>
+                  <div style={{ marginTop: spacing.md }}>
+                    <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+                      Skin Thickness: {state.skinThicknessMm === 0
+                        ? 'Auto'
+                        : `${state.skinThicknessMm.toFixed(1)} mm`}
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={15}
+                      step={0.5}
+                      value={state.skinThicknessMm}
+                      onChange={e => onSkinThicknessChange(parseFloat(e.target.value))}
+                      aria-label="Skin thickness in millimetres"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <label
+                    style={{
+                      ...styles.label,
+                      marginTop: spacing.sm,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing.xs,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={state.includeCore}
+                      onChange={e => onIncludeCoreChange(e.target.checked)}
+                    />
+                    Include printable core
+                  </label>
+                </>
+              )}
+
+              {/* Material estimate — the number that decides whether a job is
+                  worth running, so it sits next to the settings that change it. */}
+              {state.siliconeVolumeCm3 > 0 && (
+                <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.sm }}>
+                  Estimated silicone needed: {state.siliconeVolumeCm3.toFixed(0)} cm³
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Mold box shape — rect is default, cylinder wins for round parts
               (bottles, dials), roundedRect is a small FDM-durability upgrade

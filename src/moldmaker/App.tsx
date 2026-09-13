@@ -10,7 +10,7 @@ import HeatmapOverlay from './components/HeatmapOverlay';
 import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator';
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
-import type { Axis, MoldBoxShape } from './types';
+import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
 import { colors, radii, spacing, fontSizes, focusVisibleCss } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
@@ -102,6 +102,16 @@ export interface GeneratedParams {
   /** Hollow-vessel mode in effect at generate time. Snapshotted for the
    *  staleness check — toggling it must invalidate the current mold. */
   isHollow: boolean;
+  /** Rigid casting mold vs silicone tooling, at generate time. */
+  moldMode: MoldMode;
+  /** Which silicone workflow was generated (only meaningful for silicone). */
+  siliconeType: SiliconeMoldType;
+  /** Silicone thickness around the master for block molds, mm. */
+  siliconeMarginMm: number;
+  /** Skin thickness for skin/glove molds, mm. */
+  skinThicknessMm: number;
+  /** Whether the printable core was included with a skin mold. */
+  includeCore: boolean;
 }
 
 export interface AppState {
@@ -156,6 +166,24 @@ export interface AppState {
   /** Hollow-vessel mode (Phase 1): caps open holes so open pots/jars stop
    *  hard-failing. Does not yet generate a core — see generateMold.isHollow. */
   isHollow: boolean;
+  /**
+   * Which workflow the Generate button runs:
+   *   'rigid'    — the original two-part rigid casting mold.
+   *   'silicone' — printable silicone tooling (see siliconeType).
+   */
+  moldMode: MoldMode;
+  /** Silicone workflow: open-pour box, two-part block mold, or skin mold. */
+  siliconeType: SiliconeMoldType;
+  /** Silicone thickness around the master for block molds, mm. 0 = auto. */
+  siliconeMarginMm: number;
+  /** Skin thickness for skin/glove molds, mm. 0 = auto. */
+  skinThicknessMm: number;
+  /** Emit the printable core alongside the mother-mold halves. */
+  includeCore: boolean;
+  /** Export filename suffixes for the current pieces (silicone workflows). */
+  pieceLabels: string[];
+  /** Estimated silicone consumption of the current mold, cm³. 0 = unknown. */
+  siliconeVolumeCm3: number;
   /** Params used to generate the current mold — null when no mold exists. */
   generatedParams: GeneratedParams | null;
   explodedView: boolean;
@@ -209,6 +237,15 @@ const initialState: AppState = {
   moldPieces: [],
   additionalPlanes: [],
   isHollow: false,
+  moldMode: 'rigid',
+  siliconeType: 'blockTwoPart',
+  // 0 = "let the generator pick from the part size" (10 mm shop minimum,
+  // scaled up for large parts). Users override with the sliders.
+  siliconeMarginMm: 0,
+  skinThicknessMm: 0,
+  includeCore: true,
+  pieceLabels: [],
+  siliconeVolumeCm3: 0,
   generatedParams: null,
   explodedView: true,
   showOriginal: true,
@@ -244,7 +281,8 @@ export default function App() {
    * and swaps the STEP button for a Cancel button while it's in flight.
    */
   const [stepExporting, setStepExporting] = useState(false);
-  const { generateMold, exportFiles, cancelStepExport, autoDetectPlane } = useMoldGenerator();
+  const { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane } =
+    useMoldGenerator();
   const telemetry = useTelemetry();
 
   // ── Telemetry: session_started ──
@@ -398,27 +436,54 @@ export default function App() {
       // state.additionalPlanes can't retroactively change generatedParams.
       additionalPlanes: state.additionalPlanes.map(p => ({ ...p })),
       isHollow: state.isHollow,
+      moldMode: state.moldMode,
+      siliconeType: state.siliconeType,
+      siliconeMarginMm: state.siliconeMarginMm,
+      skinThicknessMm: state.skinThicknessMm,
+      includeCore: state.includeCore,
     };
 
     try {
-      const result = await generateMold(
-        state.originalGeometry,
-        state.boundingBox,
-        params.axis,
-        params.offset,
-        {
-          wallThicknessRatio: params.wallThicknessRatio,
-          clearanceMm: params.clearanceMm,
-          sprueDiameterMm: params.sprueDiameterMm,
-          moldBoxShape: params.moldBoxShape,
-          cutAngle: params.cutAngle,
-          sprueOverride: params.sprueOverride ?? undefined,
-          additionalPlanes: params.additionalPlanes.length > 0
-            ? params.additionalPlanes
-            : undefined,
-          isHollow: params.isHollow,
-        },
-      );
+      // Two distinct pipelines behind one button. Silicone tooling produces
+      // named pieces (pour box / mother halves / core) and a material
+      // estimate; the rigid path keeps its historical shape exactly.
+      const result = params.moldMode === 'silicone'
+        ? await generateSilicone(
+            state.originalGeometry,
+            state.boundingBox,
+            params.axis,
+            params.offset,
+            {
+              siliconeType: params.siliconeType,
+              siliconeMarginMm: params.siliconeMarginMm || undefined,
+              skinThicknessMm: params.skinThicknessMm || undefined,
+              includeCore: params.includeCore,
+              wallThicknessRatio: params.wallThicknessRatio,
+              clearanceMm: params.clearanceMm,
+              sprueDiameterMm: params.sprueDiameterMm,
+              moldBoxShape: params.moldBoxShape,
+              cutAngle: params.cutAngle,
+              isHollow: params.isHollow,
+            },
+          )
+        : await generateMold(
+            state.originalGeometry,
+            state.boundingBox,
+            params.axis,
+            params.offset,
+            {
+              wallThicknessRatio: params.wallThicknessRatio,
+              clearanceMm: params.clearanceMm,
+              sprueDiameterMm: params.sprueDiameterMm,
+              moldBoxShape: params.moldBoxShape,
+              cutAngle: params.cutAngle,
+              sprueOverride: params.sprueOverride ?? undefined,
+              additionalPlanes: params.additionalPlanes.length > 0
+                ? params.additionalPlanes
+                : undefined,
+              isHollow: params.isHollow,
+            },
+          );
 
       // Surface a non-blocking info banner if the pre-flight mesh validator
       // had to drop bad triangles. summarizeRepairs returns null when nothing
@@ -431,6 +496,8 @@ export default function App() {
         ...prev,
         moldPieces: result.pieces,
         moldGenerated: true,
+        pieceLabels: (result as { labels?: string[] }).labels ?? [],
+        siliconeVolumeCm3: (result as { siliconeVolumeCm3?: number }).siliconeVolumeCm3 ?? 0,
         generatedParams: params,
         generating: false,
         showOriginal: false,
@@ -475,7 +542,9 @@ export default function App() {
     state.wallThicknessRatio, state.clearanceMm, state.sprueDiameterMm,
     state.moldBoxShape, state.sprueOverride,
     state.additionalPlanes, state.isHollow,
-    state.generating, generateMold, telemetry,
+    state.moldMode, state.siliconeType, state.siliconeMarginMm,
+    state.skinThicknessMm, state.includeCore,
+    state.generating, generateMold, generateSilicone, telemetry,
   ]);
 
   const handleAutoDetect = useCallback(async () => {
@@ -520,6 +589,9 @@ export default function App() {
       // applied via a <group scale> wrapper). Scale 1.0 is the no-op path.
       await exportFiles(
         state.moldPieces, state.fileName, format, state.scale,
+        // Silicone runs name their pieces (pour_box, mother_top, core…);
+        // rigid runs pass an empty list and keep top/bottom naming.
+        state.pieceLabels.length > 0 ? state.pieceLabels : undefined,
       );
       // Telemetry: file_exported (success only — we don't event failures here
       // because export failures are extremely rare and the signal we actually
@@ -549,7 +621,7 @@ export default function App() {
     } finally {
       if (format === 'step') setStepExporting(false);
     }
-  }, [state.moldPieces, state.fileName, state.scale, exportFiles, telemetry]);
+  }, [state.moldPieces, state.fileName, state.scale, state.pieceLabels, exportFiles, telemetry]);
 
   const handleCancelStepExport = useCallback(() => {
     cancelStepExport();
@@ -1022,6 +1094,16 @@ export default function App() {
             setState(prev => ({ ...prev, sprueDiameterMm }))}
           onMoldBoxShapeChange={(moldBoxShape: MoldBoxShape) =>
             setState(prev => ({ ...prev, moldBoxShape }))}
+          onMoldModeChange={(moldMode: MoldMode) =>
+            setState(prev => ({ ...prev, moldMode }))}
+          onSiliconeTypeChange={(siliconeType: SiliconeMoldType) =>
+            setState(prev => ({ ...prev, siliconeType }))}
+          onSiliconeMarginChange={(siliconeMarginMm: number) =>
+            setState(prev => ({ ...prev, siliconeMarginMm }))}
+          onSkinThicknessChange={(skinThicknessMm: number) =>
+            setState(prev => ({ ...prev, skinThicknessMm }))}
+          onIncludeCoreChange={(includeCore: boolean) =>
+            setState(prev => ({ ...prev, includeCore }))}
           onResetDimensions={() => setState(prev => ({
             ...prev,
             wallThicknessRatio: WALL_THICKNESS_RATIO,
