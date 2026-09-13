@@ -1,6 +1,6 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import type { AppState } from '../App';
-import type { Axis, MoldBoxShape } from '../types';
+import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, ENABLE_OBLIQUE_PLANES } from '../mold/constants';
 import { MAX_CUT_ANGLE_DEGREES, hingeAxisFor } from '../mold/planeGeometry';
 import { colors, radii, spacing, fontSizes } from '../theme';
@@ -232,6 +232,7 @@ export default function ControlPanel({
   onToggleHollow,
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
   onWallThicknessChange, onClearanceChange, onSprueDiameterChange, onMoldBoxShapeChange, onResetDimensions,
+  onMoldModeChange, onSiliconeTypeChange, onSiliconeMarginChange, onSkinThicknessChange, onIncludeCoreChange,
   onGenerate, onAutoDetect, onExport,
   onToggleExplode, onToggleOriginal, onToggleHeatmap, onToggleWireframe, onStartOver,
   onPrinterChange, onScaleChange, onResetScale,
