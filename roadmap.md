@@ -9,4 +9,4 @@
 
 ## New requests (Sep 13)
 - [x] Evaluate whether 3DPrint_MoldGen (MoldGen) can run in this environment
-- [ ] Build a silicone mold maker feature (scope pending user answers)
+- [x] Build a silicone mold maker feature (new mode in current app, all three industry workflows — verified in browser)
