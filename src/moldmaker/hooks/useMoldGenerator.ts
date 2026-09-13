@@ -433,6 +433,7 @@ export function useMoldGenerator() {
     // 2 pieces (sequential additional cuts) gets `_part_N` numbering
     // because there's no obvious "top vs side vs back" semantic to pick.
     const suffixFor = (i: number): string => {
+      if (labels && labels[i]) return labels[i];
       if (pieces.length === 2) return i === 0 ? 'top' : 'bottom';
       return `part_${i + 1}`;
     };
@@ -519,7 +520,7 @@ export function useMoldGenerator() {
     }
   }, [exportStepViaWorker]);
 
-  return { generateMold, exportFiles, cancelStepExport, autoDetectPlane };
+  return { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane };
 }
 
 // Re-export the Axis type for backward compat with anything importing it from here.
