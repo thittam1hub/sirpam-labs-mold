@@ -541,7 +541,9 @@ export default function App() {
     state.wallThicknessRatio, state.clearanceMm, state.sprueDiameterMm,
     state.moldBoxShape, state.sprueOverride,
     state.additionalPlanes, state.isHollow,
-    state.generating, generateMold, telemetry,
+    state.moldMode, state.siliconeType, state.siliconeMarginMm,
+    state.skinThicknessMm, state.includeCore,
+    state.generating, generateMold, generateSilicone, telemetry,
   ]);
 
   const handleAutoDetect = useCallback(async () => {
