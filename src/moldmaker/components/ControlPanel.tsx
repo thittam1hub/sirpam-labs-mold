@@ -42,6 +42,16 @@ interface ControlPanelProps {
   /** Sprue top-diameter in absolute mm (roadmap #13). */
   onSprueDiameterChange: (sprueDiameterMm: number) => void;
   onMoldBoxShapeChange: (shape: MoldBoxShape) => void;
+  /** Switch between the rigid casting mold and the silicone tooling flows. */
+  onMoldModeChange: (mode: MoldMode) => void;
+  /** Pick the silicone workflow: pour box, two-part block, or skin + core. */
+  onSiliconeTypeChange: (type: SiliconeMoldType) => void;
+  /** Silicone thickness around the master, mm. 0 = auto from part size. */
+  onSiliconeMarginChange: (mm: number) => void;
+  /** Skin/glove mold wall thickness, mm. 0 = auto from part size. */
+  onSkinThicknessChange: (mm: number) => void;
+  /** Include the printable core with a skin mold. */
+  onIncludeCoreChange: (include: boolean) => void;
   onResetDimensions: () => void;
   onGenerate: () => void;
   onAutoDetect: () => void;
