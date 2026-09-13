@@ -10,7 +10,7 @@ import HeatmapOverlay from './components/HeatmapOverlay';
 import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator';
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
-import type { Axis, MoldBoxShape } from './types';
+import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
 import { colors, radii, spacing, fontSizes, focusVisibleCss } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
@@ -102,6 +102,16 @@ export interface GeneratedParams {
   /** Hollow-vessel mode in effect at generate time. Snapshotted for the
    *  staleness check — toggling it must invalidate the current mold. */
   isHollow: boolean;
+  /** Rigid casting mold vs silicone tooling, at generate time. */
+  moldMode: MoldMode;
+  /** Which silicone workflow was generated (only meaningful for silicone). */
+  siliconeType: SiliconeMoldType;
+  /** Silicone thickness around the master for block molds, mm. */
+  siliconeMarginMm: number;
+  /** Skin thickness for skin/glove molds, mm. */
+  skinThicknessMm: number;
+  /** Whether the printable core was included with a skin mold. */
+  includeCore: boolean;
 }
 
 export interface AppState {
