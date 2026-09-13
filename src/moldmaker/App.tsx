@@ -281,7 +281,8 @@ export default function App() {
    * and swaps the STEP button for a Cancel button while it's in flight.
    */
   const [stepExporting, setStepExporting] = useState(false);
-  const { generateMold, exportFiles, cancelStepExport, autoDetectPlane } = useMoldGenerator();
+  const { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane } =
+    useMoldGenerator();
   const telemetry = useTelemetry();
 
   // ── Telemetry: session_started ──
