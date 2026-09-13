@@ -495,6 +495,8 @@ export default function App() {
         ...prev,
         moldPieces: result.pieces,
         moldGenerated: true,
+        pieceLabels: (result as { labels?: string[] }).labels ?? [],
+        siliconeVolumeCm3: (result as { siliconeVolumeCm3?: number }).siliconeVolumeCm3 ?? 0,
         generatedParams: params,
         generating: false,
         showOriginal: false,
