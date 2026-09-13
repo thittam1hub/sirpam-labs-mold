@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 // ─────────────────────────────────────────────────────────────────────────────
 // STEP (ISO 10303-21) export via opencascade.js v1.1.1
 // ─────────────────────────────────────────────────────────────────────────────

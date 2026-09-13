@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /**
  * Printer build-volume presets for the Auto-scale-to-printer feature (roadmap #10).
  *

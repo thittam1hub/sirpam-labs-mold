@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /// <reference lib="webworker" />
 // ─────────────────────────────────────────────────────────────────────────────
 // Dedicated worker for STEP export.

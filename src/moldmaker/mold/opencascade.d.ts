@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 // opencascade.js v1.1.1 ships types for the top-level `opencascade.js`
 // import, but we bypass that entry point (see stepExporter.ts and the ADR).
 // We import the emscripten-generated JS directly, which has no types.

@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /**
  * Shared types used across hooks, mold/, components/, and utils/.
  *

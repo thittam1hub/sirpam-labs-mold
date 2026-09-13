@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /**
  * Telemetry transport — fire-and-forget POST to the Umami endpoint.
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 // ─────────────────────────────────────────────────────────────────────────────
 // User-facing translation layer for STEP-export errors.
 // ─────────────────────────────────────────────────────────────────────────────

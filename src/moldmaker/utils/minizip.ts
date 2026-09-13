@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /**
  * Minimal ZIP file creator for 3MF export.
  * Creates a valid ZIP archive from a set of text files.

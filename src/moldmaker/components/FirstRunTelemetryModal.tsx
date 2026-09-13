@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import { useEffect } from 'react';
 import { colors, radii, spacing, fontSizes } from '../theme';
 

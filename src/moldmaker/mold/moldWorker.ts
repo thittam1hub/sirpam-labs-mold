@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /// <reference lib="webworker" />
 import * as THREE from 'three';
 import { generateMold } from './generateMold';

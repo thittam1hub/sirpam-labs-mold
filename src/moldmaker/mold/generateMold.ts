@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape } from '../types';
 import {

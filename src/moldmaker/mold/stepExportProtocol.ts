@@ -1,3 +1,4 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 // ─────────────────────────────────────────────────────────────────────────────
 // Message protocol between the main thread and the STEP-export worker.
 // ─────────────────────────────────────────────────────────────────────────────
