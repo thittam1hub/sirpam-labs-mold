@@ -28,7 +28,7 @@ const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobal
 
 ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
   const req = ev.data;
-  if (req.type !== 'generate') {
+  if (req.type !== 'generate' && req.type !== 'silicone') {
     // Unknown message — reply with a structured error so the main thread
     // doesn't silently stall waiting on a response.
     const res: WorkerResponse = {
