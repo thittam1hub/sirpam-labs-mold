@@ -29,3 +29,18 @@ export type Axis = 'x' | 'y' | 'z';
  * but that's the oblique-parting-plane feature, not this one.
  */
 export type MoldBoxShape = 'rect' | 'cylinder' | 'roundedRect';
+
+/**
+ * Which silicone workflow to generate printable tooling for.
+ *
+ * - `blockOneWay`:  open-top containment box; pour silicone over the master
+ *                   and cut one relief slit to demold. Simplest, cheapest.
+ * - `blockTwoPart`: closed, keyed, split box with a pour sprue and vents —
+ *                   the standard two-part block mold for figures/parts.
+ * - `skinCore`:     thin silicone skin held by a rigid two-part mother mold,
+ *                   cast over the printed core. Saves silicone on big parts.
+ */
+export type SiliconeMoldType = 'blockOneWay' | 'blockTwoPart' | 'skinCore';
+
+/** Top-level mold workflow: rigid two-part casting mold, or silicone tooling. */
+export type MoldMode = 'rigid' | 'silicone';
