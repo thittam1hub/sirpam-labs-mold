@@ -1094,6 +1094,16 @@ export default function App() {
             setState(prev => ({ ...prev, sprueDiameterMm }))}
           onMoldBoxShapeChange={(moldBoxShape: MoldBoxShape) =>
             setState(prev => ({ ...prev, moldBoxShape }))}
+          onMoldModeChange={(moldMode: MoldMode) =>
+            setState(prev => ({ ...prev, moldMode }))}
+          onSiliconeTypeChange={(siliconeType: SiliconeMoldType) =>
+            setState(prev => ({ ...prev, siliconeType }))}
+          onSiliconeMarginChange={(siliconeMarginMm: number) =>
+            setState(prev => ({ ...prev, siliconeMarginMm }))}
+          onSkinThicknessChange={(skinThicknessMm: number) =>
+            setState(prev => ({ ...prev, skinThicknessMm }))}
+          onIncludeCoreChange={(includeCore: boolean) =>
+            setState(prev => ({ ...prev, includeCore }))}
           onResetDimensions={() => setState(prev => ({
             ...prev,
             wallThicknessRatio: WALL_THICKNESS_RATIO,
