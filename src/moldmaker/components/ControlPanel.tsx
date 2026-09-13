@@ -311,6 +311,15 @@ export default function ControlPanel({
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
     state.generatedParams.isHollow !== state.isHollow ||
+    // Silicone params only make the mold stale while silicone mode is on;
+    // switching modes is itself a change either way.
+    state.generatedParams.moldMode !== state.moldMode ||
+    (state.moldMode === 'silicone' && (
+      state.generatedParams.siliconeType !== state.siliconeType ||
+      state.generatedParams.siliconeMarginMm !== state.siliconeMarginMm ||
+      state.generatedParams.skinThicknessMm !== state.skinThicknessMm ||
+      state.generatedParams.includeCore !== state.includeCore
+    )) ||
     additionalPlanesChanged
   );
 
