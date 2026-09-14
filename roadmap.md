@@ -10,3 +10,4 @@
 ## New requests (Sep 13)
 - [x] Evaluate whether 3DPrint_MoldGen (MoldGen) can run in this environment
 - [x] Build a silicone mold maker feature (new mode in current app, all three industry workflows — verified in browser)
+- [x] Form fit shell option: mold wall hugs the model (rigid + silicone block workflows), Box Shape hidden while on — verified in browser
