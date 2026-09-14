@@ -231,10 +231,11 @@ const styles = {
   exportBtn: {
     flex: 1,
     padding: `${spacing.sm}px ${spacing.md}px`,
-    borderRadius: radii.sm,
-    border: `1px solid ${colors.borderSubtle}`,
-    background: colors.viewportBg,
-    color: '#ccc',
+    borderRadius: radii.md,
+    border: 'none',
+    background: colors.sectionBg,
+    boxShadow: shadows.raisedSm,
+    color: colors.textBody,
     cursor: 'pointer',
     fontWeight: 600,
     fontSize: fontSizes.sm,
@@ -384,8 +385,15 @@ export default function ControlPanel({
   return (
     <aside style={styles.panel} aria-label="Controls">
       <div>
-        <div style={styles.title}>Mold Maker</div>
-        <div style={styles.subtitle}>Two-part mold generator for 3D printing</div>
+        <div style={styles.titleRow}>
+          <div style={styles.logoMark} aria-hidden="true">
+            <span style={{ color: colors.primary, fontSize: fontSizes.lg }}>●</span>
+          </div>
+          <div style={styles.title}>
+            Sirpam <span style={styles.titleAccent}>3D Labs</span> Mold
+          </div>
+        </div>
+        <div style={styles.subtitle}>Two-part &amp; silicone mold generator for 3D printing</div>
       </div>
 
       {/* File Section */}
@@ -1332,7 +1340,8 @@ function ToggleSwitch({ active, onClick, label }: { active: boolean; onClick: ()
       onClick={onClick}
       style={{
         width: 44, height: 24, borderRadius: 12,
-        background: active ? colors.primary : '#333',
+        background: active ? colors.primary : colors.sectionBg,
+        boxShadow: active ? 'none' : shadows.inset,
         cursor: 'pointer', position: 'relative',
         transition: 'background 0.2s',
         border: 'none', padding: 0,
@@ -1347,6 +1356,7 @@ function ToggleSwitch({ active, onClick, label }: { active: boolean; onClick: ()
           background: '#fff', position: 'absolute',
           top: 3, left: active ? 23 : 3,
           transition: 'left 0.2s',
+          boxShadow: '1px 1px 3px rgba(0,0,0,0.25)',
         }}
       />
     </button>
