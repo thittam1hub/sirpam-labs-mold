@@ -184,11 +184,15 @@ const styles = {
   },
   primaryBtn: {
     background: colors.primary,
-    color: colors.textPrimary,
+    color: '#fff',
+    boxShadow: shadows.primary,
+    borderRadius: radii.pill,
   },
   secondaryBtn: {
-    background: colors.borderSection,
-    color: '#ccc',
+    background: colors.sectionBg,
+    color: colors.textBody,
+    boxShadow: shadows.raisedSm,
+    borderRadius: radii.pill,
   },
   disabledBtn: {
     opacity: 0.5,
@@ -197,17 +201,17 @@ const styles = {
   axisBtn: (active: boolean) => ({
     flex: 1,
     padding: `${spacing.sm}px ${spacing.md}px`, // 8px 12px
-    borderRadius: radii.sm,
-    border: active ? `2px solid ${colors.primary}` : `1px solid ${colors.borderSubtle}`,
-    background: active ? colors.primaryAlpha : colors.viewportBg,
-    color: active ? colors.primary : colors.textFaint,
+    borderRadius: radii.md,
+    border: 'none',
+    background: colors.sectionBg,
+    boxShadow: active ? shadows.inset : shadows.raisedSm,
+    color: active ? colors.primary : colors.textMuted,
     cursor: 'pointer',
     fontWeight: 600,
     fontSize: fontSizes.md,
   }),
   slider: {
     width: '100%',
-    accentColor: colors.primary,
   },
   toggleRow: {
     display: 'flex',
