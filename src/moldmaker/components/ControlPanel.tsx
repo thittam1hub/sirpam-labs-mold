@@ -956,6 +956,7 @@ export default function ControlPanel({
               })}
             </div>
           </div>
+          )}
 
           <div style={{ marginBottom: spacing.md }}>
             <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
