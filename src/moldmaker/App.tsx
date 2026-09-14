@@ -885,11 +885,11 @@ export default function App() {
               role="alert"
               style={{
                 position: 'absolute', top: spacing.lg, left: spacing.lg, right: spacing.lg,
-                background: colors.errorBg, color: colors.textPrimary,
+                background: colors.errorBg, color: '#fff',
                 padding: `${spacing.md}px ${spacing.lg}px`,
                 borderRadius: radii.lg,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                boxShadow: shadows.raised,
                 fontSize: fontSizes.md,
                 zIndex: 10,
               }}
@@ -899,8 +899,8 @@ export default function App() {
                 type="button"
                 onClick={clearError}
                 style={{
-                  background: 'transparent', color: colors.textPrimary,
-                  border: `1px solid ${colors.textPrimary}`,
+                  background: 'transparent', color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.7)',
                   borderRadius: radii.sm,
                   padding: `${spacing.xs}px ${spacing.sm + 2}px`,
                   cursor: 'pointer', fontSize: fontSizes.xs,
@@ -926,11 +926,11 @@ export default function App() {
                 position: 'absolute',
                 top: state.errorMessage ? spacing.lg + 56 : spacing.lg,
                 left: spacing.lg, right: spacing.lg,
-                background: colors.infoBg, color: colors.textPrimary,
+                background: colors.infoBg, color: '#fff',
                 padding: `${spacing.md}px ${spacing.lg}px`,
                 borderRadius: radii.lg,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                boxShadow: shadows.raised,
                 fontSize: fontSizes.md,
                 zIndex: 10,
               }}
@@ -940,8 +940,8 @@ export default function App() {
                 type="button"
                 onClick={clearInfo}
                 style={{
-                  background: 'transparent', color: colors.textPrimary,
-                  border: `1px solid ${colors.textPrimary}`,
+                  background: 'transparent', color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.7)',
                   borderRadius: radii.sm,
                   padding: `${spacing.xs}px ${spacing.sm + 2}px`,
                   cursor: 'pointer', fontSize: fontSizes.xs,
