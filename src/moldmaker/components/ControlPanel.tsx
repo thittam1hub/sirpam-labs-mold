@@ -3,7 +3,7 @@ import type { AppState } from '../App';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, ENABLE_OBLIQUE_PLANES } from '../mold/constants';
 import { MAX_CUT_ANGLE_DEGREES, hingeAxisFor } from '../mold/planeGeometry';
-import { colors, radii, spacing, fontSizes } from '../theme';
+import { colors, radii, spacing, fontSizes, shadows, fonts } from '../theme';
 import { PRINTER_PRESETS, getPresetById } from '../utils/printerPresets';
 import { computeFit, suggestScale, formatFitStatus } from '../utils/printerFit';
 
@@ -109,38 +109,68 @@ const SPRUE_DIAMETER_STEP_MM = 0.5;
 
 const styles = {
   panel: {
-    width: 320,
+    width: 340,
     background: colors.panelBg,
-    borderLeft: `1px solid ${colors.borderPanel}`,
+    borderLeft: 'none',
     padding: spacing.xl,
     display: 'flex',
     flexDirection: 'column' as const,
     gap: spacing.lg,
     overflowY: 'auto' as const,
+    fontFamily: fonts.body,
+  },
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  logoMark: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    background: colors.sectionBg,
+    boxShadow: shadows.raisedSm,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: fonts.display,
+    fontWeight: 700,
+    fontSize: fontSizes.sm,
+    color: colors.textPrimary,
+    flexShrink: 0,
   },
   title: {
-    fontSize: fontSizes.xl,
+    fontSize: fontSizes.lg,
     fontWeight: 700,
+    fontFamily: fonts.display,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    letterSpacing: -0.3,
+    lineHeight: 1.15,
+  },
+  titleAccent: {
+    color: colors.primary,
   },
   subtitle: {
     fontSize: fontSizes.xs,
     color: colors.textDim,
+    marginTop: spacing.xs,
+    lineHeight: 1.4,
   },
   section: {
     background: colors.sectionBg,
-    borderRadius: radii.lg,
-    padding: spacing.md + 2, // 14 — between md(12) and lg(16)
-    border: `1px solid ${colors.borderSection}`,
+    borderRadius: radii.xl,
+    padding: spacing.md + 4, // 16
+    border: 'none',
+    boxShadow: shadows.raised,
   },
   sectionTitle: {
     fontSize: fontSizes.sm,
     fontWeight: 600,
-    color: colors.textMuted,
+    color: colors.textDim,
     marginBottom: spacing.sm + 2, // 10
     textTransform: 'uppercase' as const,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   button: {
     width: '100%',
