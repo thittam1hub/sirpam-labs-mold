@@ -64,7 +64,7 @@ export default function FirstRunTelemetryModal({
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.6)',
+        background: 'rgba(30,41,59,0.35)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -81,7 +81,8 @@ export default function FirstRunTelemetryModal({
           color: colors.textPrimary,
           minWidth: 440,
           maxWidth: 560,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: '12px 12px 24px #b8b9be, -12px -12px 24px #ffffff',
+          border: 'none',
         }}
       >
         <div
@@ -92,7 +93,7 @@ export default function FirstRunTelemetryModal({
             marginBottom: spacing.md,
           }}
         >
-          Help shape Mold Maker?
+          Help shape Sirpam 3D Labs Mold?
         </div>
 
         <p style={{ fontSize: fontSizes.sm, color: colors.textBody, marginBottom: spacing.lg, lineHeight: 1.5 }}>
@@ -130,7 +131,7 @@ export default function FirstRunTelemetryModal({
         </div>
 
         <div style={{
-          background: 'rgba(80,40,40,0.2)',
+          background: colors.primaryAlpha,
           border: `1px solid ${colors.borderSection}`,
           borderRadius: radii.md,
           padding: `${spacing.md}px ${spacing.lg}px`,
@@ -157,10 +158,11 @@ export default function FirstRunTelemetryModal({
             type="button"
             onClick={onDecline}
             style={{
-              background: 'transparent',
-              color: colors.textPrimary,
-              border: `1px solid ${colors.borderPanel}`,
-              borderRadius: radii.md,
+              background: colors.sectionBg,
+              color: colors.textBody,
+              border: 'none',
+              boxShadow: '3px 3px 6px #b8b9be, -3px -3px 6px #ffffff',
+              borderRadius: radii.pill,
               padding: `${spacing.sm}px ${spacing.lg}px`,
               fontSize: fontSizes.sm,
               fontWeight: 600,
@@ -176,9 +178,10 @@ export default function FirstRunTelemetryModal({
             onClick={onAllow}
             style={{
               background: colors.primary,
-              color: colors.textPrimary,
+              color: '#fff',
               border: 'none',
-              borderRadius: radii.md,
+              boxShadow: '4px 4px 10px rgba(232,99,43,0.35), -4px -4px 8px #ffffff',
+              borderRadius: radii.pill,
               padding: `${spacing.sm}px ${spacing.lg}px`,
               fontSize: fontSizes.sm,
               fontWeight: 600,

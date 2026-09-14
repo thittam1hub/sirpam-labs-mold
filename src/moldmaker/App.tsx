@@ -11,7 +11,7 @@ import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
-import { colors, radii, spacing, fontSizes, focusVisibleCss } from './theme';
+import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
@@ -776,7 +776,13 @@ export default function App() {
           input, etc.) gets a brand-colored ring via this rule. */}
       <style>{focusVisibleCss}</style>
 
-      <div style={{ display: 'flex', width: '100vw', height: '100vh' }}>
+      <div
+        data-sirpam
+        style={{
+          display: 'flex', width: '100vw', height: '100vh',
+          background: colors.appBg, fontFamily: fonts.body, color: colors.textBody,
+        }}
+      >
         {/* 3D Viewport */}
         <main
           style={{ flex: 1, position: 'relative' }}
@@ -788,7 +794,7 @@ export default function App() {
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
-            <color attach="background" args={[colors.viewportBg]} />
+            <color attach="background" args={[colors.sceneBg]} />
             <CameraRig axis={state.axis} />
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
@@ -879,11 +885,11 @@ export default function App() {
               role="alert"
               style={{
                 position: 'absolute', top: spacing.lg, left: spacing.lg, right: spacing.lg,
-                background: colors.errorBg, color: colors.textPrimary,
+                background: colors.errorBg, color: '#fff',
                 padding: `${spacing.md}px ${spacing.lg}px`,
                 borderRadius: radii.lg,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                boxShadow: shadows.raised,
                 fontSize: fontSizes.md,
                 zIndex: 10,
               }}
@@ -893,8 +899,8 @@ export default function App() {
                 type="button"
                 onClick={clearError}
                 style={{
-                  background: 'transparent', color: colors.textPrimary,
-                  border: `1px solid ${colors.textPrimary}`,
+                  background: 'transparent', color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.7)',
                   borderRadius: radii.sm,
                   padding: `${spacing.xs}px ${spacing.sm + 2}px`,
                   cursor: 'pointer', fontSize: fontSizes.xs,
@@ -920,11 +926,11 @@ export default function App() {
                 position: 'absolute',
                 top: state.errorMessage ? spacing.lg + 56 : spacing.lg,
                 left: spacing.lg, right: spacing.lg,
-                background: colors.infoBg, color: colors.textPrimary,
+                background: colors.infoBg, color: '#fff',
                 padding: `${spacing.md}px ${spacing.lg}px`,
                 borderRadius: radii.lg,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                boxShadow: shadows.raised,
                 fontSize: fontSizes.md,
                 zIndex: 10,
               }}
@@ -934,8 +940,8 @@ export default function App() {
                 type="button"
                 onClick={clearInfo}
                 style={{
-                  background: 'transparent', color: colors.textPrimary,
-                  border: `1px solid ${colors.textPrimary}`,
+                  background: 'transparent', color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.7)',
                   borderRadius: radii.sm,
                   padding: `${spacing.xs}px ${spacing.sm + 2}px`,
                   cursor: 'pointer', fontSize: fontSizes.xs,
@@ -960,11 +966,12 @@ export default function App() {
                 position: 'absolute',
                 bottom: spacing.lg,
                 right: spacing.lg,
-                background: 'rgba(18, 24, 43, 0.85)',
-                border: `1px solid ${colors.borderPanel}`,
+                background: 'rgba(224, 229, 236, 0.92)',
+                border: 'none',
+                boxShadow: shadows.raisedSm,
                 borderRadius: radii.md,
                 padding: `${spacing.sm}px ${spacing.md}px`,
-                color: colors.textPrimary,
+                color: colors.textBody,
                 fontSize: fontSizes.xs,
                 display: 'flex',
                 flexDirection: 'column',
@@ -991,9 +998,9 @@ export default function App() {
                 position: 'absolute', inset: 0,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(18, 24, 43, 0.85)',
+                background: 'rgba(224, 229, 236, 0.88)',
                 color: colors.textPrimary,
-                fontFamily: 'inherit',
+                fontFamily: fonts.body,
               }}
             >
               {/* Inline SVG instead of a platform-dependent emoji — renders
@@ -1021,14 +1028,15 @@ export default function App() {
                   onClick={handleFileLoad}
                   style={{
                     background: colors.primary,
-                    color: colors.textPrimary,
+                    color: '#fff',
                     border: 'none',
-                    borderRadius: radii.md,
+                    borderRadius: radii.pill,
                     padding: `${spacing.md}px ${spacing.xl}px`,
                     fontSize: fontSizes.md,
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
+                    boxShadow: shadows.primary,
                   }}
                   aria-label="Load a 3D model file"
                 >
@@ -1038,15 +1046,16 @@ export default function App() {
                   type="button"
                   onClick={handleLoadSample}
                   style={{
-                    background: 'transparent',
-                    color: colors.textPrimary,
-                    border: `1px solid ${colors.borderPanel}`,
-                    borderRadius: radii.md,
+                    background: colors.sectionBg,
+                    color: colors.textBody,
+                    border: 'none',
+                    borderRadius: radii.pill,
                     padding: `${spacing.md}px ${spacing.xl}px`,
                     fontSize: fontSizes.md,
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
+                    boxShadow: shadows.raisedSm,
                   }}
                   aria-label="Load the built-in sample model"
                 >
@@ -1231,7 +1240,7 @@ function ShortcutCheatSheet({ onClose }: { onClose: () => void }) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.6)',
+        background: 'rgba(30,41,59,0.35)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 100,
       }}
@@ -1246,7 +1255,8 @@ function ShortcutCheatSheet({ onClose }: { onClose: () => void }) {
           color: colors.textPrimary,
           minWidth: 360,
           maxWidth: 480,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: shadows.raised,
+          border: 'none',
         }}
       >
         <div style={{

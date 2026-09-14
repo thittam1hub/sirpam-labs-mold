@@ -11,3 +11,6 @@
 - [x] Evaluate whether 3DPrint_MoldGen (MoldGen) can run in this environment
 - [x] Build a silicone mold maker feature (new mode in current app, all three industry workflows — verified in browser)
 - [x] Form fit shell option: mold wall hugs the model (rigid + silicone block workflows), Box Shape hidden while on — verified in browser
+
+## Done
+- [x] Rebrand to Sirpam 3D Labs Mold (Soft Neumorphic Lab: light shell, raised/inset shadows, ember #E8632B, Space Grotesk + DM Sans, brand wordmark, title/meta) — verified in browser, no errors

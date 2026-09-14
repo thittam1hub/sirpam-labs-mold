@@ -8,13 +8,13 @@ const MoldMakerApp = lazy(() => import("../moldmaker/App"));
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Mold Maker — two-part mold generator for 3D printing" },
+      { title: "Sirpam 3D Labs Mold — two-part & silicone mold generator" },
       {
         name: "description",
         content:
           "Load an STL or OBJ, pick a parting plane, export print-ready mold halves with auto-generated sprues, vents, and registration pins. Runs in your browser — no signup, no cloud upload.",
       },
-      { property: "og:title", content: "Mold Maker — two-part mold generator for 3D printing" },
+      { property: "og:title", content: "Sirpam 3D Labs Mold — two-part & silicone mold generator" },
       {
         property: "og:description",
         content:
