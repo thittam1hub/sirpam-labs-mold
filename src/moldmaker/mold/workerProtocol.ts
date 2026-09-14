@@ -89,6 +89,12 @@ export type WorkerRequest = {
      */
     isHollow?: boolean;
     /**
+     * Form-fit shell: outer wall hugs the model (outward offset) instead of
+     * an analytic mold box. Applies to the rigid path and the silicone
+     * block workflows; ignored by skinCore. Omitted → false.
+     */
+    formFit?: boolean;
+    /**
      * Silicone-workflow parameters. Present only for `type: 'silicone'`
      * requests; ignored by the rigid path.
      */
