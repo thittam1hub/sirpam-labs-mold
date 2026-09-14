@@ -11,7 +11,7 @@ import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
-import { colors, radii, spacing, fontSizes, focusVisibleCss } from './theme';
+import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
@@ -776,7 +776,13 @@ export default function App() {
           input, etc.) gets a brand-colored ring via this rule. */}
       <style>{focusVisibleCss}</style>
 
-      <div style={{ display: 'flex', width: '100vw', height: '100vh' }}>
+      <div
+        data-sirpam
+        style={{
+          display: 'flex', width: '100vw', height: '100vh',
+          background: colors.appBg, fontFamily: fonts.body, color: colors.textBody,
+        }}
+      >
         {/* 3D Viewport */}
         <main
           style={{ flex: 1, position: 'relative' }}
@@ -788,7 +794,7 @@ export default function App() {
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
-            <color attach="background" args={[colors.viewportBg]} />
+            <color attach="background" args={[colors.sceneBg]} />
             <CameraRig axis={state.axis} />
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
