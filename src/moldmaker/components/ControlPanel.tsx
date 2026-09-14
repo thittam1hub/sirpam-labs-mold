@@ -894,10 +894,41 @@ export default function ControlPanel({
             </div>
           )}
 
+          {/* Form-fit shell — the outer wall hugs the model (outward offset)
+              instead of an analytic box. Hidden for skin molds: the mother
+              mold there already hugs the inflated model, so the toggle would
+              be a no-op. */}
+          {!(state.moldMode === 'silicone' && state.siliconeType === 'skinCore') && (
+            <div style={{ marginBottom: spacing.md }}>
+              <label
+                style={{
+                  ...styles.label,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={state.formFit}
+                  onChange={e => onFormFitChange(e.target.checked)}
+                />
+                Form fit shell (hugs the model)
+              </label>
+              {state.formFit && (
+                <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
+                  Saves material on curvy models — generation takes longer.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Mold box shape — rect is default, cylinder wins for round parts
               (bottles, dials), roundedRect is a small FDM-durability upgrade
               over rect. Rendered as a segmented 3-way control to match the
-              axis picker aesthetic below. */}
+              axis picker aesthetic below. Hidden while form fit is on — the
+              shell silhouette comes from the model, not this picker. */}
+          {!state.formFit && (
           <div style={{ marginBottom: spacing.md }}>
             <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
               Box Shape
