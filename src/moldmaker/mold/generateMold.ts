@@ -201,7 +201,7 @@ export async function generateMold(
   // channel placement below (it reasons about the bounding region, not the
   // shell silhouette). For non-rect shapes, the envelope's AABB is the
   // circumscribing box of the actual shell.
-  const envelope = computeMoldEnvelope(boundingBox, moldBoxShape, axis, wallThickness);
+  let envelope = computeMoldEnvelope(boundingBox, moldBoxShape, axis, wallThickness);
 
   // Pre-flight mesh validation. Drops NaN/Infinity vertices, zero-edge
   // slivers, and degenerate (near-zero-area) triangles that would otherwise
@@ -257,11 +257,24 @@ export async function generateMold(
     throw new Error('Could not convert geometry to manifold. The model may not be watertight.');
   }
 
-  // Create the full mold box (rect / cylinder / roundedRect)
-  const fullBox = createMoldBoxManifold(wasm, envelope);
-
-  // Subtract the model from the box to get the mold cavity
-  const moldCavity = fullBox.subtract(modelManifold);
+  // Create the full outer shell and subtract the part to form the cavity.
+  //
+  // Form-fit mode: instead of an analytic envelope (box / cylinder /
+  // roundedRect), the shell is the model offset outward by clearance + wall
+  // and the cavity is the model offset by clearance alone — the wall hugs
+  // the part at a uniform distance, which saves a lot of print material on
+  // organic shapes. The envelope (used downstream only for its AABB, by pin
+  // and channel placement) becomes the offset solid's own bounding box.
+  let moldCavity;
+  if (options.formFit) {
+    const cavitySolid = offsetOutward(wasm, modelManifold, clearance, boundingBox);
+    const fullBox = offsetOutward(wasm, modelManifold, clearance + wallThickness, boundingBox);
+    envelope = envelopeAroundManifold(fullBox, axis, wallThickness);
+    moldCavity = fullBox.subtract(cavitySolid);
+  } else {
+    const fullBox = createMoldBoxManifold(wasm, envelope);
+    moldCavity = fullBox.subtract(modelManifold);
+  }
 
   // Split the cavity into top and bottom halves along the parting plane.
   //
