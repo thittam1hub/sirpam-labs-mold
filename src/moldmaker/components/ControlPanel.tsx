@@ -52,6 +52,8 @@ interface ControlPanelProps {
   onSkinThicknessChange: (mm: number) => void;
   /** Include the printable core with a skin mold. */
   onIncludeCoreChange: (include: boolean) => void;
+  /** Toggle the form-fit shell (outer wall hugs the model, not a box). */
+  onFormFitChange: (formFit: boolean) => void;
   onResetDimensions: () => void;
   onGenerate: () => void;
   onAutoDetect: () => void;
@@ -233,6 +235,7 @@ export default function ControlPanel({
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
   onWallThicknessChange, onClearanceChange, onSprueDiameterChange, onMoldBoxShapeChange, onResetDimensions,
   onMoldModeChange, onSiliconeTypeChange, onSiliconeMarginChange, onSkinThicknessChange, onIncludeCoreChange,
+  onFormFitChange,
   onGenerate, onAutoDetect, onExport,
   onToggleExplode, onToggleOriginal, onToggleHeatmap, onToggleWireframe, onStartOver,
   onPrinterChange, onScaleChange, onResetScale,
@@ -292,7 +295,8 @@ export default function ControlPanel({
     state.wallThicknessRatio === WALL_THICKNESS_RATIO &&
     state.clearanceMm === CLEARANCE_MM &&
     state.sprueDiameterMm === SPRUE_DIAMETER_MM &&
-    state.moldBoxShape === 'rect';
+    state.moldBoxShape === 'rect' &&
+    state.formFit === false;
 
   // Compare current params against the params used for the last successful
   // mold generation. When different, the existing mold is stale and the primary
@@ -321,6 +325,7 @@ export default function ControlPanel({
     state.generatedParams.clearanceMm !== state.clearanceMm ||
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
+    state.generatedParams.formFit !== state.formFit ||
     state.generatedParams.isHollow !== state.isHollow ||
     // Silicone params only make the mold stale while silicone mode is on;
     // switching modes is itself a change either way.
@@ -889,10 +894,41 @@ export default function ControlPanel({
             </div>
           )}
 
+          {/* Form-fit shell — the outer wall hugs the model (outward offset)
+              instead of an analytic box. Hidden for skin molds: the mother
+              mold there already hugs the inflated model, so the toggle would
+              be a no-op. */}
+          {!(state.moldMode === 'silicone' && state.siliconeType === 'skinCore') && (
+            <div style={{ marginBottom: spacing.md }}>
+              <label
+                style={{
+                  ...styles.label,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={state.formFit}
+                  onChange={e => onFormFitChange(e.target.checked)}
+                />
+                Form fit shell (hugs the model)
+              </label>
+              {state.formFit && (
+                <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
+                  Saves material on curvy models — generation takes longer.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Mold box shape — rect is default, cylinder wins for round parts
               (bottles, dials), roundedRect is a small FDM-durability upgrade
               over rect. Rendered as a segmented 3-way control to match the
-              axis picker aesthetic below. */}
+              axis picker aesthetic below. Hidden while form fit is on — the
+              shell silhouette comes from the model, not this picker. */}
+          {!state.formFit && (
           <div style={{ marginBottom: spacing.md }}>
             <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
               Box Shape
@@ -920,6 +956,7 @@ export default function ControlPanel({
               })}
             </div>
           </div>
+          )}
 
           <div style={{ marginBottom: spacing.md }}>
             <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>

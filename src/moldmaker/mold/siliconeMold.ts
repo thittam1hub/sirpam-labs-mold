@@ -23,6 +23,7 @@ import {
   primaryAxisIndex,
   lateralAxisIndices,
 } from './moldBox';
+import { envelopeAroundManifold, offsetOutward } from './moldOffset';
 
 /**
  * Silicone mold generation — the three workflows the casting industry
@@ -72,6 +73,12 @@ export interface SiliconeMoldOptions {
   includeCore?: boolean;
   /** Cap open boundary loops before CSG (open vessels). */
   isHollow?: boolean;
+  /**
+   * Form-fit shell for the block workflows: the containment wall hugs the
+   * model (offset outward) instead of being a box/cylinder. Ignored for
+   * skinCore — its mother mold already hugs the inflated model.
+   */
+  formFit?: boolean;
 }
 
 export interface SiliconeMoldResult {
@@ -93,44 +100,6 @@ function defaultMargin(maxExtent: number): number {
  *  tearing; scaled up a little for big parts. */
 function defaultSkin(maxExtent: number): number {
   return Math.max(4, maxExtent * 0.04);
-}
-
-/**
- * Grow a manifold outward by `t` in every direction.
- *
- * True offsetting is a Minkowski sum with a sphere; that's exact but its
- * cost scales with (triangles × sphere facets), so it is only attempted on
- * moderate meshes. For heavy meshes we fall back to a uniform scale about
- * the bbox centre, which is a well-behaved approximation for the blobby
- * organic shapes skin molds are normally used on.
- */
-function offsetOutward(wasm: any, m: any, t: number, bbox: THREE.Box3): any {
-  const { Manifold } = wasm;
-  let triCount = Infinity;
-  try {
-    triCount = m.numTri();
-  } catch {
-    /* older builds: leave as Infinity so we take the cheap path */
-  }
-
-  if (t > 0 && triCount <= 20000) {
-    try {
-      return m.minkowskiSum(Manifold.sphere(t, 12));
-    } catch (e) {
-      console.warn('Minkowski offset failed, falling back to scaled offset', e);
-    }
-  }
-
-  const size = new THREE.Vector3();
-  bbox.getSize(size);
-  const center = new THREE.Vector3();
-  bbox.getCenter(center);
-  const minExtent = Math.max(Math.min(size.x, size.y, size.z), 1e-6);
-  const k = 1 + (2 * t) / minExtent;
-  return m
-    .translate([-center.x, -center.y, -center.z])
-    .scale([k, k, k])
-    .translate([center.x, center.y, center.z]);
 }
 
 /** Axis-aligned cylinder helper: builds along Z, rotates onto `axis`. */
@@ -289,28 +258,59 @@ export async function generateSiliconeMold(
 
   if (options.type === 'blockOneWay' || options.type === 'blockTwoPart') {
     const margin = options.siliconeMarginMm ?? defaultMargin(maxExtent);
-    const cavityBox = expandedBox(boundingBox, margin);
-    const innerEnv = computeMoldEnvelope(cavityBox, shape, axis, 0);
-    const outerEnv = computeMoldEnvelope(cavityBox, shape, axis, wallThickness);
 
-    const outer = createMoldBoxManifold(wasm, outerEnv);
+    // Form-fit: cavity and outer wall hug the master via outward offsets
+    // instead of an analytic box. The envelope (used only for its AABB by
+    // the pour system and split/key helpers) is the outer solid's own bbox.
+    let outer: any;
+    let cavitySolid: any;
+    let cavityBox: THREE.Box3;
+    let outerEnv: any;
+
+    if (options.formFit) {
+      cavitySolid = offsetOutward(wasm, master, margin, boundingBox);
+      outer = offsetOutward(wasm, master, margin + wallThickness, boundingBox);
+      cavityBox = expandedBox(boundingBox, margin);
+      outerEnv = envelopeAroundManifold(outer, axis, wallThickness);
+    } else {
+      cavityBox = expandedBox(boundingBox, margin);
+      const innerEnv = computeMoldEnvelope(cavityBox, shape, axis, 0);
+      outerEnv = computeMoldEnvelope(cavityBox, shape, axis, wallThickness);
+      outer = createMoldBoxManifold(wasm, outerEnv);
+      cavitySolid = createMoldBoxManifold(wasm, innerEnv);
+    }
 
     // Silicone usage = cavity volume minus the master that displaces it.
-    const cavitySolid = createMoldBoxManifold(wasm, innerEnv);
     siliconeVolumeCm3 = Math.max(0, volumeCm3(cavitySolid) - volumeCm3(master));
 
     if (options.type === 'blockOneWay') {
       // Open-top box: extend the cavity out through the top face so the
-      // caster can lower the master in and pour.
-      const openBox = cavityBox.clone();
-      openBox.max.setComponent(
-        primary,
-        openBox.max.getComponent(primary) + wallThickness * 6,
-      );
-      const openCavity = createMoldBoxManifold(
-        wasm,
-        computeMoldEnvelope(openBox, shape, axis, 0),
-      );
+      // caster can lower the master in and pour. For form-fit the cavity is
+      // the offset master, so we union it with a tall slab spanning the
+      // cavity's lateral bbox — same "cut the top open" effect for a shell
+      // that has no flat top face to extend through.
+      let openCavity: any;
+      if (options.formFit) {
+        const slabMin = cavityBox.min.clone();
+        slabMin.setComponent(primary, cavityBox.max.getComponent(primary));
+        const slabSize = new THREE.Vector3();
+        cavityBox.getSize(slabSize);
+        slabSize.setComponent(primary, wallThickness * 6 + margin);
+        openCavity = cavitySolid.add(
+          Manifold.cube([slabSize.x, slabSize.y, slabSize.z], false)
+            .translate([slabMin.x, slabMin.y, slabMin.z]),
+        );
+      } else {
+        const openBox = cavityBox.clone();
+        openBox.max.setComponent(
+          primary,
+          openBox.max.getComponent(primary) + wallThickness * 6,
+        );
+        openCavity = createMoldBoxManifold(
+          wasm,
+          computeMoldEnvelope(openBox, shape, axis, 0),
+        );
+      }
       const shell = outer.subtract(openCavity);
       pieces.push(shell);
       labels.push('pour_box');

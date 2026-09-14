@@ -126,6 +126,8 @@ export function useMoldGenerator() {
         /** Hollow-vessel mode — caps open boundary loops before CSG so open
          *  pots/jars don't hard-fail. See generateMold's isHollow. */
         isHollow?: boolean;
+        /** Form-fit shell — outer wall hugs the model instead of a mold box. */
+        formFit?: boolean;
       } = {},
     ): Promise<{
       /** Mold pieces in stable order: [0]=top of primary, [1]=bottom of
@@ -170,6 +172,7 @@ export function useMoldGenerator() {
           sprueOverride: options.sprueOverride,
           additionalPlanes: options.additionalPlanes,
           isHollow: options.isHollow,
+          formFit: options.formFit,
         },
       };
 
@@ -232,6 +235,8 @@ export function useMoldGenerator() {
         moldBoxShape?: MoldBoxShape;
         cutAngle?: number;
         isHollow?: boolean;
+        /** Form-fit shell for the block workflows (ignored by skinCore). */
+        formFit?: boolean;
       },
     ): Promise<{
       pieces: THREE.BufferGeometry[];
@@ -267,6 +272,7 @@ export function useMoldGenerator() {
           sprueDiameterMm: options.sprueDiameterMm,
           moldBoxShape: options.moldBoxShape,
           isHollow: options.isHollow,
+          formFit: options.formFit,
           silicone: {
             type: options.siliconeType,
             siliconeMarginMm: options.siliconeMarginMm,

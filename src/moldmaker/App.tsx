@@ -112,6 +112,8 @@ export interface GeneratedParams {
   skinThicknessMm: number;
   /** Whether the printable core was included with a skin mold. */
   includeCore: boolean;
+  /** Form-fit shell in effect at generate time (outer wall hugs the model). */
+  formFit: boolean;
 }
 
 export interface AppState {
@@ -180,6 +182,9 @@ export interface AppState {
   skinThicknessMm: number;
   /** Emit the printable core alongside the mother-mold halves. */
   includeCore: boolean;
+  /** Form-fit shell: outer wall hugs the model instead of a box. Applies to
+   *  the rigid mold and the silicone block workflows (not skinCore). */
+  formFit: boolean;
   /** Export filename suffixes for the current pieces (silicone workflows). */
   pieceLabels: string[];
   /** Estimated silicone consumption of the current mold, cm³. 0 = unknown. */
@@ -244,6 +249,7 @@ const initialState: AppState = {
   siliconeMarginMm: 0,
   skinThicknessMm: 0,
   includeCore: true,
+  formFit: false,
   pieceLabels: [],
   siliconeVolumeCm3: 0,
   generatedParams: null,
@@ -441,6 +447,7 @@ export default function App() {
       siliconeMarginMm: state.siliconeMarginMm,
       skinThicknessMm: state.skinThicknessMm,
       includeCore: state.includeCore,
+      formFit: state.formFit,
     };
 
     try {
@@ -464,6 +471,7 @@ export default function App() {
               moldBoxShape: params.moldBoxShape,
               cutAngle: params.cutAngle,
               isHollow: params.isHollow,
+              formFit: params.formFit,
             },
           )
         : await generateMold(
@@ -482,6 +490,7 @@ export default function App() {
                 ? params.additionalPlanes
                 : undefined,
               isHollow: params.isHollow,
+              formFit: params.formFit,
             },
           );
 
@@ -543,7 +552,7 @@ export default function App() {
     state.moldBoxShape, state.sprueOverride,
     state.additionalPlanes, state.isHollow,
     state.moldMode, state.siliconeType, state.siliconeMarginMm,
-    state.skinThicknessMm, state.includeCore,
+    state.skinThicknessMm, state.includeCore, state.formFit,
     state.generating, generateMold, generateSilicone, telemetry,
   ]);
 
@@ -754,6 +763,7 @@ export default function App() {
     state.generatedParams.clearanceMm !== state.clearanceMm ||
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
+    state.generatedParams.formFit !== state.formFit ||
     sprueOverrideChanged
   );
   const showPartingPlaneIndicator =
@@ -1104,12 +1114,15 @@ export default function App() {
             setState(prev => ({ ...prev, skinThicknessMm }))}
           onIncludeCoreChange={(includeCore: boolean) =>
             setState(prev => ({ ...prev, includeCore }))}
+          onFormFitChange={(formFit: boolean) =>
+            setState(prev => ({ ...prev, formFit }))}
           onResetDimensions={() => setState(prev => ({
             ...prev,
             wallThicknessRatio: WALL_THICKNESS_RATIO,
             clearanceMm: CLEARANCE_MM,
             sprueDiameterMm: SPRUE_DIAMETER_MM,
             moldBoxShape: 'rect',
+            formFit: false,
           }))}
           onGenerate={handleGenerate}
           onAutoDetect={handleAutoDetect}
