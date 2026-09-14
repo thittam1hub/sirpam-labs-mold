@@ -966,11 +966,12 @@ export default function App() {
                 position: 'absolute',
                 bottom: spacing.lg,
                 right: spacing.lg,
-                background: 'rgba(18, 24, 43, 0.85)',
-                border: `1px solid ${colors.borderPanel}`,
+                background: 'rgba(224, 229, 236, 0.92)',
+                border: 'none',
+                boxShadow: shadows.raisedSm,
                 borderRadius: radii.md,
                 padding: `${spacing.sm}px ${spacing.md}px`,
-                color: colors.textPrimary,
+                color: colors.textBody,
                 fontSize: fontSizes.xs,
                 display: 'flex',
                 flexDirection: 'column',
@@ -997,9 +998,9 @@ export default function App() {
                 position: 'absolute', inset: 0,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(18, 24, 43, 0.85)',
+                background: 'rgba(224, 229, 236, 0.88)',
                 color: colors.textPrimary,
-                fontFamily: 'inherit',
+                fontFamily: fonts.body,
               }}
             >
               {/* Inline SVG instead of a platform-dependent emoji — renders
@@ -1027,14 +1028,15 @@ export default function App() {
                   onClick={handleFileLoad}
                   style={{
                     background: colors.primary,
-                    color: colors.textPrimary,
+                    color: '#fff',
                     border: 'none',
-                    borderRadius: radii.md,
+                    borderRadius: radii.pill,
                     padding: `${spacing.md}px ${spacing.xl}px`,
                     fontSize: fontSizes.md,
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
+                    boxShadow: shadows.primary,
                   }}
                   aria-label="Load a 3D model file"
                 >
@@ -1044,15 +1046,16 @@ export default function App() {
                   type="button"
                   onClick={handleLoadSample}
                   style={{
-                    background: 'transparent',
-                    color: colors.textPrimary,
-                    border: `1px solid ${colors.borderPanel}`,
-                    borderRadius: radii.md,
+                    background: colors.sectionBg,
+                    color: colors.textBody,
+                    border: 'none',
+                    borderRadius: radii.pill,
                     padding: `${spacing.md}px ${spacing.xl}px`,
                     fontSize: fontSizes.md,
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
+                    boxShadow: shadows.raisedSm,
                   }}
                   aria-label="Load the built-in sample model"
                 >
