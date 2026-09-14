@@ -23,6 +23,7 @@ import {
   primaryAxisIndex,
   lateralAxisIndices,
 } from './moldBox';
+import { envelopeAroundManifold, offsetOutward } from './moldOffset';
 
 /**
  * Silicone mold generation — the three workflows the casting industry
@@ -72,6 +73,12 @@ export interface SiliconeMoldOptions {
   includeCore?: boolean;
   /** Cap open boundary loops before CSG (open vessels). */
   isHollow?: boolean;
+  /**
+   * Form-fit shell for the block workflows: the containment wall hugs the
+   * model (offset outward) instead of being a box/cylinder. Ignored for
+   * skinCore — its mother mold already hugs the inflated model.
+   */
+  formFit?: boolean;
 }
 
 export interface SiliconeMoldResult {
