@@ -1027,7 +1027,7 @@ export default function App() {
               <div style={{ fontSize: fontSizes.md, color: colors.textFaint, marginBottom: spacing.lg }}>
                 Supports STL and OBJ files
               </div>
-              <div style={{ display: 'flex', gap: spacing.md }}>
+              <div style={{ display: 'flex', gap: spacing.md, pointerEvents: 'auto' }}>
                 <button
                   type="button"
                   onClick={handleFileLoad}
