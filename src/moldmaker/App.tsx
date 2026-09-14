@@ -1001,6 +1001,11 @@ export default function App() {
                 background: 'rgba(224, 229, 236, 0.88)',
                 color: colors.textPrimary,
                 fontFamily: fonts.body,
+                // Let mouse drags fall through to the 3D canvas so the empty
+                // scene is still orbit-able; only the buttons re-enable
+                // pointer events for themselves.
+                pointerEvents: 'none',
+                userSelect: 'none',
               }}
             >
               {/* Inline SVG instead of a platform-dependent emoji — renders
