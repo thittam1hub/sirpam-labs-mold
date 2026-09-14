@@ -3,7 +3,7 @@ import type { AppState } from '../App';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, ENABLE_OBLIQUE_PLANES } from '../mold/constants';
 import { MAX_CUT_ANGLE_DEGREES, hingeAxisFor } from '../mold/planeGeometry';
-import { colors, radii, spacing, fontSizes } from '../theme';
+import { colors, radii, spacing, fontSizes, shadows, fonts } from '../theme';
 import { PRINTER_PRESETS, getPresetById } from '../utils/printerPresets';
 import { computeFit, suggestScale, formatFitStatus } from '../utils/printerFit';
 
@@ -109,38 +109,68 @@ const SPRUE_DIAMETER_STEP_MM = 0.5;
 
 const styles = {
   panel: {
-    width: 320,
+    width: 340,
     background: colors.panelBg,
-    borderLeft: `1px solid ${colors.borderPanel}`,
+    borderLeft: 'none',
     padding: spacing.xl,
     display: 'flex',
     flexDirection: 'column' as const,
     gap: spacing.lg,
     overflowY: 'auto' as const,
+    fontFamily: fonts.body,
+  },
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  logoMark: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    background: colors.sectionBg,
+    boxShadow: shadows.raisedSm,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: fonts.display,
+    fontWeight: 700,
+    fontSize: fontSizes.sm,
+    color: colors.textPrimary,
+    flexShrink: 0,
   },
   title: {
-    fontSize: fontSizes.xl,
+    fontSize: fontSizes.lg,
     fontWeight: 700,
+    fontFamily: fonts.display,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    letterSpacing: -0.3,
+    lineHeight: 1.15,
+  },
+  titleAccent: {
+    color: colors.primary,
   },
   subtitle: {
     fontSize: fontSizes.xs,
     color: colors.textDim,
+    marginTop: spacing.xs,
+    lineHeight: 1.4,
   },
   section: {
     background: colors.sectionBg,
-    borderRadius: radii.lg,
-    padding: spacing.md + 2, // 14 — between md(12) and lg(16)
-    border: `1px solid ${colors.borderSection}`,
+    borderRadius: radii.xl,
+    padding: spacing.md + 4, // 16
+    border: 'none',
+    boxShadow: shadows.raised,
   },
   sectionTitle: {
     fontSize: fontSizes.sm,
     fontWeight: 600,
-    color: colors.textMuted,
+    color: colors.textDim,
     marginBottom: spacing.sm + 2, // 10
     textTransform: 'uppercase' as const,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   button: {
     width: '100%',
@@ -154,11 +184,15 @@ const styles = {
   },
   primaryBtn: {
     background: colors.primary,
-    color: colors.textPrimary,
+    color: '#fff',
+    boxShadow: shadows.primary,
+    borderRadius: radii.pill,
   },
   secondaryBtn: {
-    background: colors.borderSection,
-    color: '#ccc',
+    background: colors.sectionBg,
+    color: colors.textBody,
+    boxShadow: shadows.raisedSm,
+    borderRadius: radii.pill,
   },
   disabledBtn: {
     opacity: 0.5,
@@ -167,17 +201,17 @@ const styles = {
   axisBtn: (active: boolean) => ({
     flex: 1,
     padding: `${spacing.sm}px ${spacing.md}px`, // 8px 12px
-    borderRadius: radii.sm,
-    border: active ? `2px solid ${colors.primary}` : `1px solid ${colors.borderSubtle}`,
-    background: active ? colors.primaryAlpha : colors.viewportBg,
-    color: active ? colors.primary : colors.textFaint,
+    borderRadius: radii.md,
+    border: 'none',
+    background: colors.sectionBg,
+    boxShadow: active ? shadows.inset : shadows.raisedSm,
+    color: active ? colors.primary : colors.textMuted,
     cursor: 'pointer',
     fontWeight: 600,
     fontSize: fontSizes.md,
   }),
   slider: {
     width: '100%',
-    accentColor: colors.primary,
   },
   toggleRow: {
     display: 'flex',
@@ -197,10 +231,11 @@ const styles = {
   exportBtn: {
     flex: 1,
     padding: `${spacing.sm}px ${spacing.md}px`,
-    borderRadius: radii.sm,
-    border: `1px solid ${colors.borderSubtle}`,
-    background: colors.viewportBg,
-    color: '#ccc',
+    borderRadius: radii.md,
+    border: 'none',
+    background: colors.sectionBg,
+    boxShadow: shadows.raisedSm,
+    color: colors.textBody,
     cursor: 'pointer',
     fontWeight: 600,
     fontSize: fontSizes.sm,
@@ -350,8 +385,15 @@ export default function ControlPanel({
   return (
     <aside style={styles.panel} aria-label="Controls">
       <div>
-        <div style={styles.title}>Mold Maker</div>
-        <div style={styles.subtitle}>Two-part mold generator for 3D printing</div>
+        <div style={styles.titleRow}>
+          <div style={styles.logoMark} aria-hidden="true">
+            <span style={{ color: colors.primary, fontSize: fontSizes.lg }}>●</span>
+          </div>
+          <div style={styles.title}>
+            Sirpam <span style={styles.titleAccent}>3D Labs</span> Mold
+          </div>
+        </div>
+        <div style={styles.subtitle}>Two-part &amp; silicone mold generator for 3D printing</div>
       </div>
 
       {/* File Section */}
@@ -1298,7 +1340,8 @@ function ToggleSwitch({ active, onClick, label }: { active: boolean; onClick: ()
       onClick={onClick}
       style={{
         width: 44, height: 24, borderRadius: 12,
-        background: active ? colors.primary : '#333',
+        background: active ? colors.primary : colors.sectionBg,
+        boxShadow: active ? 'none' : shadows.inset,
         cursor: 'pointer', position: 'relative',
         transition: 'background 0.2s',
         border: 'none', padding: 0,
@@ -1313,6 +1356,7 @@ function ToggleSwitch({ active, onClick, label }: { active: boolean; onClick: ()
           background: '#fff', position: 'absolute',
           top: 3, left: active ? 23 : 3,
           transition: 'left 0.2s',
+          boxShadow: '1px 1px 3px rgba(0,0,0,0.25)',
         }}
       />
     </button>
