@@ -52,6 +52,8 @@ interface ControlPanelProps {
   onSkinThicknessChange: (mm: number) => void;
   /** Include the printable core with a skin mold. */
   onIncludeCoreChange: (include: boolean) => void;
+  /** Toggle the form-fit shell (outer wall hugs the model, not a box). */
+  onFormFitChange: (formFit: boolean) => void;
   onResetDimensions: () => void;
   onGenerate: () => void;
   onAutoDetect: () => void;
@@ -233,6 +235,7 @@ export default function ControlPanel({
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
   onWallThicknessChange, onClearanceChange, onSprueDiameterChange, onMoldBoxShapeChange, onResetDimensions,
   onMoldModeChange, onSiliconeTypeChange, onSiliconeMarginChange, onSkinThicknessChange, onIncludeCoreChange,
+  onFormFitChange,
   onGenerate, onAutoDetect, onExport,
   onToggleExplode, onToggleOriginal, onToggleHeatmap, onToggleWireframe, onStartOver,
   onPrinterChange, onScaleChange, onResetScale,
@@ -292,7 +295,8 @@ export default function ControlPanel({
     state.wallThicknessRatio === WALL_THICKNESS_RATIO &&
     state.clearanceMm === CLEARANCE_MM &&
     state.sprueDiameterMm === SPRUE_DIAMETER_MM &&
-    state.moldBoxShape === 'rect';
+    state.moldBoxShape === 'rect' &&
+    state.formFit === false;
 
   // Compare current params against the params used for the last successful
   // mold generation. When different, the existing mold is stale and the primary
@@ -321,6 +325,7 @@ export default function ControlPanel({
     state.generatedParams.clearanceMm !== state.clearanceMm ||
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
+    state.generatedParams.formFit !== state.formFit ||
     state.generatedParams.isHollow !== state.isHollow ||
     // Silicone params only make the mold stale while silicone mode is on;
     // switching modes is itself a change either way.
