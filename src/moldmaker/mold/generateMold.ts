@@ -27,6 +27,7 @@ import {
   computeChannelPositionsForEnvelope,
 } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold } from './moldBox';
+import { envelopeAroundManifold, offsetOutward } from './moldOffset';
 
 /**
  * Optional overrides for tunables that are otherwise read from ./constants.
