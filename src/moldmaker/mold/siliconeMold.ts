@@ -102,44 +102,6 @@ function defaultSkin(maxExtent: number): number {
   return Math.max(4, maxExtent * 0.04);
 }
 
-/**
- * Grow a manifold outward by `t` in every direction.
- *
- * True offsetting is a Minkowski sum with a sphere; that's exact but its
- * cost scales with (triangles × sphere facets), so it is only attempted on
- * moderate meshes. For heavy meshes we fall back to a uniform scale about
- * the bbox centre, which is a well-behaved approximation for the blobby
- * organic shapes skin molds are normally used on.
- */
-function offsetOutward(wasm: any, m: any, t: number, bbox: THREE.Box3): any {
-  const { Manifold } = wasm;
-  let triCount = Infinity;
-  try {
-    triCount = m.numTri();
-  } catch {
-    /* older builds: leave as Infinity so we take the cheap path */
-  }
-
-  if (t > 0 && triCount <= 20000) {
-    try {
-      return m.minkowskiSum(Manifold.sphere(t, 12));
-    } catch (e) {
-      console.warn('Minkowski offset failed, falling back to scaled offset', e);
-    }
-  }
-
-  const size = new THREE.Vector3();
-  bbox.getSize(size);
-  const center = new THREE.Vector3();
-  bbox.getCenter(center);
-  const minExtent = Math.max(Math.min(size.x, size.y, size.z), 1e-6);
-  const k = 1 + (2 * t) / minExtent;
-  return m
-    .translate([-center.x, -center.y, -center.z])
-    .scale([k, k, k])
-    .translate([center.x, center.y, center.z]);
-}
-
 /** Axis-aligned cylinder helper: builds along Z, rotates onto `axis`. */
 function axialCylinder(
   wasm: any,
