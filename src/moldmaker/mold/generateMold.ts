@@ -99,6 +99,14 @@ export interface GenerateMoldOptions {
    * of holes closed is reported back via the repair log.
    */
   isHollow?: boolean;
+  /**
+   * Form-fit shell: when true, the outer mold wall is the model offset
+   * outward by (clearance + wallThickness) instead of a box/cylinder/
+   * roundedRect envelope. Saves print material on organic shapes. The
+   * `moldBoxShape` option is ignored while this is on. CSG cost is higher
+   * (Minkowski offset), so the UI warns that generation takes longer.
+   */
+  formFit?: boolean;
 }
 
 /**
