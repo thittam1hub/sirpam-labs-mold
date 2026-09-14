@@ -1240,7 +1240,7 @@ function ShortcutCheatSheet({ onClose }: { onClose: () => void }) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.6)',
+        background: 'rgba(30,41,59,0.35)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 100,
       }}
@@ -1255,7 +1255,8 @@ function ShortcutCheatSheet({ onClose }: { onClose: () => void }) {
           color: colors.textPrimary,
           minWidth: 360,
           maxWidth: 480,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: shadows.raised,
+          border: 'none',
         }}
       >
         <div style={{
