@@ -32,7 +32,7 @@ function finish(m: any): THREE.BufferGeometry {
 /* ───────────── Emboss / engrave ───────────── */
 
 export async function embossModel(model: THREE.BufferGeometry, o: {
-  text?: string; svg?: string; side: Side; heightMm: number; depthMm: number; mode: 'raise' | 'engrave';
+  text?: string; svg?: string | undefined; side: Side; heightMm: number; depthMm: number; mode: 'raise' | 'engrave';
 }): Promise<THREE.BufferGeometry> {
   let shapes: THREE.Shape[] = [];
   if (o.svg) {
