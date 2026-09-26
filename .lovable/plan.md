@@ -1,56 +1,59 @@
-# Mold Maker v2 — five new features
+# Mold Maker v2 — feature upgrade plan
 
-Five additions to Sirpam 3D Labs Mold, on top of the existing rigid/silicone workflows. All client-side, in the browser, in keeping with the app's no-signup, no-cloud promise. No changes to mold-generation math, workers, or export files except where noted.
+Two parts: an inventory of the mold features we already have (so nothing gets rebuilt by accident), and a confirmed build list plus a ranked backlog of new features modeled on what the best mold tools ship.
 
-## 1. Split-line preview (see the cut before generating)
+## What we already have (current mold features)
 
-- New overlay in the 3D viewer: when a model is loaded, draw the parting plane's intersection with the model as a bright ember-colored line on the surface, plus a faint translucent plane.
-- Reuses the parting-plane math already feeding the heatmap (`draftAnalysis.ts`, `planeGeometry.ts`); classification of each triangle vs. the plane is linear in triangles, so it updates live on every slider tick — same pattern as the existing heatmap overlay.
-- Shown in both Rigid and Silicone modes; toggleable ("Show split line") and hidden automatically while a mold is generated/generated pieces are displayed.
+- **Model input** — drag-drop / browse STL & OBJ, sample model, auto mesh repair, hollow-vessel hole capping.
+- **3D preview** — orbit/zoom/pan, live demoldability heatmap (green/yellow/red by face), wireframe toggle.
+- **Parting plane** — axis pick, slide offset, tilt ±30°, extra parting planes, sprue diameter + manual sprue placement, vents, registration pins, wall thickness, clearance, box shapes (rect / cylinder / rounded), form-fit shell.
+- **Mold types** — Rigid two-part; Silicone with three workflows (open pour box, two-part block, skin + mother mold), silicone-volume estimate.
+- **Output** — STL/OBJ/3MF/STEP ZIP export with per-part naming, printer fit check with presets.
+- **Already built, easy to miss**: **Exploded view** — the explode toggle in the viewer already spreads the pieces apart (`explodedView` in App.tsx). So this is NOT part of the new work.
 
-## 2. Auto-suggest best parting setup
+## Tier 1 — build now (confirmed)
 
-- New "Suggest best split" button near the parting-plane controls.
-- Runs in the mold worker (off the UI thread): samples the candidate axes (x/y/z, with a few tilt angles), scores each using the existing draft-heat classification (fewer red/undercut faces, fewer near-vertical yellow faces, more balanced piece heights), and applies the winner to the axis/offset/tilt controls.
-- Shows a one-line result in the panel, e.g. "Best: Y axis, 48% up, 6° tilt — 2% undercut faces". User can accept (default) or keep adjusting manually.
+### 1. Split-line preview
+- Ember-colored line where the parting plane meets the model surface, plus a faint translucent plane, updating live as sliders move.
+- Reuses `planeGeometry.ts` plane math + per-triangle classification from `draftAnalysis.ts`; new `mold/splitLine.ts` sibling overlay mounted in App.tsx's scene group (same pattern as HeatmapOverlay). Hidden when generated pieces are shown.
 
-## 3. Save / load mold projects (browser-only)
+### 2. Auto-suggest best parting setup ("Split advisor")
+- Button sweeps candidate axes (x/y/z), offsets, and tilts, scoring each with the existing `undercutFraction` metric (fewest undercut faces, balanced piece heights); applies the winner and shows one line: "Best: Y axis, 48% up, 6° tilt — 2% undercut".
+- Extended from the existing `autoDetectPlane` path in `useMoldGenerator.ts` / `generateMold.ts`, running in the worker so the UI stays smooth.
 
-- "Save project" stores the model file reference, parting-plane settings, mold type and all mold parameters, printer preset, and a snapshot name in browser storage (IndexedDB via a tiny wrapper, following the existing `telemetrySettings.ts` local-storage pattern). The model file itself is stored so reopening restores everything.
-- A "Projects" section in the control panel lists saved projects (name + date), with Open and Delete. "Save" prompts for a name; re-saving the same name updates it.
-- "Export project file" downloads a single `.sirpam.json` (settings + model) that can be shared or backed up; "Import project file" restores it. No accounts, nothing leaves the browser.
+### 3. Save / load projects (browser-only)
+- Save named snapshots (model file + all settings) to IndexedDB; Projects list with Open/Delete; export/import a single `.sirpam.json` for backup or sharing.
+- New `services/projectStorage.ts` copying the defensive localStorage pattern of `telemetrySettings.ts`; section near the top of ControlPanel.
 
-## 4. Material & cost estimator
+### 4. Material & cost estimator
+- After generation: per-piece and total part volume, material weight (PLA / resin toggle), rough print-time estimate from the printer preset, cost from an editable price per kg; for silicone workflows, the silicone volume (cm³) with price per liter.
+- Real mesh volume via the divergence theorem on the generated pieces (siliconeMold already computes volumes this way for its estimate); new `utils/costEstimate.ts`, shown in a ControlPanel section — same inline-derive-then-render pattern the panel already uses.
 
-- After a mold is generated, the results area shows per-piece and total estimates: part volume, material weight (PLA/resin toggle, default PLA), estimated print time (volume- and height-based rule of thumb per printer preset), and cost from a user-editable material price per kg.
-- For silicone workflows, also shows the existing silicone volume (cm³) with a price per liter input, next to the rigid filament estimate for the box/core.
-- Pure client-side math on the generated geometry (triangle volume + bounding box); no generation-time changes.
+## Tier 2 — new features borrowed from the best tools (build after Tier 1)
 
-## 5. Exploded view of mold pieces
+Found studying Meshcast, SpliceSTL, and Mold Studio:
 
-- "Explode" slider in the results/viewer area: spreads the generated pieces apart along the parting axis (and outward for additional planes) with an animated slide, so cavities, pins, vents, and internal faces are easy to inspect.
-- Slider returns to 0 to snap pieces back together; disabled when nothing is generated or only one piece exists.
-- Implemented inside `ModelViewer.tsx` by offsetting piece meshes from their assembled positions — no geometry changes, so exports are untouched.
+1. **Seal type choice** — tongue-and-groove seal for liquids (wax/resin) vs. registration pins for rigid casts.
+2. **Pry pockets** — small notches on the parting face so halves open with a screwdriver.
+3. **Material presets** — pick what you're casting (silicone, resin, plaster, wax): auto-sets shrinkage compensation, sprue size, and release tolerance.
+4. **Side-specific silicone thickness** — separate side / seam / floor / top thickness instead of one global margin.
+5. **Gate advisor** — score pour points across the mold ceiling (least trapped air, fastest fill) and move the sprue automatically.
+6. **Multi-cavity tray** — array N copies of the model in one mold for batch casting.
+7. **Radial splits** — 3- or 4-piece molds for round/undercut parts, not just two halves.
+8. **Auto-orient for printing** — rotate mold pieces to the best print-bed orientation with support hints.
 
 ## Where the work lands (technical)
 
-- `src/moldmaker/mold/` — new `splitLine.ts` (plane/model intersection) and `suggestParting.ts` (scoring), both pure functions; auto-suggest invoked from the worker via a new lightweight message type in `workerProtocol.ts`.
-- `src/moldmaker/components/ModelViewer.tsx` — split-line overlay mesh, exploded-view offset state, per-piece volume capture.
-- `src/moldmaker/components/ControlPanel.tsx` — Projects section, Suggest button, estimator inputs; styled with existing `theme.ts` neumorphic tokens only.
-- `src/moldmaker/App.tsx` — wires state: split-line toggle, suggestion result, saved-project list, estimator settings; passes new props down.
-- `src/moldmaker/utils/` — new `projectStorage.ts` (IndexedDB save/load/import/export) and `costEstimate.ts` (volume/weight/time/cost math); `printerPresets.ts` reused for print-time heuristics.
-- No new npm dependencies. Exports, generation results, and file formats unchanged (project files are new, additive).
+- `src/moldmaker/mold/` — new `splitLine.ts`; auto-suggest extends `generateMold.ts`'s detect path via a new message type in `workerProtocol.ts`.
+- `src/moldmaker/App.tsx` — new state (split-line toggle, suggestion result, project list, estimator settings) wired with the existing `(value) => setState(...)` callback idiom; new overlay mounted beside HeatmapOverlay in the scene group.
+- `src/moldmaker/components/ControlPanel.tsx` — Projects section (top), Suggest button (Parting Plane section), estimator section (after Dimensions), styled with existing `theme.ts` neumorphic tokens only.
+- `src/moldmaker/services/projectStorage.ts` + `src/moldmaker/utils/costEstimate.ts` — new pure modules; `printerPresets.ts` reused for print-time heuristics.
+- No new npm dependencies. Mold-generation math, workers' CSG, and export formats stay untouched (project files and estimator are additive).
 
 ## Order of build
 
-1. Split-line preview (foundational plane math, visible immediately)
-2. Auto-suggest (reuses #1's classification)
-3. Exploded view (viewer-only)
-4. Material & cost estimator
-5. Save / load projects
-
-Each step is verified in the browser with the sample model (rigid + silicone two-part) before moving on; final pass covers save → reload → reopen → explode → export.
+1. Split-line preview → 2. Auto-suggest → 3. Material & cost estimator → 4. Save/load projects. Tier 2 items follow one at a time, each verified in the browser with the sample model (rigid + silicone two-part) before the next.
 
 ## Out of scope (this round)
 
-Model transforms, multi-cavity layout, print-readiness report, cloud accounts. Can follow in a later plan.
+Cloud accounts, upstream mesh repair tools, CNC/composite outputs.
