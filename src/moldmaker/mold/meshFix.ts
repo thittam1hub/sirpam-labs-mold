@@ -17,16 +17,17 @@ export interface RepairReport {
   flipped: number;
   holesClosed: number;
   solidOk: boolean;
+  rebuilt?: boolean;
 }
 
 function triCountOf(g: THREE.BufferGeometry): number {
-  return g.index ? g.index.count / 3 : g.attributes.position!.count / 3;
+  return g.index ? g.index.count / 3 : g.attributes['position']!.count / 3;
 }
 
 /** Weld to indexed form with a grid tolerance. */
 function weld(geo: THREE.BufferGeometry, tol: number): { pos: Float64Array; tris: Uint32Array; verts: number } {
   const src = geo.index ? geo.toNonIndexed() : geo;
-  const p = src.attributes.position!.array as ArrayLike<number>;
+  const p = src.attributes['position']!.array as ArrayLike<number>;
   const n = p.length / 3;
   const map = new Map<string, number>();
   const out: number[] = [];
@@ -130,7 +131,7 @@ function diag(geo: THREE.BufferGeometry): number {
   return geo.boundingBox!.getSize(new THREE.Vector3()).length() || 1;
 }
 
-async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport): Promise<THREE.BufferGeometry> {
+async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport, rebuildCell?: number): Promise<THREE.BufferGeometry> {
   const w = weld(geo, tol);
   r.weldedVerts = w.verts;
   let g = toGeometry(w.pos, cleanTopology(w.pos, w.tris, r));
@@ -144,6 +145,14 @@ async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairRep
     if (!m.isEmpty()) { g = manifoldToGeometry(m); r.solidOk = true; }
     m.delete?.();
   } catch { r.solidOk = false; }
+  if (!r.solidOk) {
+    // Too damaged to patch: rebuild the surface from an inside/outside grid.
+    g.computeBoundingBox();
+    const maxDim = Math.max(...g.boundingBox!.getSize(new THREE.Vector3()).toArray());
+    const cells = rebuildCell ? Math.min(260, Math.max(80, Math.round(maxDim / (rebuildCell * 1.6)))) : 180;
+    const rebuilt = await voxelRebuild(g, cells);
+    if (rebuilt) { g = rebuilt; r.solidOk = true; r.rebuilt = true; }
+  }
   r.outputTris = triCountOf(g);
   g.computeBoundingBox();
   g.computeVertexNormals();
@@ -155,6 +164,126 @@ const emptyReport = (g: THREE.BufferGeometry): RepairReport => ({
   droppedNonManifold: 0, flipped: 0, holesClosed: 0, solidOk: false,
 });
 
+/**
+ * Rebuild as a watertight solid: winding-number rasterisation into a grid
+ * (robust to overlapping shells, holes and self-intersections), then Manifold
+ * levelSet. `cells` = grid resolution along the longest side.
+ */
+export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Promise<THREE.BufferGeometry | null> {
+  const src = geo.index ? geo.toNonIndexed() : geo;
+  const p = src.attributes['position']!.array as ArrayLike<number>;
+  src.computeBoundingBox();
+  const bb = src.boundingBox!;
+  const size = bb.getSize(new THREE.Vector3());
+  const h = Math.max(size.x, size.y, size.z) / cells;
+  if (!(h > 0)) return null;
+  const ox = bb.min.x - 2 * h, oy = bb.min.y - 2 * h, oz = bb.min.z - 2 * h;
+  const nx = Math.ceil(size.x / h) + 4, ny = Math.ceil(size.y / h) + 4, nz = Math.ceil(size.z / h) + 4;
+  const N = [nx, ny, nz], O = [ox, oy, oz];
+  const votes = new Uint8Array(nx * ny * nz);
+  // Cast columns along each axis and vote: directional leaks from holes or
+  // flipped faces only fool one axis, so the 2-of-3 majority removes streaks.
+  for (let ax = 0; ax < 3; ax++) {
+    const u = (ax + 1) % 3, v = (ax + 2) % 3;
+    const nu = N[u]!, nv = N[v]!, na = N[ax]!;
+    const hits: Array<Array<{ z: number; s: number }>> = new Array(nu * nv);
+    for (let t = 0; t < p.length; t += 9) {
+      const au = p[t + u]!, av = p[t + v]!, aa = p[t + ax]!;
+      const bu = p[t + 3 + u]!, bv = p[t + 3 + v]!, ba = p[t + 3 + ax]!;
+      const cu = p[t + 6 + u]!, cv = p[t + 6 + v]!, ca = p[t + 6 + ax]!;
+      const d = (bu - au) * (cv - av) - (cu - au) * (bv - av);
+      if (Math.abs(d) < 1e-14) continue;
+      const i0 = Math.max(0, Math.ceil((Math.min(au, bu, cu) - O[u]!) / h - 0.5)), i1 = Math.min(nu - 1, Math.floor((Math.max(au, bu, cu) - O[u]!) / h - 0.5));
+      const j0 = Math.max(0, Math.ceil((Math.min(av, bv, cv) - O[v]!) / h - 0.5)), j1 = Math.min(nv - 1, Math.floor((Math.max(av, bv, cv) - O[v]!) / h - 0.5));
+      for (let i = i0; i <= i1; i++) {
+        const x = O[u]! + (i + 0.5) * h;
+        for (let j = j0; j <= j1; j++) {
+          const y = O[v]! + (j + 0.5) * h;
+          const w1 = ((bu - x) * (cv - y) - (cu - x) * (bv - y)) / d;
+          const w2 = ((cu - x) * (av - y) - (au - x) * (cv - y)) / d;
+          const w3 = 1 - w1 - w2;
+          if (w1 < 0 || w2 < 0 || w3 < 0) continue;
+          (hits[i * nv + j] ??= []).push({ z: w1 * aa + w2 * ba + w3 * ca, s: d > 0 ? -1 : 1 });
+        }
+      }
+    }
+    const idx = [0, 0, 0];
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+      const hs = hits[i * nv + j];
+      if (!hs) continue;
+      hs.sort((q, r2) => q.z - r2.z);
+      let w = 0, e = 0;
+      idx[u] = i; idx[v] = j;
+      for (let k = 0; k < na; k++) {
+        const z = O[ax]! + (k + 0.5) * h;
+        while (e < hs.length && hs[e]!.z < z) { w += hs[e]!.s; e++; }
+        if (w > 0) { idx[ax] = k; votes[(idx[0]! * ny + idx[1]!) * nz + idx[2]!]!++; }
+      }
+    }
+  }
+  const occ = new Float32Array(nx * ny * nz);
+  for (let q = 0; q < occ.length; q++) occ[q] = votes[q]! >= 2 ? 1 : 0;
+  const val = (i: number, j: number, k: number) =>
+    i < 0 || j < 0 || k < 0 || i >= nx || j >= ny || k >= nz ? 0 : occ[(i * ny + j) * nz + k]!;
+  const sdf = (pt: number[]) => {
+    const fx = (pt[0]! - ox) / h - 0.5, fy = (pt[1]! - oy) / h - 0.5, fz = (pt[2]! - oz) / h - 0.5;
+    const i = Math.floor(fx), j = Math.floor(fy), k = Math.floor(fz);
+    const u = fx - i, v = fy - j, w = fz - k;
+    let s = 0;
+    for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) for (let c = 0; c < 2; c++)
+      s += val(i + a, j + b, k + c) * (a ? u : 1 - u) * (b ? v : 1 - v) * (c ? w : 1 - w);
+    return s - 0.5;
+  };
+  const wasm = await getManifold();
+  const m = wasm.Manifold.levelSet(sdf, { min: [ox, oy, oz], max: [ox + nx * h, oy + ny * h, oz + nz * h] }, h, 0);
+  if (m.isEmpty()) return null;
+  // levelSet makes very dense uniform triangles; collapse flat areas.
+  const sm = m;
+  const g = manifoldToGeometry(sm);
+  if (sm !== m) sm.delete?.();
+  m.delete?.();
+  return collapseSlivers(g);
+}
+
+/**
+ * Collapse near-zero triangles and ultra-short edges (they get dropped later by
+ * the mold pipeline's validator and would open holes). Edge-collapse keeps the
+ * surface closed. Weld tolerance matches the pipeline's merge tolerance.
+ */
+export function collapseSlivers(geo: THREE.BufferGeometry, minEdge = 3e-5): THREE.BufferGeometry {
+  const w = weld(geo, 1.5e-5);
+  const pos = w.pos;
+  let tris = w.tris;
+  const parent = new Int32Array(w.verts).map((_, i) => i);
+  const find = (i: number): number => { while (parent[i] !== i) { parent[i] = parent[parent[i]!]!; i = parent[i]!; } return i; };
+  const d2 = (a: number, b: number) => (pos[a * 3]! - pos[b * 3]!) ** 2 + (pos[a * 3 + 1]! - pos[b * 3 + 1]!) ** 2 + (pos[a * 3 + 2]! - pos[b * 3 + 2]!) ** 2;
+  for (let pass = 0; pass < 6; pass++) {
+    let changed = 0;
+    for (let t = 0; t < tris.length; t += 3) {
+      const a = find(tris[t]!), b = find(tris[t + 1]!), c = find(tris[t + 2]!);
+      if (a === b || b === c || a === c) continue;
+      const ab = d2(a, b), bc = d2(b, c), ca = d2(c, a);
+      const ux = pos[b * 3]! - pos[a * 3]!, uy = pos[b * 3 + 1]! - pos[a * 3 + 1]!, uz = pos[b * 3 + 2]! - pos[a * 3 + 2]!;
+      const vx = pos[c * 3]! - pos[a * 3]!, vy = pos[c * 3 + 1]! - pos[a * 3 + 1]!, vz = pos[c * 3 + 2]! - pos[a * 3 + 2]!;
+      const area = Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
+      const longest = Math.max(ab, bc, ca);
+      if (area > 1e-9 && area > longest * 1e-6 && Math.min(ab, bc, ca) > minEdge * minEdge) continue;
+      // Collapse the shortest edge.
+      if (ab <= bc && ab <= ca) parent[b] = a; else if (bc <= ca) parent[c] = b; else parent[a] = c;
+      changed++;
+    }
+    const next: number[] = [];
+    for (let t = 0; t < tris.length; t += 3) {
+      const a = find(tris[t]!), b = find(tris[t + 1]!), c = find(tris[t + 2]!);
+      if (a !== b && b !== c && a !== c) next.push(a, b, c);
+    }
+    tris = Uint32Array.from(next);
+    if (!changed) break;
+  }
+  const r = emptyReport(geo);
+  return toGeometry(pos, cleanTopology(pos, tris, r));
+}
+
 /** Deep repair: weld, drop bad/duplicate/over-shared faces, fix winding, close holes. */
 export async function repairModel(geo: THREE.BufferGeometry): Promise<{ geometry: THREE.BufferGeometry; report: RepairReport }> {
   const r = emptyReport(geo);
@@ -164,7 +293,7 @@ export async function repairModel(geo: THREE.BufferGeometry): Promise<{ geometry
 
 export function surfaceArea(geo: THREE.BufferGeometry): number {
   const src = geo.index ? geo.toNonIndexed() : geo;
-  const p = src.attributes.position!.array as ArrayLike<number>;
+  const p = src.attributes['position']!.array as ArrayLike<number>;
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
   let s = 0;
   for (let i = 0; i < p.length; i += 9) {
@@ -182,14 +311,14 @@ export async function reduceDetail(geo: THREE.BufferGeometry, targetTris: number
   const r = emptyReport(geo);
   // A uniform mesh with cell size h has ~2·A/h² triangles.
   const cell = Math.max(diag(geo) * 1e-5, Math.sqrt((2 * surfaceArea(geo)) / Math.max(1000, targetTris)));
-  const geometry = await finishRepair(geo, cell, r);
+  const geometry = await finishRepair(geo, cell, r, cell);
   return { geometry, report: r, cellMm: cell };
 }
 
 export type UpAxis = 'x' | 'y' | 'z';
 
 /** Rotate (degrees, XYZ order), then optionally scale uniformly so the size along `axis` equals `sizeMm`. Re-seats on the bed (min z = 0, centred in X/Y). */
-export function transformModel(geo: THREE.BufferGeometry, o: { rx: number; ry: number; rz: number; sizeMm?: number; axis: UpAxis }): THREE.BufferGeometry {
+export function transformModel(geo: THREE.BufferGeometry, o: { rx: number; ry: number; rz: number; sizeMm?: number | undefined; axis: UpAxis }): THREE.BufferGeometry {
   const g = geo.clone();
   const d = Math.PI / 180;
   g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(o.rx * d, o.ry * d, o.rz * d, 'XYZ')));
@@ -213,5 +342,6 @@ export function describeRepair(r: RepairReport): string {
   if (r.droppedNonManifold) parts.push(`${r.droppedNonManifold.toLocaleString()} overlapping faces removed`);
   if (r.flipped) parts.push(`${r.flipped.toLocaleString()} inside-out faces turned`);
   if (r.holesClosed) parts.push(`${r.holesClosed} holes closed`);
+  if (r.rebuilt) parts.push('surface rebuilt as one clean solid');
   return parts.length ? parts.join(', ') : 'no problems found';
 }

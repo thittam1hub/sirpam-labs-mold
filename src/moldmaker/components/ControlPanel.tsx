@@ -26,6 +26,7 @@ interface ControlPanelProps {
   modelSlot?: React.ReactNode;
   /** Print-farm planner (Finish step, when a mold exists). */
   packSlot?: React.ReactNode;
+  reportSlot?: React.ReactNode;
   step: number;
   onStepChange: (n: number) => void;
   onLoadFile: () => void;
@@ -306,7 +307,7 @@ const styles = {
 };
 
 export default function ControlPanel({
-  state, tier2Slot, moldSlot, toolsSlot, finishSlot, modelSlot, packSlot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
+  state, tier2Slot, moldSlot, toolsSlot, finishSlot, modelSlot, packSlot, reportSlot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
   onAddAdditionalPlane, onRemoveAdditionalPlane, onAdditionalPlaneChange,
   onToggleHollow,
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
@@ -1269,6 +1270,7 @@ export default function ControlPanel({
       {step === 3 && hasModel && toolsSlot}
       {step === 4 && hasModel && finishSlot}
       {step === 4 && hasMold && packSlot}
+      {step === 4 && hasMold && reportSlot}
 
       {/* Material & Cost — rough pre-flight economics. Volumes come straight
           from the generated piece meshes (divergence-theorem), so numbers

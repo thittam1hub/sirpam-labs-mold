@@ -31,6 +31,7 @@ import GuidedTour from './components/GuidedTour';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel, AiShapePanel } from './components/ShopPanels';
 import FillOverlay from './components/FillOverlay';
+import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
 
@@ -1577,7 +1578,27 @@ export default function App() {
               printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
             />
           }
-          modelSlot={<AiShapePanel onCommit={commitGeometry} />}
+          modelSlot={<>
+            <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} />
+            <AiShapePanel onCommit={commitGeometry} />
+          </>}
+          reportSlot={
+            <MoldReportPanel
+              geometry={state.originalGeometry}
+              pieces={state.moldPieces}
+              labels={state.pieceLabels}
+              fileName={state.fileName}
+              moldMode={state.moldMode}
+              axis={state.axis}
+              castingMaterial={state.tier2.castingMaterial}
+              siliconeVolumeCm3={state.siliconeVolumeCm3}
+              printMaterial={state.estimator.material}
+              pricePerKg={state.estimator.pricePerKg}
+              siliconePricePerLiter={state.estimator.siliconePricePerLiter}
+              wallMm={state.moldMode === 'silicone' ? (state.siliconeMarginMm || 10) : 5}
+              printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
+            />
+          }
           packSlot={
             <PlatePackerPanel
               pieces={state.moldPieces}
