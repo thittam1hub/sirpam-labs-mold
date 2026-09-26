@@ -18,6 +18,7 @@ export interface RepairReport {
   holesClosed: number;
   solidOk: boolean;
   rebuilt?: boolean;
+  timings: { cleanSec: number; holesSec: number; checkSec: number; rebuildSec: number };
 }
 
 function triCountOf(g: THREE.BufferGeometry): number {
@@ -143,19 +144,19 @@ async function passesMoldCheck(g: THREE.BufferGeometry): Promise<boolean> {
 }
 
 async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport, rebuildCell?: number): Promise<THREE.BufferGeometry> {
+  const T = r.timings;
+  let t0 = performance.now();
   const w = weld(geo, tol);
   r.weldedVerts = w.verts;
   let g = toGeometry(w.pos, cleanTopology(w.pos, w.tris, r));
+  T.cleanSec = (performance.now() - t0) / 1000; t0 = performance.now();
   const cap = capOpenBoundaries(g);
   r.holesClosed = cap.holesClosed;
   g = cap.geometry;
-  // Round-trip through the solid engine: success means the mold will build.
-  try {
-    const wasm = await getManifold();
-    const m = geometryToManifold(wasm, g);
-    if (!m.isEmpty()) { const out = manifoldToGeometry(m); if (await passesMoldCheck(out)) { g = out; r.solidOk = true; } }
-    m.delete?.();
-  } catch { r.solidOk = false; }
+  T.holesSec = (performance.now() - t0) / 1000; t0 = performance.now();
+  // Same check the mold maker runs: passing means the mold will build.
+  r.solidOk = await passesMoldCheck(g);
+  T.checkSec = (performance.now() - t0) / 1000; t0 = performance.now();
   if (!r.solidOk) {
     // Too damaged to patch: rebuild the surface from an inside/outside grid.
     // Verified with the exact checks the mold maker runs; retry on a shifted grid.
@@ -166,6 +167,7 @@ async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairRep
       const rebuilt = await voxelRebuild(g, cells);
       if (rebuilt && await passesMoldCheck(rebuilt)) { g = rebuilt; r.solidOk = true; r.rebuilt = true; }
     }
+    T.rebuildSec = (performance.now() - t0) / 1000;
   }
   r.outputTris = triCountOf(g);
   g.computeBoundingBox();
@@ -176,6 +178,7 @@ async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairRep
 const emptyReport = (g: THREE.BufferGeometry): RepairReport => ({
   inputTris: triCountOf(g), outputTris: 0, weldedVerts: 0, droppedBad: 0, droppedDuplicate: 0,
   droppedNonManifold: 0, flipped: 0, holesClosed: 0, solidOk: false,
+  timings: { cleanSec: 0, holesSec: 0, checkSec: 0, rebuildSec: 0 },
 });
 
 /**
