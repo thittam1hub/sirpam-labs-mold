@@ -65,7 +65,11 @@ export function geometryToManifold(wasm: any, geometry: THREE.BufferGeometry): a
   // 3×3×3 neighbourhood search still covers every possible match.
   const bucketSize = MERGE_TOLERANCE;
   const toleranceSq = MERGE_TOLERANCE * MERGE_TOLERANCE;
-  const vertexMap = new Map<string, number[]>();
+  // Numeric spatial hash (much faster than string keys on big meshes). A hash
+  // collision only adds extra candidates, which the distance test filters out.
+  const vertexMap = new Map<number, number[]>();
+  const hashKey = (a: number, b: number, c: number) =>
+    (Math.imul(a, 73856093) ^ Math.imul(b, 19349663) ^ Math.imul(c, 83492791)) | 0;
 
   const offsets = [-1, 0, 1];
   const mergeFrom: number[] = [];
@@ -86,7 +90,7 @@ export function geometryToManifold(wasm: any, geometry: THREE.BufferGeometry): a
     for (const dx of offsets) {
       for (const dy of offsets) {
         for (const dz of offsets) {
-          const key = `${bx + dx},${by + dy},${bz + dz}`;
+          const key = hashKey(bx + dx, by + dy, bz + dz);
           const bucket = vertexMap.get(key);
           if (bucket) {
             for (const j of bucket) {
@@ -110,7 +114,7 @@ export function geometryToManifold(wasm: any, geometry: THREE.BufferGeometry): a
     }
 
     // Always insert into the home bucket
-    const homeKey = `${bx},${by},${bz}`;
+    const homeKey = hashKey(bx, by, bz);
     const homeBucket = vertexMap.get(homeKey);
     if (homeBucket) {
       homeBucket.push(i);
