@@ -343,11 +343,34 @@ export function surfaceArea(geo: THREE.BufferGeometry): number {
  * so the result is a clean solid. Works on broken meshes too.
  */
 export async function reduceDetail(geo: THREE.BufferGeometry, targetTris: number): Promise<{ geometry: THREE.BufferGeometry; report: RepairReport; cellMm: number }> {
+  // 1) Keep full detail if the model can be repaired as-is, then let the solid
+  //    engine simplify it (keeps sharp features; accepted only if the mold
+  //    maker's own check passes).
+  const full = await repairModel(geo);
+  if (full.report.solidOk && !full.report.rebuilt) {
+    const wasm = await getManifold();
+    const base = geometryToManifold(wasm, full.geometry);
+    const d = diag(full.geometry);
+    for (const f of [2e-4, 5e-4, 1e-3, 2e-3, 4e-3]) {
+      const sm = base.simplify(d * f);
+      const n = sm.numTri();
+      if (n <= targetTris * 1.15) {
+        const g = manifoldToGeometry(sm);
+        sm.delete?.();
+        if (await passesMoldCheck(g)) {
+          base.delete?.();
+          g.computeBoundingBox(); g.computeVertexNormals();
+          return { geometry: g, report: { ...full.report, outputTris: triCountOf(g) }, cellMm: d * f };
+        }
+      } else sm.delete?.();
+    }
+    base.delete?.();
+  }
+  // 2) Fallback for badly broken files: cluster + rebuild (smoother, loses fine detail).
   const r = emptyReport(geo);
-  // A uniform mesh with cell size h has ~2·A/h² triangles.
   const cell = Math.max(diag(geo) * 1e-5, Math.sqrt((2 * surfaceArea(geo)) / Math.max(1000, targetTris)));
   const geometry = await finishRepair(geo, cell, r, cell);
-  return { geometry, report: r, cellMm: cell };
+  return { geometry, report: { ...r, droppedBad: 0 }, cellMm: cell };
 }
 
 export type UpAxis = 'x' | 'y' | 'z';
