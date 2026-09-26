@@ -179,39 +179,50 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
   if (!(h > 0)) return null;
   const ox = bb.min.x - 2 * h, oy = bb.min.y - 2 * h, oz = bb.min.z - 2 * h;
   const nx = Math.ceil(size.x / h) + 4, ny = Math.ceil(size.y / h) + 4, nz = Math.ceil(size.z / h) + 4;
-  const hits: Array<Array<{ z: number; s: number }>> = new Array(nx * ny);
-  for (let t = 0; t < p.length; t += 9) {
-    const ax = p[t]!, ay = p[t + 1]!, az = p[t + 2]!, bx = p[t + 3]!, by = p[t + 4]!, bz = p[t + 5]!, cx = p[t + 6]!, cy = p[t + 7]!, cz = p[t + 8]!;
-    const d = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay); // 2× signed xy area
-    if (Math.abs(d) < 1e-14) continue;
-    const i0 = Math.max(0, Math.ceil((Math.min(ax, bx, cx) - ox) / h - 0.5)), i1 = Math.min(nx - 1, Math.floor((Math.max(ax, bx, cx) - ox) / h - 0.5));
-    const j0 = Math.max(0, Math.ceil((Math.min(ay, by, cy) - oy) / h - 0.5)), j1 = Math.min(ny - 1, Math.floor((Math.max(ay, by, cy) - oy) / h - 0.5));
-    for (let i = i0; i <= i1; i++) {
-      const x = ox + (i + 0.5) * h;
-      for (let j = j0; j <= j1; j++) {
-        const y = oy + (j + 0.5) * h;
-        const w1 = ((bx - x) * (cy - y) - (cx - x) * (by - y)) / d;
-        const w2 = ((cx - x) * (ay - y) - (ax - x) * (cy - y)) / d;
-        const w3 = 1 - w1 - w2;
-        if (w1 < 0 || w2 < 0 || w3 < 0) continue;
-        const z = w1 * az + w2 * bz + w3 * cz;
-        (hits[i * ny + j] ??= []).push({ z, s: d > 0 ? -1 : 1 }); // up-facing = leaving
+  const N = [nx, ny, nz], O = [ox, oy, oz];
+  const votes = new Uint8Array(nx * ny * nz);
+  // Cast columns along each axis and vote: directional leaks from holes or
+  // flipped faces only fool one axis, so the 2-of-3 majority removes streaks.
+  for (let ax = 0; ax < 3; ax++) {
+    const u = (ax + 1) % 3, v = (ax + 2) % 3;
+    const nu = N[u]!, nv = N[v]!, na = N[ax]!;
+    const hits: Array<Array<{ z: number; s: number }>> = new Array(nu * nv);
+    for (let t = 0; t < p.length; t += 9) {
+      const au = p[t + u]!, av = p[t + v]!, aa = p[t + ax]!;
+      const bu = p[t + 3 + u]!, bv = p[t + 3 + v]!, ba = p[t + 3 + ax]!;
+      const cu = p[t + 6 + u]!, cv = p[t + 6 + v]!, ca = p[t + 6 + ax]!;
+      const d = (bu - au) * (cv - av) - (cu - au) * (bv - av);
+      if (Math.abs(d) < 1e-14) continue;
+      const i0 = Math.max(0, Math.ceil((Math.min(au, bu, cu) - O[u]!) / h - 0.5)), i1 = Math.min(nu - 1, Math.floor((Math.max(au, bu, cu) - O[u]!) / h - 0.5));
+      const j0 = Math.max(0, Math.ceil((Math.min(av, bv, cv) - O[v]!) / h - 0.5)), j1 = Math.min(nv - 1, Math.floor((Math.max(av, bv, cv) - O[v]!) / h - 0.5));
+      for (let i = i0; i <= i1; i++) {
+        const x = O[u]! + (i + 0.5) * h;
+        for (let j = j0; j <= j1; j++) {
+          const y = O[v]! + (j + 0.5) * h;
+          const w1 = ((bu - x) * (cv - y) - (cu - x) * (bv - y)) / d;
+          const w2 = ((cu - x) * (av - y) - (au - x) * (cv - y)) / d;
+          const w3 = 1 - w1 - w2;
+          if (w1 < 0 || w2 < 0 || w3 < 0) continue;
+          (hits[i * nv + j] ??= []).push({ z: w1 * aa + w2 * ba + w3 * ca, s: d > 0 ? -1 : 1 });
+        }
+      }
+    }
+    const idx = [0, 0, 0];
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+      const hs = hits[i * nv + j];
+      if (!hs) continue;
+      hs.sort((q, r2) => q.z - r2.z);
+      let w = 0, e = 0;
+      idx[u] = i; idx[v] = j;
+      for (let k = 0; k < na; k++) {
+        const z = O[ax]! + (k + 0.5) * h;
+        while (e < hs.length && hs[e]!.z < z) { w += hs[e]!.s; e++; }
+        if (w > 0) { idx[ax] = k; votes[(idx[0]! * ny + idx[1]!) * nz + idx[2]!]!++; }
       }
     }
   }
   const occ = new Float32Array(nx * ny * nz);
-  for (let c = 0; c < nx * ny; c++) {
-    const hs = hits[c];
-    if (!hs) continue;
-    const ev = hs.sort((a, b) => a.z - b.z);
-    // Crossing a down-facing face enters (+1), an up-facing face leaves (−1).
-    let w = 0, e = 0;
-    for (let k = 0; k < nz; k++) {
-      const z = oz + (k + 0.5) * h;
-      while (e < ev.length && ev[e]!.z < z) { w += ev[e]!.s; e++; }
-      if (w > 0) occ[c * nz + k] = 1;
-    }
-  }
+  for (let q = 0; q < occ.length; q++) occ[q] = votes[q]! >= 2 ? 1 : 0;
   const val = (i: number, j: number, k: number) =>
     i < 0 || j < 0 || k < 0 || i >= nx || j >= ny || k >= nz ? 0 : occ[(i * ny + j) * nz + k]!;
   const sdf = (pt: number[]) => {
