@@ -1259,6 +1259,253 @@ export default function ControlPanel({
         </div>
       )}
 
+      {/* Material & Cost — rough pre-flight economics. Volumes come straight
+          from the generated piece meshes (divergence-theorem), so numbers
+          appear only after a successful generate. Prices are the user's own
+          currency unit — deliberately unitless in the UI. */}
+      {hasModel && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Material & Cost</div>
+
+          {!hasMold ? (
+            <div style={{
+              fontSize: fontSizes.xs,
+              color: colors.textDim,
+              lineHeight: 1.4,
+            }}>
+              Generate a mold to see material and cost estimates.
+            </div>
+          ) : state.moldMode === 'silicone' ? (
+            <>
+              <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+                Silicone price per litre
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={estimator.siliconePricePerLiter}
+                onChange={e => onEstimatorChange({
+                  siliconePricePerLiter: parseFloat(e.target.value) || 0,
+                })}
+                style={{
+                  width: '100%', marginBottom: spacing.md,
+                  padding: `${spacing.xs}px ${spacing.sm}px`,
+                  borderRadius: radii.sm, border: 'none',
+                  background: colors.viewportBg, boxShadow: shadows.inset,
+                  color: colors.textPrimary, fontSize: fontSizes.sm,
+                  fontFamily: 'inherit',
+                }}
+                aria-label="Silicone price per litre"
+              />
+              <div style={estStatRow}>
+                <span>Silicone volume</span>
+                <span>{state.siliconeVolumeCm3.toFixed(0)} cm³</span>
+              </div>
+              <div style={estStatRow}>
+                <span>Weight</span>
+                <span>{estimateSiliconeCost(state.siliconeVolumeCm3, estimator.siliconePricePerLiter).grams.toFixed(0)} g</span>
+              </div>
+              <div style={{ ...estStatRow, color: colors.textPrimary }}>
+                <span>Est. material cost</span>
+                <span>{estimateSiliconeCost(state.siliconeVolumeCm3, estimator.siliconePricePerLiter).cost.toFixed(2)}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+                Material
+              </label>
+              <select
+                value={estimator.material}
+                onChange={e => onEstimatorChange({ material: e.target.value as 'pla' | 'resin' })}
+                style={{
+                  width: '100%', marginBottom: spacing.sm,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.sm, border: 'none',
+                  background: colors.viewportBg, boxShadow: shadows.inset,
+                  color: colors.textPrimary, fontSize: fontSizes.sm,
+                  fontFamily: 'inherit',
+                }}
+                aria-label="Print material"
+              >
+                <option value="pla">PLA (filament)</option>
+                <option value="resin">Resin (MSLA)</option>
+              </select>
+
+              <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+                Price per kg
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={estimator.pricePerKg}
+                onChange={e => onEstimatorChange({ pricePerKg: parseFloat(e.target.value) || 0 })}
+                style={{
+                  width: '100%', marginBottom: spacing.md,
+                  padding: `${spacing.xs}px ${spacing.sm}px`,
+                  borderRadius: radii.sm, border: 'none',
+                  background: colors.viewportBg, boxShadow: shadows.inset,
+                  color: colors.textPrimary, fontSize: fontSizes.sm,
+                  fontFamily: 'inherit',
+                }}
+                aria-label="Price per kilogram"
+              />
+
+              {(() => {
+                const pieces = state.moldPieces;
+                const vols = pieces.map(p =>
+                  meshVolumeCm3(
+                    p.attributes.position.array as Float32Array,
+                    p.index ? (p.index.array as ArrayLike<number>) : null,
+                  ),
+                );
+                const ests = vols.map(v => estimatePieceCost(v, estimator.material, estimator.pricePerKg));
+                const grams = ests.reduce((a, e) => a + e.grams, 0);
+                const hours = ests.reduce((a, e) => a + e.hours, 0);
+                const cost = ests.reduce((a, e) => a + e.cost, 0);
+                const cm3 = vols.reduce((a, v) => a + v, 0);
+                return (
+                  <>
+                    <div style={estStatRow}>
+                      <span>Mold volume</span>
+                      <span>{cm3.toFixed(0)} cm³</span>
+                    </div>
+                    <div style={estStatRow}>
+                      <span>Material weight</span>
+                      <span>{grams.toFixed(0)} g</span>
+                    </div>
+                    <div style={estStatRow}>
+                      <span>Est. print time</span>
+                      <span>{hours >= 1 ? `${hours.toFixed(1)} h` : `${Math.round(hours * 60)} min`}</span>
+                    </div>
+                    <div style={{ ...estStatRow, color: colors.textPrimary }}>
+                      <span>Est. material cost</span>
+                      <span>{cost.toFixed(2)}</span>
+                    </div>
+                  </>
+                );
+              })()}
+            </>
+          )}
+
+          <div style={{
+            fontSize: fontSizes.xs,
+            color: colors.textDim,
+            lineHeight: 1.4,
+            marginTop: spacing.sm,
+          }}>
+            Rough estimate from mesh volume — not a slicer. Print time varies
+            with layer height, supports and infill.
+          </div>
+        </div>
+      )}
+
+      {/* Projects — browser-only save/load. The library lives in IndexedDB
+          (embeds the model geometry, so localStorage wouldn't fit); Export
+          writes a shareable .sirpam.json with everything inside. */}
+      {hasModel && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Projects</div>
+
+          <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
+            <button
+              type="button"
+              style={{
+                ...styles.button, ...styles.secondaryBtn, flex: 1,
+                ...(projectBusy ? styles.disabledBtn : {}),
+              }}
+              onClick={onSaveProject}
+              disabled={projectBusy}
+            >
+              Save Project
+            </button>
+            <button
+              type="button"
+              style={{
+                ...styles.button, ...styles.secondaryBtn, flex: 1,
+                ...(projectBusy ? styles.disabledBtn : {}),
+              }}
+              onClick={onImportProject}
+              disabled={projectBusy}
+            >
+              Import…
+            </button>
+          </div>
+
+          {projects.length === 0 ? (
+            <div style={{
+              fontSize: fontSizes.xs,
+              color: colors.textDim,
+              lineHeight: 1.4,
+            }}>
+              No saved projects yet. Saving keeps the model and every mold
+              setting in this browser.
+            </div>
+          ) : (
+            <div>
+              {projects.map(p => (
+                <div
+                  key={p.id}
+                  style={{
+                    padding: `${spacing.sm}px ${spacing.md}px`,
+                    borderRadius: radii.sm,
+                    background: colors.viewportBg,
+                    boxShadow: shadows.inset,
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'baseline', gap: spacing.sm,
+                  }}>
+                    <span style={{
+                      color: colors.textPrimary,
+                      fontSize: fontSizes.sm,
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }} title={p.name}>
+                      {p.name}
+                    </span>
+                    <span style={{ color: colors.textDim, fontSize: fontSizes.xs, flexShrink: 0 }}>
+                      {new Date(p.savedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.sm }}>
+                    <button
+                      type="button"
+                      style={{ ...styles.button, ...styles.primaryBtn, flex: 1, padding: `${spacing.xs}px 0` }}
+                      onClick={() => onOpenProject(p.id)}
+                      disabled={projectBusy}
+                    >
+                      Open
+                    </button>
+                    <button
+                      type="button"
+                      style={{ ...styles.button, ...styles.secondaryBtn, flex: 1, padding: `${spacing.xs}px 0` }}
+                      onClick={() => onExportProject(p.id)}
+                      disabled={projectBusy}
+                    >
+                      Export
+                    </button>
+                    <button
+                      type="button"
+                      style={{ ...styles.button, ...styles.secondaryBtn, flex: 1, padding: `${spacing.xs}px 0` }}
+                      onClick={() => onDeleteProject(p.id)}
+                      disabled={projectBusy}
+                      aria-label={`Delete project ${p.name}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* View Options — promoted from hasMold-only to hasModel-and-up because
           Wireframe is useful on the *loaded* model too (CSG debugging, topology
           inspection). Exploded/Show Original still require a mold to be
