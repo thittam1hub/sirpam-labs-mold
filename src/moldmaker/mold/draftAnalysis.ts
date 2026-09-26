@@ -87,7 +87,9 @@ export function classifyScore(score: number): DraftClass {
  */
 const nonIndexedPositionsCache = new WeakMap<THREE.BufferGeometry, Float32Array>();
 
-function getNonIndexedPositions(source: THREE.BufferGeometry): Float32Array {
+// Exported for the split-line preview, which shares the cache so both
+// overlays can rebuild on slider ticks without re-expanding the geometry.
+export function getNonIndexedPositions(source: THREE.BufferGeometry): Float32Array {
   if (!source.index) {
     // Non-indexed already — caller can use the buffer directly. Don't cache;
     // the array is already owned by `source` and will be freed with it.

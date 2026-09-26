@@ -1,6 +1,6 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import * as THREE from 'three';
-import type { MoldBoxShape, SiliconeMoldType } from '../types';
+import type { Axis, MoldBoxShape, SiliconeMoldType } from '../types';
 import type { MeshRepairLog } from './validateMesh';
 
 /**
@@ -13,8 +13,13 @@ import type { MeshRepairLog } from './validateMesh';
  */
 
 export type WorkerRequest = {
-  /** 'generate' = rigid two-part casting mold, 'silicone' = silicone tooling. */
-  type: 'generate' | 'silicone';
+  /**
+   * 'generate' = rigid two-part casting mold, 'silicone' = silicone tooling,
+   * 'suggest'  = split advisor sweep (parting-setup recommendation only —
+   *              runs the same draft classification the heatmap uses, but
+   *              off the UI thread; see mold/suggestParting.ts).
+   */
+  type: 'generate' | 'silicone' | 'suggest';
   /** Client-supplied correlation id, echoed back on the response. */
   id: number;
   payload: {
@@ -136,6 +141,17 @@ export type WorkerResponse =
          *  present (even if no repairs were needed) so the main thread
          *  can decide whether to surface a toast. */
         repairs: MeshRepairLog;
+      };
+    }
+  | {
+      type: 'suggestResult';
+      id: number;
+      payload: {
+        axis: Axis;
+        offset: number;
+        cutAngle: number;
+        /** True-undercut fraction of the recommended setup, 0..1. */
+        undercut: number;
       };
     }
   | {
