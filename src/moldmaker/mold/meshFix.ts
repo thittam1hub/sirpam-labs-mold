@@ -223,6 +223,17 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
   }
   const occ = new Float32Array(nx * ny * nz);
   for (let q = 0; q < occ.length; q++) occ[q] = votes[q]! >= 2 ? 1 : 0;
+  // Light blur along each axis: gives a smooth field so the surface never
+  // lands exactly on grid points (which makes zero-area slivers).
+  const strides = [ny * nz, nz, 1], dims = [nx, ny, nz];
+  for (let a = 0; a < 3; a++) {
+    const src2 = occ.slice(), st = strides[a]!, dm = dims[a]!;
+    for (let q = 0; q < occ.length; q++) {
+      const c = Math.floor(q / st) % dm;
+      const lo = c > 0 ? src2[q - st]! : 0, hi = c < dm - 1 ? src2[q + st]! : 0;
+      occ[q] = 0.25 * lo + 0.5 * src2[q]! + 0.25 * hi;
+    }
+  }
   const val = (i: number, j: number, k: number) =>
     i < 0 || j < 0 || k < 0 || i >= nx || j >= ny || k >= nz ? 0 : occ[(i * ny + j) * nz + k]!;
   const sdf = (pt: number[]) => {
@@ -232,7 +243,7 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
     let s = 0;
     for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) for (let c = 0; c < 2; c++)
       s += val(i + a, j + b, k + c) * (a ? u : 1 - u) * (b ? v : 1 - v) * (c ? w : 1 - w);
-    return s - 0.5;
+    return s - 0.4937;
   };
   const wasm = await getManifold();
   const m = wasm.Manifold.levelSet(sdf, { min: [ox, oy, oz], max: [ox + nx * h, oy + ny * h, oz + nz * h] }, h, 0);
@@ -242,7 +253,7 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
   const g = manifoldToGeometry(sm);
   if (sm !== m) sm.delete?.();
   m.delete?.();
-  return collapseSlivers(g);
+  return g;
 }
 
 /**
