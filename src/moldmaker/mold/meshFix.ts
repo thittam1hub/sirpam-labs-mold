@@ -131,7 +131,7 @@ function diag(geo: THREE.BufferGeometry): number {
   return geo.boundingBox!.getSize(new THREE.Vector3()).length() || 1;
 }
 
-async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport): Promise<THREE.BufferGeometry> {
+async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport, rebuildCell?: number): Promise<THREE.BufferGeometry> {
   const w = weld(geo, tol);
   r.weldedVerts = w.verts;
   let g = toGeometry(w.pos, cleanTopology(w.pos, w.tris, r));
@@ -147,7 +147,10 @@ async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairRep
   } catch { r.solidOk = false; }
   if (!r.solidOk) {
     // Too damaged to patch: rebuild the surface from an inside/outside grid.
-    const rebuilt = await voxelRebuild(g.index ? g : g, 220);
+    g.computeBoundingBox();
+    const maxDim = Math.max(...g.boundingBox!.getSize(new THREE.Vector3()).toArray());
+    const cells = rebuildCell ? Math.min(260, Math.max(80, Math.round(maxDim / (rebuildCell * 1.6)))) : 180;
+    const rebuilt = await voxelRebuild(g, cells);
     if (rebuilt) { g = rebuilt; r.solidOk = true; r.rebuilt = true; }
   }
   r.outputTris = triCountOf(g);
@@ -224,7 +227,7 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
   const m = wasm.Manifold.levelSet(sdf, { min: [ox, oy, oz], max: [ox + nx * h, oy + ny * h, oz + nz * h] }, h, 0);
   if (m.isEmpty()) return null;
   // levelSet makes very dense uniform triangles; collapse flat areas.
-  const sm = typeof m.simplify === 'function' ? m.simplify(h * 0.2) : m;
+  const sm = typeof m.simplify === 'function' ? m.simplify(h * 0.3) : m;
   const g = manifoldToGeometry(sm);
   if (sm !== m) sm.delete?.();
   m.delete?.();
@@ -258,7 +261,7 @@ export async function reduceDetail(geo: THREE.BufferGeometry, targetTris: number
   const r = emptyReport(geo);
   // A uniform mesh with cell size h has ~2·A/h² triangles.
   const cell = Math.max(diag(geo) * 1e-5, Math.sqrt((2 * surfaceArea(geo)) / Math.max(1000, targetTris)));
-  const geometry = await finishRepair(geo, cell, r);
+  const geometry = await finishRepair(geo, cell, r, cell);
   return { geometry, report: r, cellMm: cell };
 }
 
