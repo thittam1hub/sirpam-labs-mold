@@ -35,6 +35,8 @@ import {
   applyPryPockets,
   applyRadialSplit,
   lateralToWorld,
+  buildHollowCore,
+  buildRunners,
 } from './moldFeatures';
 
 /**

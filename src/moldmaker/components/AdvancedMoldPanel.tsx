@@ -14,6 +14,9 @@ export interface Tier2Settings {
   cavitySpacingMm: number;
   orientForPrint: boolean;
   castingMaterial: CastingMaterialId;
+  /** Optional so projects saved before these existed still load. */
+  hollowCore?: { enabled: boolean; wallMm: number; opening: 'top' | 'bottom' };
+  runner?: boolean;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -25,6 +28,8 @@ export const DEFAULT_TIER2: Tier2Settings = {
   cavitySpacingMm: 8,
   orientForPrint: true,
   castingMaterial: 'pu_resin',
+  hollowCore: { enabled: false, wallMm: 3, opening: 'top' },
+  runner: false,
 };
 
 interface Props {
@@ -158,11 +163,48 @@ export default function AdvancedMoldPanel(p: Props) {
             <Slider label="Gap between copies" value={t.cavitySpacingMm} min={3} max={30} step={1} unit=" mm"
               onChange={v => onChange({ cavitySpacingMm: v })} />
           )}
+          {isRigid && t.cavityCount > 1 && (
+            <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.sm }}>
+              <input type="checkbox" checked={!!t.runner} onChange={e => onChange({ runner: e.target.checked })} />
+              One pour hole with runners
+            </label>
+          )}
           <div style={s.hint}>
-            Cast several parts per pour. {isOpenBox ? '' : 'Each cavity gets its own sprue.'}
+            Cast several parts per pour. {isOpenBox ? '' : (isRigid && t.runner && t.cavityCount > 1)
+              ? 'A single central pour hole feeds every cavity through channels on the split line.'
+              : 'Each cavity gets its own sprue.'}
           </div>
         </>
       )}
+
+      {isRigid && (() => {
+        const h = t.hollowCore ?? DEFAULT_TIER2.hollowCore!;
+        const set = (patch: Partial<typeof h>) => onChange({ hollowCore: { ...h, ...patch } });
+        return (
+          <>
+            <div style={s.sub}>Hollow casting (vases, cups)</div>
+            <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center' }}>
+              <input type="checkbox" checked={h.enabled} onChange={e => set({ enabled: e.target.checked })} />
+              Add a printable inner core
+            </label>
+            {h.enabled && (
+              <>
+                <Slider label="Cast wall thickness" value={h.wallMm} min={1} max={15} step={0.5} unit=" mm"
+                  onChange={v => set({ wallMm: v })} />
+                <div style={s.row}>
+                  <button style={s.chip(h.opening === 'top')} onClick={() => set({ opening: 'top' })}>Opening on top</button>
+                  <button style={s.chip(h.opening === 'bottom')} onClick={() => set({ opening: 'bottom' })}>Opening on bottom</button>
+                </div>
+              </>
+            )}
+            <div style={s.hint}>
+              {h.enabled && t.cavityCount > 1
+                ? 'Only works with a single copy — turn the tray off to use it.'
+                : 'Casts the part hollow: a core piece slides in through the opening and its flange sits on the mold. Pour hole moves into the wall.'}
+            </div>
+          </>
+        );
+      })()}
 
       {isRigid && (
         <>
@@ -222,5 +264,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner]);
 }
