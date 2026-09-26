@@ -65,6 +65,8 @@ export default function TopBar(p: Props) {
         <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
         <button type="button" style={pill()} onClick={p.onSample}>Try sample</button>
         <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
+        <a href="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</a>
+        <a href="/gallery" style={{ ...pill(), textDecoration: 'none' }}>Gallery</a>
         <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
       </div>
       <div className="sirpam-show-sm" style={{ position: 'relative' }}>
