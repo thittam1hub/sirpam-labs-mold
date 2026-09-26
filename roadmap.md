@@ -15,9 +15,9 @@
 - [x] Tier 1: save/load projects (IndexedDB + .sirpam.json export/import)
 - [x] Tier 2: seal type (pins/tongue & groove), pry slots, casting material presets, per-side silicone thickness, gate advisor, multi-cavity tray, radial splits, auto-orient on export — browser-verified
 
-- [ ] Hollow core molds (printable core for vases/cups)
-- [ ] Runner system for multi-cavity trays
-- [ ] Guided first-time tutorial
+- [x] Hollow core molds (printable core for vases/cups)
+- [x] Runner system for multi-cavity trays
+- [x] Guided first-time tutorial
 
 ## Done
 - [x] Rebrand to Sirpam 3D Labs Mold (Soft Neumorphic Lab: light shell, raised/inset shadows, ember #E8632B, Space Grotesk + DM Sans, brand wordmark, title/meta) — verified in browser, no errors
