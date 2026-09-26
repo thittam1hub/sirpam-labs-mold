@@ -618,6 +618,181 @@ export default function App() {
     }
   }, [state.originalGeometry, state.autoDetecting, autoDetectPlane, telemetry]);
 
+  // ── Split advisor (worker-side parting-setup sweep) ──
+  const handleSuggestParting = useCallback(async () => {
+    if (!state.originalGeometry || !state.boundingBox || state.suggesting) return;
+    setState(prev => ({ ...prev, suggesting: true, errorMessage: null }));
+    try {
+      const result = await suggestParting(state.originalGeometry, state.boundingBox);
+      setState(prev => ({
+        ...prev,
+        axis: result.axis,
+        planeOffset: result.offset,
+        cutAngle: result.cutAngle,
+        suggesting: false,
+        infoMessage:
+          `Best split found: ${result.axis.toUpperCase()} axis, ` +
+          `${Math.round(result.offset * 100)}% up` +
+          (result.cutAngle !== 0 ? `, ${result.cutAngle}° tilt` : '') +
+          ` — ${result.undercut < 0.005 ? 'no' : (result.undercut * 100).toFixed(1) + '%'} undercut faces. ` +
+          'Adjust if you like, then Generate.',
+      }));
+    } catch (err) {
+      console.error('Split advisor failed:', err);
+      setState(prev => ({
+        ...prev,
+        suggesting: false,
+        errorMessage: err instanceof Error ? err.message : 'Split advisor failed.',
+      }));
+    }
+  }, [state.originalGeometry, state.boundingBox, state.suggesting, suggestParting]);
+
+  // ── Saved-project handlers (IndexedDB, browser-only) ──
+  const handleSaveProject = useCallback(async () => {
+    const geo = state.originalGeometry;
+    if (!geo || projectBusy) return;
+    const defaultName = state.fileName.replace(/\.[^.]+$/, '') || 'Untitled project';
+    const name = window.prompt('Project name', defaultName)?.trim();
+    if (!name) return; // cancelled or empty name
+    setProjectBusy(true);
+    try {
+      // Overwrite an existing project of the same name instead of piling up
+      // duplicates — the library stays one-row-per-project.
+      const existing = projects.find(p => p.name === name);
+      const positionAttr = geo.attributes.position;
+      if (!positionAttr) throw new Error('Model has no geometry to save.');
+      const positions = new Float32Array(positionAttr.array as Float32Array);
+      const index = geo.index
+        ? new Uint32Array(geo.index.array as Uint16Array | Uint32Array)
+        : null;
+      const params: ProjectParams = {
+        axis: state.axis,
+        planeOffset: state.planeOffset,
+        cutAngle: state.cutAngle,
+        wallThicknessRatio: state.wallThicknessRatio,
+        clearanceMm: state.clearanceMm,
+        sprueDiameterMm: state.sprueDiameterMm,
+        moldBoxShape: state.moldBoxShape,
+        sprueOverride: { ...state.sprueOverride },
+        additionalPlanes: state.additionalPlanes.map(p => ({ ...p })),
+        isHollow: state.isHollow,
+        moldMode: state.moldMode,
+        siliconeType: state.siliconeType,
+        siliconeMarginMm: state.siliconeMarginMm,
+        skinThicknessMm: state.skinThicknessMm,
+        includeCore: state.includeCore,
+        formFit: state.formFit,
+        scale: state.scale,
+        selectedPrinterId: state.selectedPrinterId,
+      };
+      await saveProject({
+        id: existing?.id ?? newProjectId(),
+        name,
+        savedAt: new Date().toISOString(),
+        fileName: state.fileName || 'model.stl',
+        positions,
+        index,
+        params,
+      });
+      refreshProjects();
+      setState(prev => ({ ...prev, infoMessage: `Project "${name}" saved.` }));
+    } catch (err) {
+      console.error('Save project failed:', err);
+      setState(prev => ({
+        ...prev,
+        errorMessage: err instanceof Error ? err.message : 'Could not save project.',
+      }));
+    } finally {
+      setProjectBusy(false);
+    }
+  }, [state, projects, projectBusy, refreshProjects]);
+
+  /** Rebuild a BufferGeometry from stored typed arrays (save/load/import). */
+  const geometryFromProject = useCallback(
+    (positions: Float32Array, index: Uint32Array | null) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      if (index) geo.setIndex(new THREE.BufferAttribute(index, 1));
+      return geo;
+    },
+    [],
+  );
+
+  const handleOpenProject = useCallback(async (id: string) => {
+    if (projectBusy) return;
+    setProjectBusy(true);
+    try {
+      const project = await getProject(id);
+      if (!project) throw new Error('Project not found.');
+      // Re-run the shared ingest path (center, bbox, normals), then layer the
+      // saved parameters on top of the fresh state.
+      commitGeometry(geometryFromProject(project.positions, project.index), project.fileName);
+      setState(prev => ({
+        ...prev,
+        ...project.params,
+        infoMessage: `Project "${project.name}" opened.`,
+      }));
+    } catch (err) {
+      console.error('Open project failed:', err);
+      setState(prev => ({
+        ...prev,
+        errorMessage: err instanceof Error ? err.message : 'Could not open project.',
+      }));
+    } finally {
+      setProjectBusy(false);
+    }
+  }, [projectBusy, commitGeometry, geometryFromProject]);
+
+  const handleDeleteProject = useCallback(async (id: string) => {
+    try {
+      await deleteProject(id);
+      refreshProjects();
+ecatch (err) {
+      console.error('Delete project failed:', err);
+      setState(prev => ({
+        ...prev,
+        errorMessage: err instanceof Error ? err.message : 'Could not delete project.',
+      }));
+    }
+  }, [refreshProjects]);
+
+  const handleExportProject = useCallback(async (id: string) => {
+    try {
+      const project = await getProject(id);
+      if (!project) throw new Error('Project not found.');
+      downloadProjectFile(project);
+    } catch (err) {
+      console.error('Export project failed:', err);
+      setState(prev => ({
+        ...prev,
+        errorMessage: err instanceof Error ? err.message : 'Could not export project.',
+      }));
+    }
+  }, []);
+
+  const handleImportProject = useCallback(async () => {
+    if (projectBusy) return;
+    try {
+      const imported = await pickProjectFile();
+      if (!imported) return; // picker cancelled
+      commitGeometry(
+        geometryFromProject(imported.positions, imported.index),
+        imported.fileName,
+      );
+      setState(prev => ({
+        ...prev,
+        ...imported.params,
+        infoMessage: `Project "${imported.name}" imported.`,
+      }));
+    } catch (err) {
+      console.error('Import project failed:', err);
+      setState(prev => ({
+        ...prev,
+        errorMessage: err instanceof Error ? err.message : 'Could not import project file.',
+      }));
+    }
+  }, [projectBusy, commitGeometry, geometryFromProject]);
+
   const handleExport = useCallback(async (format: 'stl' | 'obj' | '3mf' | 'step') => {
     if (state.moldPieces.length === 0) return;
     // STEP runs for ~60s in a worker — flip the busy flag so the panel can
