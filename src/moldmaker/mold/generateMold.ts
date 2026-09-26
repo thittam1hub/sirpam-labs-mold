@@ -35,6 +35,8 @@ import {
   applyPryPockets,
   applyRadialSplit,
   lateralToWorld,
+  buildHollowCore,
+  buildRunners,
 } from './moldFeatures';
 
 /**
@@ -409,12 +411,27 @@ export async function generateMold(
   const sprueMargin = sprueTopRadius + wallThickness * 0.5;
   const ventMargin = ventRadius + wallThickness * 0.3;
 
+  // Hollow core (Tier 3): printable inner core for vases/cups (single cavity only).
+  const hollow = extras.hollowCore && cavityCenters.length <= 1
+    ? buildHollowCore(wasm, {
+        model: modelManifold, axis, envMin: envelope.moldMin, envSize: envelope.moldSize,
+        wallMm: extras.hollowCore.wallMm, opening: extras.hollowCore.opening,
+        flangeMm: Math.max(2, wallThickness * 0.5),
+      })
+    : null;
+  const useRunner = !!extras.runner && cavityCenters.length > 1;
+  const trayHub = {
+    a: cavityCenters.reduce((t, c) => t + c.a, 0) / Math.max(1, cavityCenters.length),
+    b: cavityCenters.reduce((t, c) => t + c.b, 0) / Math.max(1, cavityCenters.length),
+  };
   const channels = computeChannelPositionsForEnvelope(
     envelope, boundingBox, splitPos, geometry,
     { sprueMargin, ventMargin },
     cutAngle,
-    cavityCenters.length > 1
-      ? { sprueOverride: cavityCenters[0] }
+    hollow
+      ? { sprueOverride: hollow.sprueLateral }
+      : cavityCenters.length > 1
+      ? { sprueOverride: useRunner ? trayHub : cavityCenters[0] }
       : options.sprueOverride ? { sprueOverride: options.sprueOverride } : {},
   );
 
@@ -453,7 +470,7 @@ export async function generateMold(
     }
 
     // Multi-cavity tray: one sprue per extra cavity, same depth/taper.
-    for (const c of cavityCenters.slice(1)) {
+    for (const c of useRunner ? [] : cavityCenters.slice(1)) {
       const pos = lateralToWorld(axis, c.a, c.b, channels.spruePos[primaryAxisIndex(axis)]);
       topResult = topResult.subtract(
         Manifold.cylinder(channels.sprueHeight, sprueGateRadius, sprueTopRadius, 24)
@@ -476,6 +493,19 @@ export async function generateMold(
   // to, and would change the meaning of "top half" mid-pipeline. By doing
   // primary-plus-features first, the sequential cuts become a pure topology
   // operation on already-finished mold geometry.
+  if (useRunner) {
+    const runners = buildRunners(wasm, {
+      axis, hub: trayHub, centers: cavityCenters, splitPos, radius: Math.max(1.5, sprueGateRadius),
+    });
+    if (runners) {
+      topResult = topResult.subtract(runners);
+      bottomResult = bottomResult.subtract(runners);
+    }
+  }
+  if (hollow) {
+    topResult = topResult.subtract(hollow.column);
+    bottomResult = bottomResult.subtract(hollow.column);
+  }
   let pieces: any[] = [topResult, bottomResult];
 
   // Pry pockets (Tier 2) on the primary parting line.
@@ -532,6 +562,8 @@ export async function generateMold(
     pieces = applyRadialSplit(pieces, { axis, center, segments: radial }).pieces;
   }
 
+  pieces = pieces.filter(p => !p.isEmpty());
+  if (hollow) pieces.push(hollow.core);
   const pieceGeos = pieces.map(p => manifoldToGeometry(p));
 
   return { pieces: pieceGeos, repairs };

@@ -27,6 +27,7 @@ import {
   type ProjectMeta, type ProjectParams,
 } from './services/projectStorage';
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
+import GuidedTour from './components/GuidedTour';
 
 export type { Axis } from './types';
 
@@ -508,6 +509,10 @@ export default function App() {
         ? { top: t2.siliconeSides.top, bottom: t2.siliconeSides.bottom, sides: t2.siliconeSides.sides }
         : undefined,
       cavityCenters: tray ? tray.centers : undefined,
+      hollowCore: params.moldMode !== 'silicone' && t2.hollowCore?.enabled
+        ? { wallMm: t2.hollowCore.wallMm, opening: t2.hollowCore.opening }
+        : undefined,
+      runner: tray && params.moldMode !== 'silicone' ? !!t2.runner : undefined,
     };
 
     try {
@@ -1484,6 +1489,8 @@ export default function App() {
           configured with a telemetry host AND the user hasn't yet been
           asked. Rendered outside the main layout flow so it can overlay
           everything including the control panel. */}
+      <GuidedTour />
+
       {telemetryModalOpen && (
         <FirstRunTelemetryModal
           onAllow={() => {

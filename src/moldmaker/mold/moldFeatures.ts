@@ -22,6 +22,10 @@ export interface MoldExtras {
   siliconeMargins?: { top: number; bottom: number; sides: number };
   /** Multi-cavity tray: lateral (a,b) centre of every cavity (one sprue each). */
   cavityCenters?: Array<{ a: number; b: number }>;
+  /** Hollow casting: printable core that forms the inside of a vase/cup. */
+  hollowCore?: { wallMm: number; opening: 'top' | 'bottom' };
+  /** Multi-cavity tray: one central sprue feeding every cavity via runners. */
+  runner?: boolean;
 }
 
 function box(wasm: any, min: THREE.Vector3, max: THREE.Vector3) {
@@ -208,4 +212,74 @@ export function lateralToWorld(axis: Axis, a: number, b: number, primaryValue: n
   p[la] = a;
   p[lb] = b;
   return p;
+}
+
+const cube = (wasm: any, min: number[], max: number[]) =>
+  wasm.Manifold.cube([max[0]! - min[0]!, max[1]! - min[1]!, max[2]! - min[2]!], false)
+    .translate([min[0]!, min[1]!, min[2]!]);
+
+/**
+ * Hollow core: inset copy of the part (uniform cast wall `wallMm`) that is
+ * open toward `opening`, joined by a column to a flange that rests on the
+ * mold's outer face. Returns the printable core plus the column that must be
+ * cut out of the mold pieces so the core can be inserted. Null if the part
+ * is too thin for the requested wall.
+ */
+export function buildHollowCore(wasm: any, o: {
+  model: any; axis: Axis; envMin: THREE.Vector3; envSize: THREE.Vector3;
+  wallMm: number; opening: 'top' | 'bottom'; flangeMm: number;
+}): { core: any; column: any; sprueLateral: { a: number; b: number } } | null {
+  const bb = o.model.boundingBox();
+  const mn = bb.min as number[], mx = bb.max as number[];
+  const p = primaryAxisIndex(o.axis);
+  const [la, lb] = lateralAxisIndices(o.axis);
+  const w = o.wallMm;
+  const size = [0, 1, 2].map(i => mx[i]! - mn[i]!);
+  const top = o.opening === 'top';
+  const anchor = [0, 1, 2].map(i => (mn[i]! + mx[i]!) / 2);
+  anchor[p] = top ? mx[p]! : mn[p]!;
+  const k = [0, 1, 2].map(i => (i === p ? (size[i]! - w) / size[i]! : (size[i]! - 2 * w) / size[i]!));
+  if (k.some(v => !(v > 0.1))) return null;
+  const inner = o.model
+    .translate([-anchor[0]!, -anchor[1]!, -anchor[2]!])
+    .scale(k as [number, number, number])
+    .translate(anchor as [number, number, number]);
+  // Rim slab of the inner solid, hulled up past the mold face = insertion column.
+  const envMin = [o.envMin.x, o.envMin.y, o.envMin.z];
+  const envMax = [o.envMin.x + o.envSize.x, o.envMin.y + o.envSize.y, o.envMin.z + o.envSize.z];
+  const slabMin = [...envMin].map(v => v - 1), slabMax = [...envMax].map(v => v + 1);
+  const rim = anchor[p]!;
+  if (top) { slabMin[p] = rim - Math.max(w, 0.5); slabMax[p] = rim; }
+  else { slabMin[p] = rim; slabMax[p] = rim + Math.max(w, 0.5); }
+  const slab = inner.intersect(cube(wasm, slabMin, slabMax));
+  if (slab.isEmpty()) return null;
+  const face = top ? envMax[p]! : envMin[p]!;
+  const shift = [0, 0, 0]; shift[p] = (top ? 1 : -1) * (Math.abs(face - rim) + o.flangeMm * 0.5);
+  const column = wasm.Manifold.hull([slab, slab.translate(shift as [number, number, number])]);
+  const cb = column.boundingBox();
+  const fMin = [...(cb.min as number[])], fMax = [...(cb.max as number[])];
+  fMin[la] -= w * 2; fMax[la] += w * 2; fMin[lb] -= w * 2; fMax[lb] += w * 2;
+  if (top) { fMin[p] = face; fMax[p] = face + o.flangeMm; }
+  else { fMax[p] = face; fMin[p] = face - o.flangeMm; }
+  const core = inner.add(column).add(cube(wasm, fMin, fMax));
+  // Pour between core and outer wall: midway through the wall on the +a side.
+  const sprueLateral = { a: mx[la]! - w / 2, b: anchor[lb]! };
+  return { core, column, sprueLateral };
+}
+
+/** Runner channels (round, centred on the parting plane) from hub to each cavity. */
+export function buildRunners(wasm: any, o: {
+  axis: Axis; hub: { a: number; b: number }; centers: Array<{ a: number; b: number }>;
+  splitPos: number; radius: number;
+}): any | null {
+  let acc: any = null;
+  const s = (c: { a: number; b: number }) =>
+    wasm.Manifold.sphere(o.radius, 16).translate(lateralToWorld(o.axis, c.a, c.b, o.splitPos));
+  const hub = s(o.hub);
+  for (const c of o.centers) {
+    if (Math.hypot(c.a - o.hub.a, c.b - o.hub.b) < 1e-3) continue;
+    const r = wasm.Manifold.hull([hub, s(c)]);
+    acc = acc ? acc.add(r) : r;
+  }
+  return acc;
 }
