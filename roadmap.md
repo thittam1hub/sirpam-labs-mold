@@ -22,3 +22,8 @@
 ## Done
 - [x] Rebrand to Sirpam 3D Labs Mold (Soft Neumorphic Lab: light shell, raised/inset shadows, ember #E8632B, Space Grotesk + DM Sans, brand wordmark, title/meta) — verified in browser, no errors
 - [x] UI restructure: top toolbar + 5-step guided panel
+
+## Research roadmap (Sep 26, second round)
+- [x] Phase A: shrink & fit compensation, leak-proof print guide, surface finish advisor, mold life estimate, wall-thickness view
+- [x] Phase B: logo/text emboss, casting presets (chocolate/candle/soap/concrete/resin), wax tree builder, big-prop bed splitter, dental/medical model base
+- [ ] Phase C: fill preview, print-farm plate packer, text/photo to mold (needs user go-ahead; AI needs Lovable Cloud)
