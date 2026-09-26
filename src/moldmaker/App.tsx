@@ -27,6 +27,7 @@ import {
   type ProjectMeta, type ProjectParams,
 } from './services/projectStorage';
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
+import GuidedTour from './components/GuidedTour';
 
 export type { Axis } from './types';
 
@@ -1488,6 +1489,8 @@ export default function App() {
           configured with a telemetry host AND the user hasn't yet been
           asked. Rendered outside the main layout flow so it can overlay
           everything including the control panel. */}
+      <GuidedTour />
+
       {telemetryModalOpen && (
         <FirstRunTelemetryModal
           onAllow={() => {
