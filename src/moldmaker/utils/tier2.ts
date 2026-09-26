@@ -174,7 +174,7 @@ export function buildCavityTray(
   const centers: Array<{ a: number; b: number }> = [];
   for (let k = 0; k < count; k++) {
     const r = Math.floor(k / cols), c = k % cols;
-    const off = [0, 0, 0];
+    const off: [number, number, number] = [0, 0, 0];
     off[la] = (c - (cols - 1) / 2) * stepA;
     off[lb] = (r - (rows - 1) / 2) * stepB;
     const base = k * srcPos.length;
@@ -208,7 +208,7 @@ export function orientForPrint(geo: THREE.BufferGeometry): THREE.BufferGeometry 
   ];
   const cos45 = Math.cos(Math.PI / 4);
   const n = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
-  let best = downs[0];
+  let best = downs[0]!;
   let bestScore = Infinity;
   for (const d of downs) {
     let minH = Infinity;
