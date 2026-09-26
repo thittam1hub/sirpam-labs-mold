@@ -19,6 +19,7 @@ import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts } fr
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
+import { repairModel, describeRepair } from './mold/meshFix';
 import { useTelemetry } from './services/useTelemetry';
 import { buildEvent } from './services/telemetryEvents';
 import {
@@ -498,6 +499,9 @@ export default function App() {
     e.dataTransfer.dropEffect = 'copy';
   }, []);
 
+  const autoRepairTried = useRef(false);
+  const retryAfterRepair = useRef(false);
+  const pendingAutoRepairNote = useRef<string | null>(null);
   const handleGenerate = useCallback(async () => {
     if (!state.originalGeometry || !state.boundingBox) return;
     // Concurrent-click guard: even though the button is disabled, an Enter-key
@@ -621,8 +625,10 @@ export default function App() {
         generatedParams: params,
         generating: false,
         showOriginal: false,
-        infoMessage: repairNote,
+        infoMessage: pendingAutoRepairNote.current ?? repairNote,
       }));
+      pendingAutoRepairNote.current = null;
+      autoRepairTried.current = false;
       // Telemetry: mold_generated (success). `axisUsed` lets us spot whether
       // Z dominates (it will) or any axis is unexpectedly common — a signal
       // about auto-detect quality and the default axis choice.
@@ -648,12 +654,30 @@ export default function App() {
           failureReason: 'csg_failed',
         }),
       );
+      const msg = err instanceof Error ? err.message : '';
+      // Auto-repair: broken-surface failures are fixed and retried once
+      // automatically instead of only being flagged.
+      if (!autoRepairTried.current && /non-manifold|not manifold|watertight/i.test(msg) && !tray) {
+        autoRepairTried.current = true;
+        setState(prev => ({ ...prev, infoMessage: 'Broken spots found — repairing the model automatically…' }));
+        try {
+          const { geometry: fixed, report } = await repairModel(state.originalGeometry);
+          if (report.solidOk) {
+            fixed.computeBoundingBox();
+            undoGeo.current = state.originalGeometry;
+            setCanUndo(true);
+            pendingAutoRepairNote.current = `Auto-repaired before making the mold: ${describeRepair(report)}.`;
+            setState(prev => ({ ...prev, generating: false, originalGeometry: fixed, boundingBox: fixed.boundingBox!.clone(), errorMessage: null }));
+            retryAfterRepair.current = true;
+            return;
+          }
+        } catch (e) { console.error('Auto-repair failed:', e); }
+      }
+      autoRepairTried.current = false;
       setState(prev => ({
         ...prev,
         generating: false,
-        errorMessage: err instanceof Error
-          ? err.message
-          : 'Mold generation failed. The model may not be watertight.',
+        errorMessage: msg || 'Mold generation failed. The model may not be watertight.',
       }));
     }
   }, [
@@ -666,6 +690,14 @@ export default function App() {
     state.skinThicknessMm, state.includeCore, state.formFit, state.tier2,
     state.generating, generateMold, generateSilicone, telemetry,
   ]);
+
+  // Retry the mold once the auto-repaired model is in state.
+  useEffect(() => {
+    if (retryAfterRepair.current && state.originalGeometry && !state.generating) {
+      retryAfterRepair.current = false;
+      void handleGenerate();
+    }
+  }, [state.originalGeometry, state.generating, handleGenerate]);
 
   const handleAutoDetect = useCallback(async () => {
     if (!state.originalGeometry) return;
