@@ -12,3 +12,4 @@
 - Dev-only JSX source tags are stripped from src/moldmaker .tsx files via a vite plugin (why: React Three Fiber crashes on dashed data-tsd-source props).
 - Layout: TopBar (src/moldmaker/components/layout) + ControlPanel filtered by a 'step' prop (0 Model,1 Split,2 Mold,3 Pro,4 Finish) with sticky Back/Next footer (why: guided flow without duplicating section code).
 - Model-prep tools (emboss, split, wax tree, base, shrink) live in src/moldmaker/mold/modelTools.ts + utils/shopAdvice.ts, run on the main thread, and replace the master via App `replaceModel` with one-level undo (why: they change the model, not the mold, so the worker pipeline stays untouched).
+- AI model maker calls Lovable AI from src/lib/shapeAi.functions.ts (server fn, raw streamed HTTP, no new deps); the AI returns a JSON shape spec (lathe/extrude/compound) built client-side with Manifold in modelTools.buildFromSpec (why: no 3D-generation model is available, and the spec is always a clean solid).

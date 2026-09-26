@@ -10,6 +10,11 @@ import {
 import { embossModel, splitForBed, buildWaxTree, addModelBase, type Side } from '../mold/modelTools';
 import { exportSTL } from '../mold/exporters';
 import { undercutFraction } from '../mold/draftAnalysis';
+import { orientForPrint, solidProps } from '../utils/tier2';
+import { packPlates } from '../utils/shopAdvice';
+import { buildFromSpec } from '../mold/modelTools';
+import { generateShape } from '@/lib/shapeAi.functions';
+import { useServerFn } from '@tanstack/react-start';
 
 const s = {
   section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
@@ -278,6 +283,104 @@ export function FinishAdvisorPanel({ geometry, boundingBox, axis, offset, cutAng
       <div style={s.sub}>Mold life</div>
       <div style={s.kv}><span>Expected casts</span><span>about {life.low}–{life.high}</span></div>
       <div style={s.hint}>{life.note} Undercuts: {undercutPct.toFixed(1)}% of surface. Rough estimate only.</div>
+    </div>
+  );
+}
+
+/* ═════════════ Finish: print-farm plate packer ═════════════ */
+
+export function PlatePackerPanel({ pieces, bed, material, pricePerKg }: {
+  pieces: THREE.BufferGeometry[]; bed: { x: number; y: number; z: number } | null;
+  material: 'pla' | 'resin'; pricePerKg: number;
+}) {
+  const [copies, setCopies] = useState(4);
+  const b = bed ?? { x: 220, y: 220, z: 250 };
+  const info = useMemo(() => pieces.map(g => {
+    const o = orientForPrint(g);
+    const sz = o.boundingBox!.getSize(new THREE.Vector3());
+    const vol = solidProps(o).volume / 1000;
+    o.dispose();
+    return { w: sz.x, d: sz.y, h: sz.z, vol };
+  }), [pieces]);
+  const items = useMemo(() => Array.from({ length: copies }, () => info).flat(), [info, copies]);
+  const pack = useMemo(() => packPlates(items, b), [items, b.x, b.y, b.z]);
+  if (!pieces.length) return null;
+  const density = material === 'resin' ? 1.1 : 1.24;
+  const perCopy = info.reduce((s2, i) => s2 + i.vol, 0) * density * pricePerKg / 1000;
+  const first = pack.layout.filter(l => l.plate === 0);
+  const sc = 180 / Math.max(b.x, b.y);
+  return (
+    <div style={s.section} id="sirpam-plate-packer">
+      <div style={s.title}>Print Farm Planner</div>
+      <Slider label="Molds to make" value={copies} min={1} max={40} step={1} unit="" onChange={setCopies} />
+      <div style={s.kv}><span>Bed</span><span>{b.x}×{b.y}×{b.z} mm{bed ? '' : ' (pick a printer for yours)'}</span></div>
+      <div style={s.kv}><span>Plates needed</span><span>{pack.plates}</span></div>
+      <div style={s.kv}><span>Pieces per plate</span><span>about {pack.perPlate}</span></div>
+      <div style={s.kv}><span>Material per mold</span><span>{perCopy.toFixed(2)}</span></div>
+      <div style={s.kv}><span>Material total</span><span>{(perCopy * copies).toFixed(2)}</span></div>
+      {pack.tooTall && <div style={{ ...s.hint, color: colors.primary }}>Some pieces are taller than the bed.</div>}
+      {pack.tooWide && <div style={{ ...s.hint, color: colors.primary }}>Some pieces don't fit the bed at all — try Big-prop split.</div>}
+      <svg width={b.x * sc} height={b.y * sc} style={{ marginTop: spacing.sm, background: colors.viewportBg, borderRadius: radii.md }} aria-label="Plate 1 layout">
+        {first.map((l, i) => <rect key={i} x={l.x * sc} y={l.y * sc} width={l.w * sc} height={l.d * sc} fill={colors.primary} opacity={0.7} rx={2} />)}
+      </svg>
+      <div style={s.hint}>Plate 1 layout, pieces laid flat with 5 mm gaps. Cost uses your price per kg from Material & Cost. Rough plan — your slicer has the final say.</div>
+    </div>
+  );
+}
+
+/* ═════════════ Model step: AI shape from text / photo ═════════════ */
+
+async function shrinkImage(file: File): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const k = Math.min(1, 1024 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.85);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+export function AiShapePanel({ onCommit }: { onCommit: (g: THREE.BufferGeometry, name: string) => void }) {
+  const gen = useServerFn(generateShape);
+  const [prompt, setPrompt] = useState('');
+  const [image, setImage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const go = async () => {
+    setBusy(true); setErr(null);
+    try {
+      const r = await gen({ data: { prompt, image: image ?? undefined } });
+      if (!r.ok) { setErr(r.error); return; }
+      const g = await buildFromSpec(r.spec);
+      onCommit(g, `${r.spec.name.replace(/[^\w-]+/g, '_').slice(0, 40) || 'ai_shape'}.stl`);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not make that shape.');
+    } finally { setBusy(false); }
+  };
+  return (
+    <div style={s.section} id="sirpam-ai-shape">
+      <div style={s.title}>Make a model with AI</div>
+      <div style={s.hint}>Describe a simple object, or add a photo to trace its outline. Works best for round things (vases, candles), flat shapes (chocolates, pendants) and simple toys.</div>
+      <textarea style={{ ...s.input, minHeight: 64, marginTop: spacing.sm, resize: 'vertical' }} value={prompt} maxLength={1000}
+        onChange={e => setPrompt(e.target.value)} aria-label="Describe the object" placeholder="e.g. a 90 mm tall candle shaped like a twisted cone" />
+      <div style={{ ...s.row, marginTop: spacing.xs }}>
+        {['Heart-shaped chocolate, 40 mm', 'Tall vase with a wide belly', 'Chess pawn, 50 mm'].map(ex => (
+          <button key={ex} type="button" style={s.chip(false)} onClick={() => setPrompt(ex)}>{ex}</button>
+        ))}
+      </div>
+      <label style={{ ...s.hint, display: 'block' }}>Photo (optional):
+        <input type="file" accept="image/*" aria-label="Photo to trace" onChange={async e => {
+          const f = e.target.files?.[0]; setImage(f ? await shrinkImage(f) : null);
+        }} />
+      </label>
+      {image && <img src={image} alt="Photo to trace" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: radii.md, marginTop: spacing.xs }} />}
+      <button type="button" style={s.btn} disabled={busy || (!prompt.trim() && !image)} onClick={go}>
+        {busy ? 'Designing… (up to a minute)' : 'Generate model'}
+      </button>
+      {err && <div role="alert" style={{ ...s.hint, color: colors.primary, fontWeight: 600 }}>{err}</div>}
+      <div style={s.hint}>AI-powered. Uses AI credits for each model. Check sizes before printing.</div>
     </div>
   );
 }

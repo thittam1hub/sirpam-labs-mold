@@ -22,6 +22,10 @@ interface ControlPanelProps {
   toolsSlot?: React.ReactNode;
   /** Print & cast advisor (Finish step). */
   finishSlot?: React.ReactNode;
+  /** AI model maker (Model step, shown even with no model). */
+  modelSlot?: React.ReactNode;
+  /** Print-farm planner (Finish step, when a mold exists). */
+  packSlot?: React.ReactNode;
   step: number;
   onStepChange: (n: number) => void;
   onLoadFile: () => void;
@@ -302,7 +306,7 @@ const styles = {
 };
 
 export default function ControlPanel({
-  state, tier2Slot, moldSlot, toolsSlot, finishSlot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
+  state, tier2Slot, moldSlot, toolsSlot, finishSlot, modelSlot, packSlot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
   onAddAdditionalPlane, onRemoveAdditionalPlane, onAdditionalPlaneChange,
   onToggleHollow,
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
@@ -1259,10 +1263,12 @@ export default function ControlPanel({
         </div>
       )}
 
+      {step === 0 && modelSlot}
       {step === 2 && hasModel && moldSlot}
       {step === 3 && hasModel && tier2Slot}
       {step === 3 && hasModel && toolsSlot}
       {step === 4 && hasModel && finishSlot}
+      {step === 4 && hasMold && packSlot}
 
       {/* Material & Cost — rough pre-flight economics. Volumes come straight
           from the generated piece meshes (divergence-theorem), so numbers

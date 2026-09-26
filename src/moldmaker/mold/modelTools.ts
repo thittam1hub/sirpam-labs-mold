@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { FontLoader, type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
+import type { ShapeSpec } from '@/lib/shapeAi.functions';
 import { getManifold, geometryToManifold, manifoldToGeometry } from './manifoldBridge';
 
 /**
@@ -212,4 +213,42 @@ export async function addModelBase(model: THREE.BufferGeometry, o: {
     if (!inner.isEmpty()) base = base.subtract(wasm.Manifold.extrude(inner, o.baseMm + 0.2).translate([0, 0, sliceZ - 0.2 - o.baseMm - 0.1]));
   }
   return finish(trimmed.add(base));
+}
+
+/* ───────────── AI shape spec → solid ───────────── */
+
+
+export async function buildFromSpec(spec: ShapeSpec): Promise<THREE.BufferGeometry> {
+  const wasm = await getManifold();
+  const { Manifold, CrossSection } = wasm;
+  let m: any;
+  if (spec.kind === 'lathe') {
+    const pts = spec.profile.map(([r, h]) => [Math.max(0, r), h] as [number, number]);
+    m = Manifold.revolve(new CrossSection([pts], 'Positive'), 64);
+  } else if (spec.kind === 'extrude') {
+    const area = (p: [number, number][]) => p.reduce((s, [x, y], i) => { const [x2, y2] = p[(i + 1) % p.length]!; return s + x * y2 - x2 * y; }, 0);
+    const outer = area(spec.outline) < 0 ? [...spec.outline].reverse() : spec.outline;
+    const holes = (spec.holes ?? []).map(h => (area(h) > 0 ? [...h].reverse() : h));
+    m = Manifold.extrude(new CrossSection([outer, ...holes], 'EvenOdd'), spec.height);
+  } else {
+    const adds: any[] = [], subs: any[] = [];
+    for (const p of spec.parts) {
+      const [sx, sy, sz] = p.size.map(v => Math.max(0.5, Math.abs(v))) as [number, number, number];
+      let prim: any;
+      if (p.shape === 'box') prim = Manifold.cube([sx, sy, sz], true);
+      else if (p.shape === 'sphere') prim = Manifold.sphere(sx / 2, 48);
+      else if (p.shape === 'cylinder') prim = Manifold.cylinder(sz, sx / 2, sx / 2, 48, true);
+      else prim = Manifold.cylinder(sz, sx / 2, 0.01, 48, true);
+      prim = prim.rotate(p.rot).translate(p.pos);
+      (p.op === 'subtract' ? subs : adds).push(prim);
+    }
+    if (!adds.length) throw new Error('The AI shape had nothing solid in it.');
+    m = Manifold.union(adds);
+    if (subs.length) m = m.subtract(Manifold.union(subs));
+    // Keep the largest connected piece so the mold gets one solid.
+    const pieces = m.decompose();
+    if (pieces.length > 1) m = pieces.reduce((a: any, b: any) => (b.volume() > a.volume() ? b : a));
+  }
+  if (m.isEmpty()) throw new Error('The AI shape could not be turned into a solid. Try again.');
+  return finish(m);
 }

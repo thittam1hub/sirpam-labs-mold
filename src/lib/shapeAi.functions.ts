@@ -27,7 +27,7 @@ export const generateShape = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data }): Promise<{ ok: true; spec: ShapeSpec } | { ok: false; error: string }> => {
     const { generateShapeJson, AiError } = await import("./shapeAi.server");
-    const key = process.env.LOVABLE_API_KEY;
+    const key = process.env['LOVABLE_API_KEY'];
     if (!key) return { ok: false, error: "AI is not configured for this app." };
     if (!data.prompt.trim() && !data.image) return { ok: false, error: "Describe an object or add a photo." };
     try {
