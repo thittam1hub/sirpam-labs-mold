@@ -27,8 +27,23 @@ export default defineConfig({
       },
     ],
     // manifold-3d ships WASM and must not be pre-bundled by dep optimizer.
+    // Pre-bundle the 3D libs up front so Vite never re-optimizes mid-session,
+    // which loads two React copies ("Cannot read properties of null (reading 'useState')").
     optimizeDeps: {
       exclude: ["manifold-3d"],
+      include: [
+        "react",
+        "react-dom",
+        "react-dom/client",
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei",
+        "three/examples/jsm/loaders/FontLoader.js",
+        "three/examples/jsm/loaders/OBJLoader.js",
+        "three/examples/jsm/loaders/STLLoader.js",
+        "three/examples/jsm/loaders/SVGLoader.js",
+        "three/examples/jsm/utils/BufferGeometryUtils.js",
+      ],
     },
   },
 });
