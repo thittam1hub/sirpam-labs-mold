@@ -47,7 +47,7 @@ export default function GuidedTour() {
   if (!open) {
     return (
       <button aria-label="Start guided tour" onClick={() => setOpen(true)}
-        style={{ ...btn(), position: 'fixed', right: 16, bottom: 16, zIndex: 50 }}>
+        style={{ ...btn(), position: 'fixed', left: 16, bottom: 16, zIndex: 50 }}>
         Tour
       </button>
     );
@@ -57,7 +57,7 @@ export default function GuidedTour() {
   const last = i === STEPS.length - 1;
   return (
     <div role="dialog" aria-label="Guided tour" style={{
-      position: 'fixed', right: 16, bottom: 16, zIndex: 60, width: 340, maxWidth: 'calc(100vw - 32px)',
+      position: 'fixed', left: 16, bottom: 16, zIndex: 60, width: 340, maxWidth: 'calc(100vw - 32px)',
       background: colors.sectionBg, borderRadius: radii.xl, boxShadow: shadows.raised, padding: spacing.md + 4,
     }}>
       <div style={{ fontSize: fontSizes.xs, color: colors.textDim, marginBottom: spacing.xs }}>

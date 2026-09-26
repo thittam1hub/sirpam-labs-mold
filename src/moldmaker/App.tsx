@@ -1368,7 +1368,7 @@ export default function App() {
 
           {state.originalGeometry && (
             <div role="toolbar" aria-label="View options" style={{
-              position: 'absolute', left: spacing.lg, bottom: spacing.lg + 40, display: 'flex', gap: 4, padding: 4,
+              position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: spacing.lg, display: 'flex', gap: 4, padding: 4,
               background: colors.sectionBg, borderRadius: radii.pill, boxShadow: shadows.raisedSm, zIndex: 6, flexWrap: 'wrap',
             }}>
               {([
