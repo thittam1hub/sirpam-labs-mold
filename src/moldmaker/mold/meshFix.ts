@@ -30,16 +30,21 @@ function weld(geo: THREE.BufferGeometry, tol: number): { pos: Float64Array; tris
   const src = geo.index ? geo.toNonIndexed() : geo;
   const p = src.attributes['position']!.array as ArrayLike<number>;
   const n = p.length / 3;
-  const map = new Map<string, number>();
+  const map = new Map<number, number[]>();
   const out: number[] = [];
+  const q: number[] = []; // quantised coords per welded vertex
   const ids = new Uint32Array(n);
   const inv = 1 / tol;
   for (let i = 0; i < n; i++) {
     const x = p[i * 3]!, y = p[i * 3 + 1]!, z = p[i * 3 + 2]!;
     if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) { ids[i] = 0xffffffff; continue; }
-    const k = `${Math.round(x * inv)},${Math.round(y * inv)},${Math.round(z * inv)}`;
-    let id = map.get(k);
-    if (id === undefined) { id = out.length / 3; out.push(x, y, z); map.set(k, id); }
+    const qx = Math.round(x * inv), qy = Math.round(y * inv), qz = Math.round(z * inv);
+    const k = (Math.imul(qx, 73856093) ^ Math.imul(qy, 19349663) ^ Math.imul(qz, 83492791)) | 0;
+    let list = map.get(k);
+    let id = -1;
+    if (list) { for (const c of list) if (q[c * 3] === qx && q[c * 3 + 1] === qy && q[c * 3 + 2] === qz) { id = c; break; } }
+    else { list = []; map.set(k, list); }
+    if (id < 0) { id = out.length / 3; out.push(x, y, z); q.push(qx, qy, qz); list.push(id); }
     ids[i] = id;
   }
   return { pos: Float64Array.from(out), tris: ids, verts: out.length / 3 };
@@ -48,18 +53,20 @@ function weld(geo: THREE.BufferGeometry, tol: number): { pos: Float64Array; tris
 /** Clean indexed triangles: drop bad/dup/non-manifold, orient consistently. */
 function cleanTopology(pos: Float64Array, raw: Uint32Array, r: RepairReport): Uint32Array {
   const keep: number[] = [];
-  const seen = new Set<string>();
+  const seen = new Map<number, number[]>();
   for (let t = 0; t < raw.length; t += 3) {
     const a = raw[t]!, b = raw[t + 1]!, c = raw[t + 2]!;
     if (a === 0xffffffff || b === 0xffffffff || c === 0xffffffff || a === b || b === c || a === c) { r.droppedBad++; continue; }
-    const s = [a, b, c].sort((x, y) => x - y).join(',');
-    if (seen.has(s)) { r.droppedDuplicate++; continue; }
-    seen.add(s);
+    const lo = Math.min(a, b, c), hi = Math.max(a, b, c), mid = a + b + c - lo - hi;
+    const sk = lo * 67108864 + mid;
+    const l = seen.get(sk);
+    if (l?.includes(hi)) { r.droppedDuplicate++; continue; }
+    if (l) l.push(hi); else seen.set(sk, [hi]);
     keep.push(a, b, c);
   }
   // Non-manifold edges: keep at most 2 faces per edge.
-  const edgeCount = new Map<string, number>();
-  const ek = (u: number, v: number) => (u < v ? `${u}_${v}` : `${v}_${u}`);
+  const edgeCount = new Map<number, number>();
+  const ek = (u: number, v: number) => (u < v ? u * 67108864 + v : v * 67108864 + u);
   const tris: number[] = [];
   for (let t = 0; t < keep.length; t += 3) {
     const a = keep[t]!, b = keep[t + 1]!, c = keep[t + 2]!;
@@ -70,7 +77,7 @@ function cleanTopology(pos: Float64Array, raw: Uint32Array, r: RepairReport): Ui
   }
   // Consistent winding via BFS over shared edges.
   const T = tris.length / 3;
-  const adj = new Map<string, number[]>();
+  const adj = new Map<number, number[]>();
   for (let t = 0; t < T; t++) for (let j = 0; j < 3; j++) {
     const k = ek(tris[t * 3 + j]!, tris[t * 3 + (j + 1) % 3]!);
     const l = adj.get(k); if (l) l.push(t); else adj.set(k, [t]);
