@@ -29,7 +29,7 @@ const s = {
   },
 };
 
-const triCount = (g: THREE.BufferGeometry) => (g.index ? g.index.count : g.attributes.position!.count) / 3;
+const triCount = (g: THREE.BufferGeometry) => (g.index ? g.index.count : g.attributes['position']!.count) / 3;
 const tick = () => new Promise(r => setTimeout(r, 30));
 
 /* ───────────── Fix & fit (Model step) ───────────── */
@@ -141,7 +141,7 @@ function renderPreview(pieces: THREE.BufferGeometry[], model: THREE.BufferGeomet
     const c = all.getCenter(new THREE.Vector3());
     const span = all.getSize(new THREE.Vector3()).length();
     pieces.forEach((p, i) => {
-      const m = new THREE.Mesh(p, new THREE.MeshStandardMaterial({ color: palette[i % palette.length], roughness: 0.6 }));
+      const m = new THREE.Mesh(p, new THREE.MeshStandardMaterial({ color: palette[i % palette.length]!, roughness: 0.6 }));
       const pc = p.boundingBox!.getCenter(new THREE.Vector3()).sub(c);
       if (pc.lengthSq() > 1e-9) m.position.copy(pc.normalize().multiplyScalar(span * 0.25));
       group.add(m);
