@@ -9,3 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Tier-2 mold features live in src/moldmaker/mold/moldFeatures.ts as optional `extras` passed through the worker; omitted extras must reproduce legacy output (why: keep existing molds byte-identical).
+- Dev-only JSX source tags are stripped from src/moldmaker .tsx files via a vite plugin (why: React Three Fiber crashes on dashed data-tsd-source props).
