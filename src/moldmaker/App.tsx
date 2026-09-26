@@ -1028,6 +1028,20 @@ export default function App() {
                 />
               )}
 
+              {/* Split-line preview: the seam where the parting plane meets
+                  the model surface. Hidden while the heatmap paints the same
+                  surface, and only while the original model is visible. */}
+              {state.originalGeometry && state.boundingBox &&
+               state.showSplitLine && !state.showHeatmap && state.showOriginal && (
+                <SplitLineOverlay
+                  geometry={state.originalGeometry}
+                  axis={state.axis}
+                  offset={state.planeOffset}
+                  boundingBox={state.boundingBox}
+                  cutAngle={state.cutAngle}
+                />
+              )}
+
               {state.originalGeometry && !state.showHeatmap && state.showOriginal && (
                 <ModelViewer
                   geometry={state.originalGeometry}
