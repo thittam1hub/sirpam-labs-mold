@@ -277,6 +277,9 @@ const initialState: AppState = {
   explodedView: true,
   showOriginal: true,
   showHeatmap: false,
+  showSplitLine: true,
+  suggesting: false,
+  estimator: { material: 'pla', pricePerKg: 20, siliconePricePerLiter: 30 },
   wireframe: false,
   generating: false,
   boundingBox: null,
@@ -308,9 +311,17 @@ export default function App() {
    * and swaps the STEP button for a Cancel button while it's in flight.
    */
   const [stepExporting, setStepExporting] = useState(false);
-  const { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane } =
+  const { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane, suggestParting } =
     useMoldGenerator();
   const telemetry = useTelemetry();
+
+  // ── Saved projects (browser-only, IndexedDB) ──
+  const [projects, setProjects] = useState<ProjectMeta[]>([]);
+  const [projectBusy, setProjectBusy] = useState(false);
+  const refreshProjects = useCallback(() => {
+    listProjects().then(setProjects);
+  }, []);
+  useEffect(() => { refreshProjects(); }, [refreshProjects]);
 
   // ── Telemetry: session_started ──
   // Fires once per mount. Empty dep array is intentional — React 18's
