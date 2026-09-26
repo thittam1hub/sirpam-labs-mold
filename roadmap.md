@@ -7,10 +7,13 @@
 - [x] Mount app at / route with head() metadata; copy public assets
 - [x] Verify build + preview works (sample model → mold halves generated, no errors)
 
-## New requests (Sep 13)
-- [x] Evaluate whether 3DPrint_MoldGen (MoldGen) can run in this environment
-- [x] Build a silicone mold maker feature (new mode in current app, all three industry workflows — verified in browser)
-- [x] Form fit shell option: mold wall hugs the model (rigid + silicone block workflows), Box Shape hidden while on — verified in browser
+## New requests (Sep 26)
+- [x] List current mold features + research competitor features (Meshcast, SpliceSTL, Mold Studio)
+- [ ] Tier 1: split-line preview (live parting-line overlay)
+- [ ] Tier 1: auto-suggest best parting setup (split advisor)
+- [ ] Tier 1: material & cost estimator
+- [ ] Tier 1: save/load projects (IndexedDB + .sirpam.json export/import)
+- [ ] Tier 2 backlog: seal type choice, pry pockets, material presets, side-specific silicone thickness, gate advisor, multi-cavity tray, radial splits, auto-orient for printing
 
 ## Done
 - [x] Rebrand to Sirpam 3D Labs Mold (Soft Neumorphic Lab: light shell, raised/inset shadows, ember #E8632B, Space Grotesk + DM Sans, brand wordmark, title/meta) — verified in browser, no errors
