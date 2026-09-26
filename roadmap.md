@@ -13,7 +13,7 @@
 - [x] Tier 1: auto-suggest best parting setup (split advisor)
 - [x] Tier 1: material & cost estimator
 - [x] Tier 1: save/load projects (IndexedDB + .sirpam.json export/import)
-- [ ] Tier 2 backlog: seal type choice, pry pockets, material presets, side-specific silicone thickness, gate advisor, multi-cavity tray, radial splits, auto-orient for printing
+- [x] Tier 2: seal type (pins/tongue & groove), pry slots, casting material presets, per-side silicone thickness, gate advisor, multi-cavity tray, radial splits, auto-orient on export — browser-verified
 
 ## Done
 - [x] Rebrand to Sirpam 3D Labs Mold (Soft Neumorphic Lab: light shell, raised/inset shadows, ember #E8632B, Space Grotesk + DM Sans, brand wordmark, title/meta) — verified in browser, no errors
