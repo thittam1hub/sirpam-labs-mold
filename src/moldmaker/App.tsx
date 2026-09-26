@@ -1170,7 +1170,7 @@ export default function App() {
             <OrbitControls makeDefault />
             <gridHelper args={[200, 20, colors.gridMajor, colors.gridMinor]} />
 
-            <GizmoHelper alignment="bottom-left" margin={[60, 60]}>
+            <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
               <GizmoViewport />
             </GizmoHelper>
           </Canvas>
