@@ -6,6 +6,10 @@ import { MAX_CUT_ANGLE_DEGREES, hingeAxisFor } from '../mold/planeGeometry';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../theme';
 import { PRINTER_PRESETS, getPresetById } from '../utils/printerPresets';
 import { computeFit, suggestScale, formatFitStatus } from '../utils/printerFit';
+import {
+  meshVolumeCm3, estimatePieceCost, estimateSiliconeCost,
+} from '../utils/costEstimate';
+import type { ProjectMeta } from '../services/projectStorage';
 
 interface ControlPanelProps {
   state: AppState;
@@ -68,6 +72,21 @@ interface ControlPanelProps {
   onToggleExplode: () => void;
   onToggleOriginal: () => void;
   onToggleHeatmap: () => void;
+  /** Split-line preview toggle — the seam where the parting plane meets the model. */
+  onToggleSplitLine: () => void;
+  /** Split advisor — sweep parting setups in the worker, apply the best. */
+  onSuggestParting: () => void;
+  /** Cost-estimator inputs. Prices are in the user's own currency unit. */
+  estimator: { material: 'pla' | 'resin'; pricePerKg: number; siliconePricePerLiter: number };
+  onEstimatorChange: (patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number }) => void;
+  /** Saved projects (browser-only IndexedDB library). */
+  projects: ProjectMeta[];
+  projectBusy: boolean;
+  onSaveProject: () => void;
+  onOpenProject: (id: string) => void;
+  onDeleteProject: (id: string) => void;
+  onExportProject: (id: string) => void;
+  onImportProject: () => void;
   onToggleWireframe: () => void;
   onStartOver: () => void;
   /** Printer Fit section — pass null to clear selection. */
@@ -272,7 +291,9 @@ export default function ControlPanel({
   onMoldModeChange, onSiliconeTypeChange, onSiliconeMarginChange, onSkinThicknessChange, onIncludeCoreChange,
   onFormFitChange,
   onGenerate, onAutoDetect, onExport,
-  onToggleExplode, onToggleOriginal, onToggleHeatmap, onToggleWireframe, onStartOver,
+  onToggleExplode, onToggleOriginal, onToggleHeatmap, onToggleSplitLine, onToggleWireframe, onStartOver,
+  onSuggestParting, estimator, onEstimatorChange,
+  projects, projectBusy, onSaveProject, onOpenProject, onDeleteProject, onExportProject, onImportProject,
   onPrinterChange, onScaleChange, onResetScale,
   telemetryConfigured, telemetryEnabled, onTelemetryAllow, onTelemetryDecline,
   stepExporting, onCancelStepExport,
