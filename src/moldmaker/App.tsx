@@ -29,7 +29,8 @@ import {
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import GuidedTour from './components/GuidedTour';
 import TopBar from './components/layout/TopBar';
-import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel } from './components/ShopPanels';
+import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel, AiShapePanel } from './components/ShopPanels';
+import FillOverlay from './components/FillOverlay';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
 
@@ -411,6 +412,8 @@ export default function App() {
   const undoGeo = useRef<THREE.BufferGeometry | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [showThickness, setShowThickness] = useState(false);
+  const [showFill, setShowFill] = useState(false);
+  const [trapCount, setTrapCount] = useState<number | null>(null);
   const [thicknessMin, setThicknessMin] = useState<number | null>(null);
   const replaceModel = useCallback((geometry: THREE.BufferGeometry, note: string) => {
     setState(prev => {
@@ -1124,10 +1127,13 @@ export default function App() {
               {/* Heatmap takes precedence over the normal original mesh — both
                   at the same coordinates would Z-fight and the flat unlit
                   heatmap colors would fight the lit physical material. */}
+              {state.originalGeometry && showFill && !showThickness && (
+                <FillOverlay geometry={state.originalGeometry} axis={state.axis} onTraps={setTrapCount} />
+              )}
               {state.originalGeometry && showThickness && (
                 <ThicknessOverlay geometry={state.originalGeometry} onMin={setThicknessMin} />
               )}
-              {state.originalGeometry && state.boundingBox && state.showHeatmap && !showThickness && (
+              {state.originalGeometry && state.boundingBox && state.showHeatmap && !showThickness && !showFill && (
                 <HeatmapOverlay
                   geometry={state.originalGeometry}
                   axis={state.axis}
@@ -1151,7 +1157,7 @@ export default function App() {
                 />
               )}
 
-              {state.originalGeometry && !state.showHeatmap && !showThickness && state.showOriginal && (
+              {state.originalGeometry && !state.showHeatmap && !showThickness && !showFill && state.showOriginal && (
                 <ModelViewer
                   geometry={state.originalGeometry}
                   color="#6c9bcf"
@@ -1408,7 +1414,8 @@ export default function App() {
               {([
                 ['Wireframe', state.wireframe, () => setState(p => ({ ...p, wireframe: !p.wireframe })), true],
                 ['Heatmap', state.showHeatmap, () => setState(p => ({ ...p, showHeatmap: !p.showHeatmap })), true],
-                ['Thickness', showThickness, () => setShowThickness(v => !v), true],
+                ['Thickness', showThickness, () => { setShowThickness(v => !v); setShowFill(false); }, true],
+                ['Fill preview', showFill, () => { setShowFill(v => !v); setShowThickness(false); }, true],
                 ['Exploded', state.explodedView, () => setState(p => ({ ...p, explodedView: !p.explodedView })), state.moldGenerated],
                 ['Original', state.showOriginal, () => setState(p => ({ ...p, showOriginal: !p.showOriginal })), state.moldGenerated],
               ] as const).filter(c => c[3]).map(([label, on, fn]) => (
@@ -1418,6 +1425,16 @@ export default function App() {
                   color: on ? colors.primary : colors.textMuted, boxShadow: on ? shadows.inset : 'none',
                 }}>{label}</button>
               ))}
+            </div>
+          )}
+          {showFill && state.originalGeometry && (
+            <div aria-label="Fill preview legend" style={{
+              position: 'absolute', top: spacing.lg, right: spacing.lg, zIndex: 6, padding: `${spacing.sm}px ${spacing.md}px`, maxWidth: 280,
+              background: colors.sectionBg, borderRadius: radii.lg, boxShadow: shadows.raisedSm, fontSize: fontSizes.xs, color: colors.textBody,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>Fill preview (pour from +{state.axis.toUpperCase()})</div>
+              <div>Orange rises as material fills from the bottom. Red dots = likely air traps{trapCount !== null ? ` (${trapCount})` : ''} — add a vent there.</div>
+              <div style={{ opacity: 0.7, marginTop: 4 }}>Estimate only, not a flow simulation.</div>
             </div>
           )}
           {showThickness && state.originalGeometry && (
@@ -1558,6 +1575,15 @@ export default function App() {
                 : (state.boundingBox ? state.boundingBox.getSize(new THREE.Vector3()).length() * state.wallThicknessRatio : 5)}
               castingMaterial={state.tier2.castingMaterial}
               printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
+            />
+          }
+          modelSlot={<AiShapePanel onCommit={commitGeometry} />}
+          packSlot={
+            <PlatePackerPanel
+              pieces={state.moldPieces}
+              bed={getPresetById(state.selectedPrinterId)?.volumeMm ?? null}
+              material={state.estimator.material}
+              pricePerKg={state.estimator.pricePerKg}
             />
           }
           toolsSlot={
