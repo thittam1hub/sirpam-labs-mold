@@ -34,3 +34,9 @@
 - [x] Suggest Best Split: coarse-to-fine (faster on big STLs, 2% precision)
 - [ ] Faster mold generation for big STLs (needs a real large STL to measure)
 - [ ] Mold from user's real STL → STL pair (waiting for the file)
+
+## Round 4 (Sep 26)
+- [x] Auto-repair broken STLs (weld, drop bad/overlapping, fix winding, close holes, rebuild-as-solid fallback)
+- [x] Detail reducer for big files (50k–400k)
+- [x] Scale to target mm + 90° rotate
+- [x] Mold report (before/after pictures, pieces, cost, casting, pour tips; Save as PDF)
