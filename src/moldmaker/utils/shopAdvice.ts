@@ -192,3 +192,86 @@ export function computeThickness(source: THREE.BufferGeometry, maxSamples = 2500
 export function axisVec(axis: Axis): THREE.Vector3 {
   return axis === 'x' ? new THREE.Vector3(1, 0, 0) : axis === 'y' ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
 }
+
+/* ───────────── Fill preview (gravity pour) ───────────── */
+
+export interface FillData { geometry: THREE.BufferGeometry; heights: Float32Array; hMin: number; hMax: number; traps: THREE.Vector3[] }
+
+/**
+ * Gravity pours fill a cavity from the bottom up, so the fill front is a
+ * height level along the pour axis. Air collects at local high points of the
+ * part surface (cavity ceilings) that are below the top, where the pour hole
+ * and vents sit. Estimate only — ignores viscosity, runners and flow speed.
+ */
+export function computeFill(source: THREE.BufferGeometry, axis: Axis): FillData {
+  const geo = source.index ? source.toNonIndexed() : source.clone();
+  geo.computeVertexNormals();
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const nor = geo.getAttribute('normal') as THREE.BufferAttribute;
+  const up = axisVec(axis);
+  const n = pos.count;
+  const heights = new Float32Array(n);
+  let hMin = Infinity, hMax = -Infinity;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    v.fromBufferAttribute(pos, i);
+    const h = v.dot(up); heights[i] = h;
+    if (h < hMin) hMin = h; if (h > hMax) hMax = h;
+  }
+  // Weld vertices, build neighbour sets.
+  const key = (i: number) => `${pos.getX(i).toFixed(3)},${pos.getY(i).toFixed(3)},${pos.getZ(i).toFixed(3)}`;
+  const id = new Map<string, number>();
+  const vid = new Int32Array(n);
+  const uh: number[] = [], un: THREE.Vector3[] = [], up3: THREE.Vector3[] = [];
+  for (let i = 0; i < n; i++) {
+    const k = key(i);
+    let j = id.get(k);
+    if (j === undefined) { j = uh.length; id.set(k, j); uh.push(heights[i]!); un.push(new THREE.Vector3()); up3.push(new THREE.Vector3().fromBufferAttribute(pos, i)); }
+    vid[i] = j;
+    un[j]!.add(new THREE.Vector3().fromBufferAttribute(nor, i));
+  }
+  const nb: Array<Set<number>> = uh.map(() => new Set());
+  for (let t = 0; t + 2 < n; t += 3) {
+    const a = vid[t]!, b = vid[t + 1]!, c = vid[t + 2]!;
+    nb[a]!.add(b).add(c); nb[b]!.add(a).add(c); nb[c]!.add(a).add(b);
+  }
+  const range = hMax - hMin;
+  const traps: THREE.Vector3[] = [];
+  for (let j = 0; j < uh.length; j++) {
+    const h = uh[j]!;
+    if (h > hMax - range * 0.03) continue;
+    if (un[j]!.normalize().dot(up) < 0.5) continue;
+    let top = true;
+    for (const k of nb[j]!) if (uh[k]! >= h) { top = false; break; }
+    if (!top) continue;
+    if (traps.some(p => p.distanceTo(up3[j]!) < Math.max(3, range * 0.05))) continue;
+    traps.push(up3[j]!.clone());
+    if (traps.length >= 20) break;
+  }
+  const col = new Float32Array(n * 3);
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return { geometry: geo, heights, hMin, hMax, traps };
+}
+
+/* ───────────── Plate packer ───────────── */
+
+export interface PackResult { plates: number; perPlate: number; tooTall: boolean; tooWide: boolean; layout: Array<{ plate: number; x: number; y: number; w: number; d: number }> }
+
+/** Shelf-pack footprints (w × d, mm) onto a bed. `gap` between parts. */
+export function packPlates(items: Array<{ w: number; d: number; h: number }>, bed: { x: number; y: number; z: number }, gap = 5): PackResult {
+  const sorted = items.map((it, i) => ({ ...it, i })).sort((a, b) => b.d - a.d);
+  const layout: PackResult['layout'] = [];
+  let plate = 0, x = 0, y = 0, shelfD = 0, tooTall = false, tooWide = false;
+  for (const it of sorted) {
+    if (it.h > bed.z) tooTall = true;
+    let w = it.w, d = it.d;
+    if (w > bed.x && d <= bed.x && w <= bed.y) [w, d] = [d, w];
+    if (w > bed.x || d > bed.y) { tooWide = true; continue; }
+    if (x + w > bed.x) { x = 0; y += shelfD + gap; shelfD = 0; }
+    if (y + d > bed.y) { plate++; x = 0; y = 0; shelfD = 0; }
+    layout.push({ plate, x, y, w, d });
+    x += w + gap; shelfD = Math.max(shelfD, d);
+  }
+  const plates = layout.length ? plate + 1 : 0;
+  return { plates, perPlate: plates ? Math.ceil(layout.length / plates) : 0, tooTall, tooWide, layout };
+}
