@@ -13,6 +13,19 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    // The dev-only source tagger adds a dashed "data-tsd-source" prop to every
+    // JSX element; React Three Fiber treats dashed props as nested paths on
+    // three.js objects and crashes. Strip it from the 3D app's files.
+    plugins: [
+      {
+        name: "strip-tsd-source-r3f",
+        enforce: "pre",
+        transform(code: string, id: string) {
+          if (!/\/src\/moldmaker\/.*\.tsx(\?|$)/.test(id) || !code.includes("data-tsd-source")) return;
+          return { code: code.replace(/ data-tsd-source="[^"]*"/g, ""), map: null };
+        },
+      },
+    ],
     // manifold-3d ships WASM and must not be pre-bundled by dep optimizer.
     optimizeDeps: {
       exclude: ["manifold-3d"],
