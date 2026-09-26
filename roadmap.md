@@ -21,3 +21,4 @@
 
 ## Done
 - [x] Rebrand to Sirpam 3D Labs Mold (Soft Neumorphic Lab: light shell, raised/inset shadows, ember #E8632B, Space Grotesk + DM Sans, brand wordmark, title/meta) — verified in browser, no errors
+- [x] UI restructure: top toolbar + 5-step guided panel
