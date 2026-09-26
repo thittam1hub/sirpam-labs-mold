@@ -7,6 +7,7 @@ import ModelViewer from './components/ModelViewer';
 import ControlPanel from './components/ControlPanel';
 import PartingPlane from './components/PartingPlane';
 import HeatmapOverlay from './components/HeatmapOverlay';
+import SplitLineOverlay from './components/SplitLineOverlay';
 import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator';
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
@@ -17,6 +18,11 @@ import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
 import { useTelemetry } from './services/useTelemetry';
 import { buildEvent } from './services/telemetryEvents';
+import {
+  listProjects, saveProject, getProject, deleteProject,
+  downloadProjectFile, pickProjectFile, newProjectId,
+  type ProjectMeta, type ProjectParams,
+} from './services/projectStorage';
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 
 export type { Axis } from './types';
@@ -195,6 +201,21 @@ export interface AppState {
   showOriginal: boolean;
   /** Demoldability heatmap overlay — off by default (diagnostic view). */
   showHeatmap: boolean;
+  /**
+   * Split-line preview — draws the seam where the parting plane crosses the
+   * model surface. On by default; hidden while the heatmap is on (its colors
+   * would bury the line) and while generated pieces are shown instead of the
+   * original model.
+   */
+  showSplitLine: boolean;
+  /** Split advisor sweep in flight (worker-side, ~45 scoring passes). */
+  suggesting: boolean;
+  /** Cost-estimator inputs. Prices are in the user's own currency unit. */
+  estimator: {
+    material: 'pla' | 'resin';
+    pricePerKg: number;
+    siliconePricePerLiter: number;
+  };
   /** Render loaded model + mold halves as wireframe — off by default. Useful for
    *  inspecting mesh topology when CSG fails or diagnosing boolean artifacts. */
   wireframe: boolean;
