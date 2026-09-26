@@ -223,7 +223,10 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
   const wasm = await getManifold();
   const m = wasm.Manifold.levelSet(sdf, { min: [ox, oy, oz], max: [ox + nx * h, oy + ny * h, oz + nz * h] }, h, 0);
   if (m.isEmpty()) return null;
-  const g = manifoldToGeometry(m);
+  // levelSet makes very dense uniform triangles; collapse flat areas.
+  const sm = typeof m.simplify === 'function' ? m.simplify(h * 0.2) : m;
+  const g = manifoldToGeometry(sm);
+  if (sm !== m) sm.delete?.();
   m.delete?.();
   return g;
 }
