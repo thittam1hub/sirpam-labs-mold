@@ -46,7 +46,7 @@ export default function GuidedTour() {
 
   if (!open) {
     return (
-      <button aria-label="Start guided tour" onClick={() => setOpen(true)}
+      <button className="sirpam-hide-sm" aria-label="Start guided tour" onClick={() => setOpen(true)}
         style={{ ...btn(), position: 'fixed', left: 16, bottom: 16, zIndex: 50 }}>
         Tour
       </button>

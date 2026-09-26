@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 - Tier-2 mold features live in src/moldmaker/mold/moldFeatures.ts as optional `extras` passed through the worker; omitted extras must reproduce legacy output (why: keep existing molds byte-identical).
 - Dev-only JSX source tags are stripped from src/moldmaker .tsx files via a vite plugin (why: React Three Fiber crashes on dashed data-tsd-source props).
+- Layout: TopBar (src/moldmaker/components/layout) + ControlPanel filtered by a 'step' prop (0 Model,1 Split,2 Mold,3 Pro,4 Finish) with sticky Back/Next footer (why: guided flow without duplicating section code).
