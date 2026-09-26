@@ -16,6 +16,8 @@ interface ControlPanelProps {
   state: AppState;
   /** Tier-2 pro features panel, rendered above Material & Cost. */
   tier2Slot?: React.ReactNode;
+  step: number;
+  onStepChange: (n: number) => void;
   onLoadFile: () => void;
   onAxisChange: (axis: Axis) => void;
   onOffsetChange: (offset: number) => void;
@@ -141,14 +143,12 @@ const estStatRow: React.CSSProperties = {
 
 const styles = {
   panel: {
-    width: 340,
+    width: 380,
     background: colors.panelBg,
     borderLeft: 'none',
-    padding: spacing.xl,
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: spacing.lg,
-    overflowY: 'auto' as const,
+    minHeight: 0,
     fontFamily: fonts.body,
   },
   titleRow: {
@@ -309,7 +309,7 @@ export default function ControlPanel({
   projects, projectBusy, onSaveProject, onOpenProject, onDeleteProject, onExportProject, onImportProject,
   onPrinterChange, onScaleChange, onResetScale,
   telemetryConfigured, telemetryEnabled, onTelemetryAllow, onTelemetryDecline,
-  stepExporting, onCancelStepExport,
+  stepExporting, onCancelStepExport, step, onStepChange,
 }: ControlPanelProps) {
   const hasModel = !!state.originalGeometry;
   const hasMold = state.moldGenerated;
@@ -418,21 +418,13 @@ export default function ControlPanel({
   const primaryDisabled = state.generating || (hasMold && !paramsChanged);
 
   return (
-    <aside style={styles.panel} aria-label="Controls">
-      <div>
-        <div style={styles.titleRow}>
-          <div style={styles.logoMark} aria-hidden="true">
-            <span style={{ color: colors.primary, fontSize: fontSizes.lg }}>●</span>
-          </div>
-          <div style={styles.title}>
-            Sirpam <span style={styles.titleAccent}>3D Labs</span> Mold
-          </div>
-        </div>
-        <div style={styles.subtitle}>Two-part &amp; silicone mold generator for 3D printing</div>
-      </div>
+    <aside className="sirpam-panel" style={styles.panel} aria-label="Controls">
+      <Stepper step={step} onStep={onStepChange} hasModel={hasModel} hasMold={hasMold} />
+      <div style={{ display: "flex", flexDirection: "column", gap: spacing.lg, flex: 1, overflowY: "auto", padding: spacing.xl, paddingTop: spacing.md }}>
+      {!hasModel && <div style={{ fontSize: fontSizes.sm, color: colors.textDim, lineHeight: 1.5 }}>Load a model to begin — use Open model or Try sample in the top bar, or drop a file on the viewer.</div>}
 
       {/* File Section */}
-      <div style={styles.section}>
+      {step === 0 && <div style={styles.section}>
         <div style={styles.sectionTitle}>Model</div>
         {state.fileName && (
           <div style={{ ...styles.fileInfo, marginBottom: spacing.sm + 2 }}>
@@ -446,12 +438,12 @@ export default function ControlPanel({
         >
           {hasModel ? 'Load Different Model' : 'Open STL / OBJ File'}
         </button>
-      </div>
+      </div>}
 
       {/* Parting Plane Section — remains visible after generation so the user
           can tweak axis/offset and regenerate without the old flow silently
           discarding the mold. */}
-      {hasModel && (
+      {step === 1 && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionTitle}>Parting Plane</div>
 
@@ -822,18 +814,6 @@ export default function ControlPanel({
             {state.suggesting ? 'Sweeping parting setups...' : 'Suggest Best Split'}
           </button>
 
-          <button
-            type="button"
-            style={{
-              ...styles.button, ...styles.primaryBtn,
-              ...(primaryDisabled ? styles.disabledBtn : {}),
-            }}
-            onClick={onGenerate}
-            disabled={primaryDisabled}
-            aria-live="polite"
-          >
-            {primaryLabel}
-          </button>
         </div>
       )}
 
@@ -841,7 +821,7 @@ export default function ControlPanel({
           compile-time constants. Exposing them here lets the user dial in fit
           for tight tolerances (small parts) or strong shells (brittle casts).
           Changing either invalidates the current mold, same as axis/offset. */}
-      {hasModel && (
+      {step === 2 && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionHeaderRow}>
             <div style={{ ...styles.sectionTitle, marginBottom: 0 }}>Mold Box</div>
@@ -1135,7 +1115,7 @@ export default function ControlPanel({
           from the competitor pattern that silently rescales your model at
           export time. We show the fit, show what scale would make it fit,
           and let the user decide. No stealth rescaling. */}
-      {hasModel && (
+      {step === 0 && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionHeaderRow}>
             <div style={{ ...styles.sectionTitle, marginBottom: 0 }}>Printer Fit</div>
@@ -1273,13 +1253,13 @@ export default function ControlPanel({
         </div>
       )}
 
-      {hasModel && tier2Slot}
+      {step === 3 && hasModel && tier2Slot}
 
       {/* Material & Cost — rough pre-flight economics. Volumes come straight
           from the generated piece meshes (divergence-theorem), so numbers
           appear only after a successful generate. Prices are the user's own
           currency unit — deliberately unitless in the UI. */}
-      {hasModel && (
+      {step === 4 && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionTitle}>Material & Cost</div>
 
@@ -1421,7 +1401,7 @@ export default function ControlPanel({
       {/* Projects — browser-only save/load. The library lives in IndexedDB
           (embeds the model geometry, so localStorage wouldn't fit); Export
           writes a shareable .sirpam.json with everything inside. */}
-      <div style={styles.section}>
+      {step === 4 && <div id="sirpam-projects" style={styles.section}>
           <div style={styles.sectionTitle}>Projects</div>
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
             <button
@@ -1517,14 +1497,14 @@ export default function ControlPanel({
               ))}
             </div>
           )}
-        </div>
+        </div>}
 
 
       {/* View Options — promoted from hasMold-only to hasModel-and-up because
           Wireframe is useful on the *loaded* model too (CSG debugging, topology
           inspection). Exploded/Show Original still require a mold to be
           meaningful, so they stay nested behind hasMold. */}
-      {hasModel && (
+      {false && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionTitle}>View</div>
           <div style={styles.toggleRow}>
@@ -1547,7 +1527,7 @@ export default function ControlPanel({
       )}
 
       {/* Export Section */}
-      {hasMold && (
+      {step === 4 && hasMold && (
         <div style={styles.section}>
           <div style={styles.sectionTitle}>Export</div>
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.sm }}>
@@ -1602,7 +1582,7 @@ export default function ControlPanel({
           invisible privacy section, so the UI doesn't advertise a feature
           that can't work. The toggle wraps grant/decline so a user who turns
           it off actually records a decline (= we don't re-prompt). */}
-      {telemetryConfigured && (
+      {step === 4 && telemetryConfigured && (
         <div style={styles.section}>
           <div style={styles.sectionTitle}>Privacy</div>
           <div style={styles.toggleRow}>
@@ -1626,7 +1606,7 @@ export default function ControlPanel({
       )}
 
       {/* Start Over */}
-      {hasModel && (
+      {step === 4 && hasModel && (
         <button
           type="button"
           style={{ ...styles.button, ...styles.secondaryBtn, marginTop: 'auto' }}
@@ -1635,7 +1615,47 @@ export default function ControlPanel({
           Start Over
         </button>
       )}
+      </div>
+      <div style={{ display: 'flex', gap: spacing.sm, padding: `${spacing.md}px ${spacing.xl}px`, boxShadow: '0 -6px 12px -8px #b8b9be' }}>
+        <button type="button" style={{ ...styles.button, ...styles.secondaryBtn, flex: 1, ...(step === 0 ? styles.disabledBtn : {}) }}
+          disabled={step === 0} onClick={() => onStepChange(Math.max(0, step - 1))}>Back</button>
+        {step < 4 ? (
+          <button type="button" style={{ ...styles.button, ...styles.primaryBtn, flex: 2, ...(!hasModel ? styles.disabledBtn : {}) }}
+            disabled={!hasModel} onClick={() => onStepChange(step + 1)}>Next: {STEP_NAMES[step + 1]}</button>
+        ) : (
+          <button type="button" style={{ ...styles.button, ...styles.primaryBtn, flex: 2, ...(primaryDisabled || !hasModel ? styles.disabledBtn : {}) }}
+            onClick={onGenerate} disabled={primaryDisabled || !hasModel} aria-live="polite">{primaryLabel}</button>
+        )}
+      </div>
     </aside>
+  );
+}
+
+export const STEP_NAMES = ['Model', 'Split', 'Mold', 'Pro', 'Finish'] as const;
+
+function Stepper({ step, onStep, hasModel, hasMold }: { step: number; onStep: (n: number) => void; hasModel: boolean; hasMold: boolean }) {
+  return (
+    <nav aria-label="Steps" className="sirpam-stepper" style={{ display: 'flex', gap: 4, padding: `${spacing.lg}px ${spacing.xl}px ${spacing.sm}px` }}>
+      {STEP_NAMES.map((name, i) => {
+        const active = i === step;
+        const done = (i === 0 && hasModel) || (i === 4 && hasMold) || (hasModel && i < step);
+        const disabled = !hasModel && i > 0;
+        return (
+          <button key={name} type="button" disabled={disabled} onClick={() => onStep(i)} aria-current={active ? 'step' : undefined}
+            style={{
+              flex: 1, border: 'none', background: 'transparent', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.45 : 1,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: 0, fontFamily: 'inherit',
+            }}>
+            <span style={{
+              width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: fontSizes.sm,
+              background: active ? colors.primary : colors.sectionBg, color: active ? '#fff' : done ? colors.primary : colors.textMuted,
+              boxShadow: active ? shadows.primary : done ? shadows.inset : shadows.raisedSm,
+            }}>{done && !active ? '✓' : i + 1}</span>
+            <span style={{ fontSize: fontSizes.xs, fontWeight: 600, color: active ? colors.primary : colors.textMuted }}>{name}</span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 
