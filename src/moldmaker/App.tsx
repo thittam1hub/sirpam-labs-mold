@@ -761,6 +761,7 @@ export default function App() {
       setState(prev => ({
         ...prev,
         ...project.params,
+        tier2: { ...DEFAULT_TIER2, ...(project.params.tier2 ?? {}) },
         infoMessage: `Project "${project.name}" opened.`,
       }));
     } catch (err) {
