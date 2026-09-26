@@ -346,6 +346,22 @@ export async function generateSiliconeMold(
     }
   }
 
-  const pieceGeos = pieces.map(p => manifoldToGeometry(p));
+  // Radial split (Tier 2) — the printable core is never wedged.
+  let finalPieces = pieces;
+  let finalLabels = labels;
+  const radial = extras.radialSegments ?? 0;
+  if (radial >= 3 && lastEnv) {
+    const center = new THREE.Vector3().copy(lastEnv.moldMin).addScaledVector(lastEnv.moldSize, 0.5);
+    const cutIdx = pieces.map((_, i) => i).filter(i => labels[i] !== 'core');
+    const r = applyRadialSplit(cutIdx.map(i => pieces[i]), { axis, center, segments: radial });
+    finalPieces = r.pieces;
+    finalLabels = r.pieces.map((_, k) => `${labels[cutIdx[r.sourceIndex[k]]]}_r${r.segmentIndex[k] + 1}`);
+    pieces.forEach((p, i) => {
+      if (labels[i] === 'core') { finalPieces.push(p); finalLabels.push('core'); }
+    });
+  }
+
+  const pieceGeos = finalPieces.map(p => manifoldToGeometry(p));
+  return { pieces: pieceGeos, labels: finalLabels, repairs, siliconeVolumeCm3 };
   return { pieces: pieceGeos, labels, repairs, siliconeVolumeCm3 };
 }
