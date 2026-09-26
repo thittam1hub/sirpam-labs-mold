@@ -126,6 +126,16 @@ const SPRUE_DIAMETER_MIN_MM = 4;
 const SPRUE_DIAMETER_MAX_MM = 25;
 const SPRUE_DIAMETER_STEP_MM = 0.5;
 
+/** One label/value row in the Material & Cost section. */
+const estStatRow: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 8,
+  padding: `4px 0`,
+  fontSize: fontSizes.sm,
+  color: colors.textDim,
+};
+
 const styles = {
   panel: {
     width: 340,
