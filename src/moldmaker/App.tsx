@@ -307,6 +307,14 @@ export default function App() {
    * lives outside AppState.
    */
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [step, setStepRaw] = useState(0);
+  useEffect(() => {
+    try { const v = Number(localStorage.getItem('sirpam.step')); if (v >= 0 && v <= 4) setStepRaw(v); } catch { /* ignore */ }
+  }, []);
+  const setStep = useCallback((n: number) => {
+    setStepRaw(n);
+    try { localStorage.setItem('sirpam.step', String(n)); } catch { /* ignore */ }
+  }, []);
   /**
    * First-run telemetry consent modal visibility. Set to true in the
    * mold_generated success branch IFF telemetry is configured and we haven't
@@ -1503,32 +1511,6 @@ export default function App() {
       </div>
       </div>
 
-      {/* Floating help button — always available as a mouse affordance for
-          users who don't know about `?`. Positioned bottom-right of the
-          whole window, inside the main viewport's visual space. */}
-      <button
-        type="button"
-        onClick={() => setShortcutHelpOpen(true)}
-        aria-label="Keyboard shortcuts"
-        title="Keyboard shortcuts (?)"
-        style={{
-          position: 'fixed',
-          bottom: spacing.lg,
-          left: spacing.lg,
-          width: 32, height: 32,
-          borderRadius: '50%',
-          background: colors.sectionBg,
-          border: `1px solid ${colors.borderSection}`,
-          color: colors.textBody,
-          fontSize: fontSizes.md,
-          cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'inherit',
-          zIndex: 5,
-        }}
-      >
-        ?
-      </button>
 
       {shortcutHelpOpen && (
         <ShortcutCheatSheet onClose={() => setShortcutHelpOpen(false)} />

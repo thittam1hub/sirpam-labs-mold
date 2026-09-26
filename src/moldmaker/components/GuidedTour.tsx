@@ -4,13 +4,13 @@ import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 const KEY = 'sirpam.tourSeen.v1';
 
 const STEPS: Array<{ title: string; body: string }> = [
-  { title: 'Welcome to Sirpam 3D Labs Mold', body: 'This quick tour shows how to turn any 3D model into a printable mold in six steps. You can reopen it anytime with the Tour button.' },
-  { title: '1. Load a model', body: 'Drop an STL or OBJ file onto the viewer, click Browse Files, or press Try Sample. Drag to rotate, scroll to zoom, right-drag to pan.' },
-  { title: '2. Choose the split', body: 'In Parting Plane pick the axis and height where the mold opens. Press Suggest Best Split to let the app find the cleanest one, and turn on Split Line to see it on the model.' },
-  { title: '3. Pick the mold type', body: 'Rigid makes a printed two-part mold. Silicone gives a pour box, two-part block or skin + mother mold. Form fit makes the shell hug the model to save material.' },
-  { title: '4. Pro Mold Features', body: 'Seal type, pry slots, radial splits, multi-cavity trays with runners, a hollow core for vases, and the gate advisor all live in the Pro panel.' },
-  { title: '5. Generate and check', body: 'Press Generate Mold. Use the exploded view to inspect pieces, and Material & Cost for weight, print time and price estimates.' },
-  { title: '6. Export and save', body: 'Export as STL, OBJ, 3MF or STEP — pieces are oriented flat for printing. Save your project in the browser or as a .sirpam.json file to share.' },
+  { title: 'Welcome to Sirpam 3D Labs Mold', body: 'This quick tour shows how to turn any 3D model into a printable mold in six steps. You can reopen it anytime with the Tour button. Everything happens in five steps on the right, with Back and Next at the bottom.' },
+  { title: '1. Model', body: 'Use Open model or Try sample in the top bar, or drop an STL / OBJ onto the viewer. Printer fit lives in this step too. Drag to rotate, scroll to zoom, right-drag to pan.' },
+  { title: '2. Split', body: 'Pick the axis and height where the mold opens. Press Suggest Best Split to let the app find the cleanest one, and turn on Split Line to see it on the model.' },
+  { title: '3. Mold', body: 'Rigid makes a printed two-part mold. Silicone gives a pour box, two-part block or skin + mother mold. Form fit makes the shell hug the model to save material.' },
+  { title: '4. Pro', body: 'Seal type, pry slots, radial splits, multi-cavity trays with runners, a hollow core for vases, and the gate advisor all live in the Pro panel.' },
+  { title: '5. Finish', body: 'Press Generate Mold (bottom right or top bar). Use the view buttons on the viewer for exploded / wireframe / heatmap, and Material & Cost for estimates.' },
+  { title: 'Export and save', body: 'Use Export in the top bar for STL, OBJ, 3MF or STEP — pieces are oriented flat for printing. Projects in the top bar saves your work in the browser or as a .sirpam.json file to share.' },
 ];
 
 export default function GuidedTour() {
