@@ -747,7 +747,7 @@ export default function App() {
     try {
       await deleteProject(id);
       refreshProjects();
-ecatch (err) {
+} catch (err) {
       console.error('Delete project failed:', err);
       setState(prev => ({
         ...prev,
