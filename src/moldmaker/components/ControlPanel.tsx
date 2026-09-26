@@ -766,6 +766,17 @@ export default function ControlPanel({
             />
           </div>
 
+          {/* Split-line preview — shows where the seam actually lands on the
+              geometry. Pairs with the translucent parting-plane indicator. */}
+          <div style={{ ...styles.toggleRow, marginBottom: spacing.md }}>
+            <span style={styles.label}>Split Line</span>
+            <ToggleSwitch
+              active={state.showSplitLine}
+              onClick={onToggleSplitLine}
+              label="Split-line preview"
+            />
+          </div>
+
           <button
             type="button"
             style={{
@@ -778,6 +789,23 @@ export default function ControlPanel({
             aria-live="polite"
           >
             {state.autoDetecting ? 'Analyzing planes...' : 'Auto-Detect Optimal Plane'}
+          </button>
+
+          {/* Split advisor — sweeps axis × offset × tilt in the worker and
+              applies the setup with the fewest true undercuts. Runs after
+              auto-detect as the "one click deeper" option. */}
+          <button
+            type="button"
+            style={{
+              ...styles.button, ...styles.secondaryBtn,
+              marginBottom: spacing.sm,
+              ...((state.suggesting || !hasModel) ? styles.disabledBtn : {}),
+            }}
+            onClick={onSuggestParting}
+            disabled={state.suggesting || !hasModel}
+            aria-live="polite"
+          >
+            {state.suggesting ? 'Sweeping parting setups...' : 'Suggest Best Split'}
           </button>
 
           <button
