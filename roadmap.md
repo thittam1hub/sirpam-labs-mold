@@ -27,3 +27,9 @@
 - [x] Phase A: shrink & fit compensation, leak-proof print guide, surface finish advisor, mold life estimate, wall-thickness view
 - [x] Phase B: logo/text emboss, casting presets (chocolate/candle/soap/concrete/resin), wax tree builder, big-prop bed splitter, dental/medical model base
 - [x] Phase C: fill preview, print-farm plate planner, AI text/photo to model (Lovable AI via server function) — browser-verified
+
+## Requests (Sep 26, round 3)
+- [ ] Shop page: researched mold/print services, pricing, how to send .sirpam
+- [ ] Gallery: upload photos + notes of printed molds (online account, sign-in)
+- [ ] Faster/more accurate: generation, Suggest Best Split, big STL handling
+- [ ] Mold from user's real STL → STL pair (waiting for the file)
