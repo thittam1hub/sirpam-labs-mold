@@ -1422,10 +1422,10 @@ export default function ControlPanel({
               type="button"
               style={{
                 ...styles.button, ...styles.secondaryBtn, flex: 1,
-                ...(projectBusy ? styles.disabledBtn : {}),
+                ...((projectBusy || !hasModel) ? styles.disabledBtn : {}),
               }}
               onClick={onSaveProject}
-              disabled={projectBusy}
+              disabled={projectBusy || !hasModel}
             >
               Save Project
             </button>
@@ -1512,7 +1512,7 @@ export default function ControlPanel({
             </div>
           )}
         </div>
-      )}
+
 
       {/* View Options — promoted from hasMold-only to hasModel-and-up because
           Wireframe is useful on the *loaded* model too (CSG debugging, topology
