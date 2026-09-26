@@ -32,11 +32,16 @@
 - [x] Shop page: researched mold/print services, pricing, how to send .sirpam
 - [x] Gallery: upload photos + notes of printed molds (online account, sign-in)
 - [x] Suggest Best Split: coarse-to-fine (faster on big STLs, 2% precision)
-- [ ] Faster mold generation for big STLs (needs a real large STL to measure)
-- [ ] Mold from user's real STL → STL pair (waiting for the file)
+- [x] Faster mold generation for big STLs (numeric spatial hash: 36s→17s on 1.2M tris)
+- [x] Mold from user's real STL → STL pair (detailed Bala Murugan, front/back split)
 
 ## Round 4 (Sep 26)
 - [x] Auto-repair broken STLs (weld, drop bad/overlapping, fix winding, close holes, rebuild-as-solid fallback)
 - [x] Detail reducer for big files (50k–400k)
 - [x] Scale to target mm + 90° rotate
 - [x] Mold report (before/after pictures, pieces, cost, casting, pour tips; Save as PDF)
+
+## Round 5 (Sep 26)
+- [x] Auto-repair + retry inside Generate Mold
+- [x] Gallery: price paid, mold size, price per cm³ comparison
+- [x] Reduce detail keeps fine detail (repair first, then solid-engine simplify)
