@@ -242,7 +242,46 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
   const g = manifoldToGeometry(sm);
   if (sm !== m) sm.delete?.();
   m.delete?.();
-  return g;
+  return collapseSlivers(g);
+}
+
+/**
+ * Collapse near-zero triangles and ultra-short edges (they get dropped later by
+ * the mold pipeline's validator and would open holes). Edge-collapse keeps the
+ * surface closed. Weld tolerance matches the pipeline's merge tolerance.
+ */
+export function collapseSlivers(geo: THREE.BufferGeometry, minEdge = 3e-5): THREE.BufferGeometry {
+  const w = weld(geo, 1.5e-5);
+  const pos = w.pos;
+  let tris = w.tris;
+  const parent = new Int32Array(w.verts).map((_, i) => i);
+  const find = (i: number): number => { while (parent[i] !== i) { parent[i] = parent[parent[i]!]!; i = parent[i]!; } return i; };
+  const d2 = (a: number, b: number) => (pos[a * 3]! - pos[b * 3]!) ** 2 + (pos[a * 3 + 1]! - pos[b * 3 + 1]!) ** 2 + (pos[a * 3 + 2]! - pos[b * 3 + 2]!) ** 2;
+  for (let pass = 0; pass < 6; pass++) {
+    let changed = 0;
+    for (let t = 0; t < tris.length; t += 3) {
+      const a = find(tris[t]!), b = find(tris[t + 1]!), c = find(tris[t + 2]!);
+      if (a === b || b === c || a === c) continue;
+      const ab = d2(a, b), bc = d2(b, c), ca = d2(c, a);
+      const ux = pos[b * 3]! - pos[a * 3]!, uy = pos[b * 3 + 1]! - pos[a * 3 + 1]!, uz = pos[b * 3 + 2]! - pos[a * 3 + 2]!;
+      const vx = pos[c * 3]! - pos[a * 3]!, vy = pos[c * 3 + 1]! - pos[a * 3 + 1]!, vz = pos[c * 3 + 2]! - pos[a * 3 + 2]!;
+      const area = Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
+      const longest = Math.max(ab, bc, ca);
+      if (area > 1e-9 && area > longest * 1e-6 && Math.min(ab, bc, ca) > minEdge * minEdge) continue;
+      // Collapse the shortest edge.
+      if (ab <= bc && ab <= ca) parent[b] = a; else if (bc <= ca) parent[c] = b; else parent[a] = c;
+      changed++;
+    }
+    const next: number[] = [];
+    for (let t = 0; t < tris.length; t += 3) {
+      const a = find(tris[t]!), b = find(tris[t + 1]!), c = find(tris[t + 2]!);
+      if (a !== b && b !== c && a !== c) next.push(a, b, c);
+    }
+    tris = Uint32Array.from(next);
+    if (!changed) break;
+  }
+  const r = emptyReport(geo);
+  return toGeometry(pos, cleanTopology(pos, tris, r));
 }
 
 /** Deep repair: weld, drop bad/duplicate/over-shared faces, fix winding, close holes. */
