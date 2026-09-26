@@ -1,4 +1,5 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
+import type { MoldExtras } from '../mold/moldFeatures';
 import { useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape } from '../types';
@@ -129,6 +130,7 @@ export function useMoldGenerator() {
         isHollow?: boolean;
         /** Form-fit shell — outer wall hugs the model instead of a mold box. */
         formFit?: boolean;
+        extras?: MoldExtras;
       } = {},
     ): Promise<{
       /** Mold pieces in stable order: [0]=top of primary, [1]=bottom of
@@ -174,6 +176,7 @@ export function useMoldGenerator() {
           additionalPlanes: options.additionalPlanes,
           isHollow: options.isHollow,
           formFit: options.formFit,
+          extras: options.extras,
         },
       };
 
@@ -238,6 +241,7 @@ export function useMoldGenerator() {
         isHollow?: boolean;
         /** Form-fit shell for the block workflows (ignored by skinCore). */
         formFit?: boolean;
+        extras?: MoldExtras;
       },
     ): Promise<{
       pieces: THREE.BufferGeometry[];
@@ -274,6 +278,7 @@ export function useMoldGenerator() {
           moldBoxShape: options.moldBoxShape,
           isHollow: options.isHollow,
           formFit: options.formFit,
+          extras: options.extras,
           silicone: {
             type: options.siliconeType,
             siliconeMarginMm: options.siliconeMarginMm,
