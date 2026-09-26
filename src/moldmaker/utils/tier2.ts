@@ -179,9 +179,9 @@ export function buildCavityTray(
     off[lb] = (r - (rows - 1) / 2) * stepB;
     const base = k * srcPos.length;
     for (let i = 0; i < srcPos.length; i += 3) {
-      out[base + i] = srcPos[i] + off[0];
-      out[base + i + 1] = srcPos[i + 1] + off[1];
-      out[base + i + 2] = srcPos[i + 2] + off[2];
+      out[base + i] = srcPos[i]! + off[0];
+      out[base + i + 1] = srcPos[i + 1]! + off[1];
+      out[base + i + 2] = srcPos[i + 2]! + off[2];
     }
     centers.push({ a: center.getComponent(la) + off[la], b: center.getComponent(lb) + off[lb] });
   }
