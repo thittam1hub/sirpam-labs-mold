@@ -1,5 +1,6 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import type { AppState } from '../App';
+import { tier2GeomKey } from './AdvancedMoldPanel';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, ENABLE_OBLIQUE_PLANES } from '../mold/constants';
 import { MAX_CUT_ANGLE_DEGREES, hingeAxisFor } from '../mold/planeGeometry';
@@ -13,6 +14,8 @@ import type { ProjectMeta } from '../services/projectStorage';
 
 interface ControlPanelProps {
   state: AppState;
+  /** Tier-2 pro features panel, rendered above Material & Cost. */
+  tier2Slot?: React.ReactNode;
   onLoadFile: () => void;
   onAxisChange: (axis: Axis) => void;
   onOffsetChange: (offset: number) => void;
@@ -293,7 +296,7 @@ const styles = {
 };
 
 export default function ControlPanel({
-  state, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
+  state, tier2Slot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
   onAddAdditionalPlane, onRemoveAdditionalPlane, onAdditionalPlaneChange,
   onToggleHollow,
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
@@ -392,6 +395,7 @@ export default function ControlPanel({
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
     state.generatedParams.formFit !== state.formFit ||
+    tier2GeomKey(state.generatedParams.tier2) !== tier2GeomKey(state.tier2) ||
     state.generatedParams.isHollow !== state.isHollow ||
     // Silicone params only make the mold stale while silicone mode is on;
     // switching modes is itself a change either way.
@@ -1268,6 +1272,8 @@ export default function ControlPanel({
           )}
         </div>
       )}
+
+      {hasModel && tier2Slot}
 
       {/* Material & Cost — rough pre-flight economics. Volumes come straight
           from the generated piece meshes (divergence-theorem), so numbers

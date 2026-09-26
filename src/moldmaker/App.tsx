@@ -3,6 +3,9 @@ import { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
+import AdvancedMoldPanel, { DEFAULT_TIER2, tier2GeomKey, type Tier2Settings } from './components/AdvancedMoldPanel';
+import { buildCavityTray, orientForPrint } from './utils/tier2';
+import type { MoldExtras } from './mold/moldFeatures';
 import ModelViewer from './components/ModelViewer';
 import ControlPanel from './components/ControlPanel';
 import PartingPlane from './components/PartingPlane';
@@ -120,6 +123,8 @@ export interface GeneratedParams {
   includeCore: boolean;
   /** Form-fit shell in effect at generate time (outer wall hugs the model). */
   formFit: boolean;
+  /** Tier-2 pro features in effect at generate time. */
+  tier2: Tier2Settings;
 }
 
 export interface AppState {
@@ -191,6 +196,8 @@ export interface AppState {
   /** Form-fit shell: outer wall hugs the model instead of a box. Applies to
    *  the rigid mold and the silicone block workflows (not skinCore). */
   formFit: boolean;
+  /** Tier-2 pro mold features (seal, pry slots, radial, tray, orient, material). */
+  tier2: Tier2Settings;
   /** Export filename suffixes for the current pieces (silicone workflows). */
   pieceLabels: string[];
   /** Estimated silicone consumption of the current mold, cm³. 0 = unknown. */
@@ -271,6 +278,7 @@ const initialState: AppState = {
   skinThicknessMm: 0,
   includeCore: true,
   formFit: false,
+  tier2: DEFAULT_TIER2,
   pieceLabels: [],
   siliconeVolumeCm3: 0,
   generatedParams: null,
@@ -480,6 +488,26 @@ export default function App() {
       skinThicknessMm: state.skinThicknessMm,
       includeCore: state.includeCore,
       formFit: state.formFit,
+      tier2: { ...state.tier2, siliconeSides: { ...state.tier2.siliconeSides } },
+    };
+
+    // Tier-2: build extras + (optionally) a multi-cavity tray geometry.
+    const t2 = params.tier2;
+    const useTray = t2.cavityCount > 1 &&
+      !(params.moldMode === 'silicone' && params.siliconeType === 'skinCore');
+    const tray = useTray
+      ? buildCavityTray(state.originalGeometry, params.axis, t2.cavityCount, t2.cavitySpacingMm)
+      : null;
+    const genGeometry = tray ? tray.geometry : state.originalGeometry;
+    const genBox = tray ? tray.bbox : state.boundingBox;
+    const extras: MoldExtras = {
+      seal: t2.seal,
+      pryPockets: t2.pryPockets,
+      radialSegments: t2.radialSegments,
+      siliconeMargins: t2.siliconeSides.enabled
+        ? { top: t2.siliconeSides.top, bottom: t2.siliconeSides.bottom, sides: t2.siliconeSides.sides }
+        : undefined,
+      cavityCenters: tray ? tray.centers : undefined,
     };
 
     try {
@@ -488,8 +516,8 @@ export default function App() {
       // estimate; the rigid path keeps its historical shape exactly.
       const result = params.moldMode === 'silicone'
         ? await generateSilicone(
-            state.originalGeometry,
-            state.boundingBox,
+            genGeometry,
+            genBox,
             params.axis,
             params.offset,
             {
@@ -504,11 +532,12 @@ export default function App() {
               cutAngle: params.cutAngle,
               isHollow: params.isHollow,
               formFit: params.formFit,
+              extras,
             },
           )
         : await generateMold(
-            state.originalGeometry,
-            state.boundingBox,
+            genGeometry,
+            genBox,
             params.axis,
             params.offset,
             {
@@ -523,6 +552,7 @@ export default function App() {
                 : undefined,
               isHollow: params.isHollow,
               formFit: params.formFit,
+              extras,
             },
           );
 
@@ -584,7 +614,7 @@ export default function App() {
     state.moldBoxShape, state.sprueOverride,
     state.additionalPlanes, state.isHollow,
     state.moldMode, state.siliconeType, state.siliconeMarginMm,
-    state.skinThicknessMm, state.includeCore, state.formFit,
+    state.skinThicknessMm, state.includeCore, state.formFit, state.tier2,
     state.generating, generateMold, generateSilicone, telemetry,
   ]);
 
@@ -682,6 +712,7 @@ export default function App() {
         skinThicknessMm: state.skinThicknessMm,
         includeCore: state.includeCore,
         formFit: state.formFit,
+        tier2: state.tier2,
         scale: state.scale,
         selectedPrinterId: state.selectedPrinterId,
       };
@@ -803,8 +834,11 @@ export default function App() {
       // Pass the current scale. Export bakes it into the geometry so the STL
       // matches what the user sees in the viewport (where the scale is
       // applied via a <group scale> wrapper). Scale 1.0 is the no-op path.
+      const piecesOut = state.tier2.orientForPrint
+        ? state.moldPieces.map(g => orientForPrint(g))
+        : state.moldPieces;
       await exportFiles(
-        state.moldPieces, state.fileName, format, state.scale,
+        piecesOut, state.fileName, format, state.scale,
         // Silicone runs name their pieces (pour_box, mother_top, core…);
         // rigid runs pass an empty list and keep top/bottom naming.
         state.pieceLabels.length > 0 ? state.pieceLabels : undefined,
@@ -837,7 +871,7 @@ export default function App() {
     } finally {
       if (format === 'step') setStepExporting(false);
     }
-  }, [state.moldPieces, state.fileName, state.scale, state.pieceLabels, exportFiles, telemetry]);
+  }, [state.moldPieces, state.fileName, state.scale, state.pieceLabels, state.tier2.orientForPrint, exportFiles, telemetry]);
 
   const handleCancelStepExport = useCallback(() => {
     cancelStepExport();
@@ -971,6 +1005,7 @@ export default function App() {
     state.generatedParams.sprueDiameterMm !== state.sprueDiameterMm ||
     state.generatedParams.moldBoxShape !== state.moldBoxShape ||
     state.generatedParams.formFit !== state.formFit ||
+    tier2GeomKey(state.generatedParams.tier2) !== tier2GeomKey(state.tier2) ||
     sprueOverrideChanged
   );
   const showPartingPlaneIndicator =
@@ -1391,6 +1426,25 @@ export default function App() {
           onTelemetryDecline={telemetry.decline}
           stepExporting={stepExporting}
           onCancelStepExport={handleCancelStepExport}
+          tier2Slot={
+            <AdvancedMoldPanel
+              settings={state.tier2}
+              onChange={patch => setState(prev => ({ ...prev, tier2: { ...prev.tier2, ...patch } }))}
+              geometry={state.originalGeometry}
+              axis={state.axis}
+              moldMode={state.moldMode}
+              siliconeType={state.siliconeType}
+              cutAngle={state.cutAngle}
+              formFit={state.formFit}
+              siliconeVolumeCm3={state.siliconeVolumeCm3}
+              onApplyGate={g => setState(prev => ({
+                ...prev,
+                sprueDiameterMm: g.sprueDiameterMm,
+                sprueOverride: { enabled: true, a: g.a, b: g.b },
+                infoMessage: `Gate advisor applied: ${g.sprueDiameterMm} mm sprue over the thickest section. Generate to see it.`,
+              }))}
+            />
+          }
         />
       </div>
 

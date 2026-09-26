@@ -39,6 +39,8 @@ export interface ProjectParams {
   skinThicknessMm: number;
   includeCore: boolean;
   formFit: boolean;
+  /** Tier-2 pro features (optional — absent in older saves). */
+  tier2?: import('../components/AdvancedMoldPanel').Tier2Settings;
   scale: number;
   selectedPrinterId: string | null;
 }

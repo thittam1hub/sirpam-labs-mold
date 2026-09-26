@@ -218,3 +218,9 @@ export default function AdvancedMoldPanel(p: Props) {
     </div>
   );
 }
+
+/** Key of the Tier-2 settings that affect geometry (used for staleness). */
+export function tier2GeomKey(t: Tier2Settings | undefined): string {
+  if (!t) return '';
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm]);
+}
