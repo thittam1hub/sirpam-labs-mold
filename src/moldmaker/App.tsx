@@ -1365,6 +1365,18 @@ export default function App() {
           onToggleExplode={() => setState(prev => ({ ...prev, explodedView: !prev.explodedView }))}
           onToggleOriginal={() => setState(prev => ({ ...prev, showOriginal: !prev.showOriginal }))}
           onToggleHeatmap={() => setState(prev => ({ ...prev, showHeatmap: !prev.showHeatmap }))}
+          onToggleSplitLine={() => setState(prev => ({ ...prev, showSplitLine: !prev.showSplitLine }))}
+          onSuggestParting={handleSuggestParting}
+          estimator={state.estimator}
+          onEstimatorChange={(patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number }) =>
+            setState(prev => ({ ...prev, estimator: { ...prev.estimator, ...patch } }))}
+          projects={projects}
+          projectBusy={projectBusy}
+          onSaveProject={handleSaveProject}
+          onOpenProject={handleOpenProject}
+          onDeleteProject={handleDeleteProject}
+          onExportProject={handleExportProject}
+          onImportProject={handleImportProject}
           onToggleWireframe={() => setState(prev => ({ ...prev, wireframe: !prev.wireframe }))}
           onStartOver={() => setState(initialState)}
           onPrinterChange={(selectedPrinterId: string | null) =>
