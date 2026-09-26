@@ -29,6 +29,9 @@ import {
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import GuidedTour from './components/GuidedTour';
 import TopBar from './components/layout/TopBar';
+import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel } from './components/ShopPanels';
+import ThicknessOverlay from './components/ThicknessOverlay';
+import { getPresetById } from './utils/printerPresets';
 
 export type { Axis } from './types';
 
@@ -402,6 +405,34 @@ export default function App() {
     // entire question this event answers.
     telemetry.send(buildEvent('model_loaded', { success: true }));
   }, [telemetry]);
+
+  // Model-prep tools (shrink, emboss, base, split…) replace the master but keep
+  // every setting. One level of undo.
+  const undoGeo = useRef<THREE.BufferGeometry | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [showThickness, setShowThickness] = useState(false);
+  const [thicknessMin, setThicknessMin] = useState<number | null>(null);
+  const replaceModel = useCallback((geometry: THREE.BufferGeometry, note: string) => {
+    setState(prev => {
+      undoGeo.current = prev.originalGeometry;
+      geometry.computeBoundingBox();
+      geometry.computeVertexNormals();
+      return {
+        ...prev, originalGeometry: geometry, boundingBox: geometry.boundingBox!.clone(),
+        moldGenerated: false, moldPieces: [], generatedParams: null, showOriginal: true,
+        infoMessage: `${note}. Generate the mold again to use it.`,
+      };
+    });
+    setCanUndo(true);
+  }, []);
+  const undoModel = useCallback(() => {
+    const g = undoGeo.current;
+    if (!g) return;
+    undoGeo.current = null;
+    setCanUndo(false);
+    setState(prev => ({ ...prev, originalGeometry: g, boundingBox: g.boundingBox!.clone(),
+      moldGenerated: false, moldPieces: [], generatedParams: null, showOriginal: true, infoMessage: 'Model change undone.' }));
+  }, []);
 
   const handleFileLoad = useCallback(async () => {
     try {
@@ -1093,7 +1124,10 @@ export default function App() {
               {/* Heatmap takes precedence over the normal original mesh — both
                   at the same coordinates would Z-fight and the flat unlit
                   heatmap colors would fight the lit physical material. */}
-              {state.originalGeometry && state.boundingBox && state.showHeatmap && (
+              {state.originalGeometry && showThickness && (
+                <ThicknessOverlay geometry={state.originalGeometry} onMin={setThicknessMin} />
+              )}
+              {state.originalGeometry && state.boundingBox && state.showHeatmap && !showThickness && (
                 <HeatmapOverlay
                   geometry={state.originalGeometry}
                   axis={state.axis}
@@ -1117,7 +1151,7 @@ export default function App() {
                 />
               )}
 
-              {state.originalGeometry && !state.showHeatmap && state.showOriginal && (
+              {state.originalGeometry && !state.showHeatmap && !showThickness && state.showOriginal && (
                 <ModelViewer
                   geometry={state.originalGeometry}
                   color="#6c9bcf"
@@ -1374,6 +1408,7 @@ export default function App() {
               {([
                 ['Wireframe', state.wireframe, () => setState(p => ({ ...p, wireframe: !p.wireframe })), true],
                 ['Heatmap', state.showHeatmap, () => setState(p => ({ ...p, showHeatmap: !p.showHeatmap })), true],
+                ['Thickness', showThickness, () => setShowThickness(v => !v), true],
                 ['Exploded', state.explodedView, () => setState(p => ({ ...p, explodedView: !p.explodedView })), state.moldGenerated],
                 ['Original', state.showOriginal, () => setState(p => ({ ...p, showOriginal: !p.showOriginal })), state.moldGenerated],
               ] as const).filter(c => c[3]).map(([label, on, fn]) => (
@@ -1383,6 +1418,16 @@ export default function App() {
                   color: on ? colors.primary : colors.textMuted, boxShadow: on ? shadows.inset : 'none',
                 }}>{label}</button>
               ))}
+            </div>
+          )}
+          {showThickness && state.originalGeometry && (
+            <div aria-label="Thickness legend" style={{
+              position: 'absolute', top: spacing.lg, right: spacing.lg, zIndex: 6, padding: `${spacing.sm}px ${spacing.md}px`,
+              background: colors.sectionBg, borderRadius: radii.lg, boxShadow: shadows.raisedSm, fontSize: fontSizes.xs, color: colors.textBody,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>Wall thickness</div>
+              <div>Red: under 1.5 mm · Yellow: 1.5–3 mm · Green: 3 mm+</div>
+              {thicknessMin !== null && <div>Thinnest spot: {thicknessMin.toFixed(1)} mm</div>}
             </div>
           )}
         </main>
@@ -1488,6 +1533,43 @@ export default function App() {
           onTelemetryDecline={telemetry.decline}
           stepExporting={stepExporting}
           onCancelStepExport={handleCancelStepExport}
+          moldSlot={
+            <MoldPrepPanel
+              geometry={state.originalGeometry}
+              onReplaceModel={replaceModel}
+              onSetClearance={mm => setState(prev => ({ ...prev, clearanceMm: mm }))}
+              onApplyPreset={p => setState(prev => ({
+                ...prev, moldMode: p.moldMode, sprueDiameterMm: p.sprueDiameterMm,
+                siliconeMarginMm: p.moldMode === 'silicone' ? p.siliconeMarginMm : prev.siliconeMarginMm,
+                tier2: { ...prev.tier2, castingMaterial: p.castingMaterial },
+              }))}
+            />
+          }
+          finishSlot={
+            <FinishAdvisorPanel
+              geometry={state.originalGeometry}
+              boundingBox={state.boundingBox}
+              axis={state.axis}
+              offset={state.planeOffset}
+              cutAngle={state.cutAngle}
+              moldMode={state.moldMode}
+              wallMm={state.moldMode === 'silicone'
+                ? (state.siliconeMarginMm || 10)
+                : (state.boundingBox ? state.boundingBox.getSize(new THREE.Vector3()).length() * state.wallThicknessRatio : 5)}
+              castingMaterial={state.tier2.castingMaterial}
+              printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
+            />
+          }
+          toolsSlot={
+            <ModelToolsPanel
+              geometry={state.originalGeometry}
+              fileName={state.fileName}
+              bed={getPresetById(state.selectedPrinterId)?.volumeMm ?? null}
+              canUndo={canUndo}
+              onUndo={undoModel}
+              onReplaceModel={replaceModel}
+            />
+          }
           tier2Slot={
             <AdvancedMoldPanel
               settings={state.tier2}

@@ -16,6 +16,12 @@ interface ControlPanelProps {
   state: AppState;
   /** Tier-2 pro features panel, rendered above Material & Cost. */
   tier2Slot?: React.ReactNode;
+  /** Casting presets + shrink compensation (Mold step). */
+  moldSlot?: React.ReactNode;
+  /** Model prep tools (Pro step). */
+  toolsSlot?: React.ReactNode;
+  /** Print & cast advisor (Finish step). */
+  finishSlot?: React.ReactNode;
   step: number;
   onStepChange: (n: number) => void;
   onLoadFile: () => void;
@@ -296,7 +302,7 @@ const styles = {
 };
 
 export default function ControlPanel({
-  state, tier2Slot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
+  state, tier2Slot, moldSlot, toolsSlot, finishSlot, onLoadFile, onAxisChange, onOffsetChange, onCutAngleChange,
   onAddAdditionalPlane, onRemoveAdditionalPlane, onAdditionalPlaneChange,
   onToggleHollow,
   onSprueOverrideToggle, onSprueOverrideAChange, onSprueOverrideBChange,
@@ -1253,7 +1259,10 @@ export default function ControlPanel({
         </div>
       )}
 
+      {step === 2 && hasModel && moldSlot}
       {step === 3 && hasModel && tier2Slot}
+      {step === 3 && hasModel && toolsSlot}
+      {step === 4 && hasModel && finishSlot}
 
       {/* Material & Cost — rough pre-flight economics. Volumes come straight
           from the generated piece meshes (divergence-theorem), so numbers

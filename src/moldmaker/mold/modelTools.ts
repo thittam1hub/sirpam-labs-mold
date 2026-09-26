@@ -32,7 +32,7 @@ function finish(m: any): THREE.BufferGeometry {
 /* ───────────── Emboss / engrave ───────────── */
 
 export async function embossModel(model: THREE.BufferGeometry, o: {
-  text?: string; svg?: string; side: Side; heightMm: number; depthMm: number; mode: 'raise' | 'engrave';
+  text?: string; svg?: string | undefined; side: Side; heightMm: number; depthMm: number; mode: 'raise' | 'engrave';
 }): Promise<THREE.BufferGeometry> {
   let shapes: THREE.Shape[] = [];
   if (o.svg) {
@@ -73,9 +73,7 @@ export async function embossModel(model: THREE.BufferGeometry, o: {
   const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
   shapeGeo.applyQuaternion(q);
   const start = o.mode === 'raise' ? -embed : -o.depthMm;
-  const extra = o.mode === 'raise' ? 0 : embed; // engrave cutter pokes out past the surface
   shapeGeo.translate(surface.x + d.x * start, surface.y + d.y * start, surface.z + d.z * start);
-  if (extra) shapeGeo.translate(0, 0, 0);
 
   const wasm = await getManifold();
   const m = geometryToManifold(wasm, model);
@@ -182,14 +180,11 @@ export async function buildWaxTree(model: THREE.BufferGeometry, o: {
     const ang = ((i % perLevel) / perLevel) * Math.PI * 2 + (lvl % 2 ? Math.PI / 4 : 0);
     const z = base + lvl * levelH + hz / 2;
     const x = Math.cos(ang) * radius, y = Math.sin(ang) * radius;
-    // Parts angle 45° downward-out so metal flows downhill into them when flask is inverted.
     pieces.push(centered.rotate([0, 0, THREE.MathUtils.radToDeg(ang)]).translate([x, y, z]));
-    const gateLen = radius;
-    const gate = wasm.Manifold.cylinder(gateLen, gateR * 1.3, gateR, 16, false)
+    const gate = wasm.Manifold.cylinder(radius, gateR * 1.3, gateR, 16, false)
       .rotate([0, 90, 0])
-      .rotate([0, -30, 0])
       .rotate([0, 0, THREE.MathUtils.radToDeg(ang)])
-      .translate([0, 0, z + gateLen * Math.sin(THREE.MathUtils.degToRad(30)) * -1 + 0]);
+      .translate([0, 0, z]);
     pieces.push(gate);
   }
   const tree = wasm.Manifold.union(pieces);
