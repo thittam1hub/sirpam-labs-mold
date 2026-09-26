@@ -37,7 +37,7 @@ export const CASTING_MATERIALS: CastingMaterial[] = [
 /* ───────────────────────────── Mesh helpers ───────────────────────────── */
 
 function triIter(geo: THREE.BufferGeometry, cb: (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => void) {
-  const pos = geo.attributes.position;
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
   const idx = geo.index;
   const n = idx ? idx.count : pos.count;
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
@@ -106,7 +106,7 @@ export function adviseGate(geo: THREE.BufferGeometry, axis: Axis): GateAdvice {
   const bb = geo.boundingBox!;
   const top = bb.max.getComponent(pi), bot = bb.min.getComponent(pi);
   const band = top - (top - bot) * 0.25;
-  const pos = geo.attributes.position;
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
   const G = 6;
   const grid = new Map<string, number>();
   const sa = bb.max.getComponent(la) - bb.min.getComponent(la) || 1;
@@ -121,7 +121,7 @@ export function adviseGate(geo: THREE.BufferGeometry, axis: Axis): GateAdvice {
   }
   let peaks = 0;
   for (const [k, h] of grid) {
-    const [ga, gb] = k.split(',').map(Number);
+    const [ga = 0, gb = 0] = k.split(',').map(Number);
     let isPeak = true;
     for (let da = -1; da <= 1 && isPeak; da++) for (let db = -1; db <= 1; db++) {
       if (!da && !db) continue;
@@ -169,7 +169,7 @@ export function buildCavityTray(
   const stepA = size.getComponent(la) + spacingMm;
   const stepB = size.getComponent(lb) + spacingMm;
   const center = bb.getCenter(new THREE.Vector3());
-  const srcPos = src.attributes.position.array as Float32Array;
+  const srcPos = (src.getAttribute('position') as THREE.BufferAttribute).array as Float32Array;
   const out = new Float32Array(srcPos.length * count);
   const centers: Array<{ a: number; b: number }> = [];
   for (let k = 0; k < count; k++) {

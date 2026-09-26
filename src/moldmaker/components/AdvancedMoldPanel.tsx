@@ -84,7 +84,7 @@ export default function AdvancedMoldPanel(p: Props) {
   const hasSplit = !isOpenBox;
   const blockSilicone = p.moldMode === 'silicone' && !isSkin;
 
-  const mat = CASTING_MATERIALS.find(m => m.id === t.castingMaterial) ?? CASTING_MATERIALS[0];
+  const mat = CASTING_MATERIALS.find(m => m.id === t.castingMaterial) ?? CASTING_MATERIALS[0]!;
   const partCm3 = useMemo(() => (p.geometry ? solidProps(p.geometry).volume / 1000 : 0), [p.geometry]);
   const castGrams = partCm3 * mat.density * t.cavityCount;
 
@@ -138,7 +138,7 @@ export default function AdvancedMoldPanel(p: Props) {
           {t.siliconeSides.enabled && (
             <>
               {(['top', 'bottom', 'sides'] as const).map(k => (
-                <Slider key={k} label={k[0].toUpperCase() + k.slice(1)} value={t.siliconeSides[k]} min={3} max={40} step={1} unit=" mm"
+                <Slider key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} value={t.siliconeSides[k]} min={3} max={40} step={1} unit=" mm"
                   onChange={v => onChange({ siliconeSides: { ...t.siliconeSides, [k]: v } })} />
               ))}
               <div style={s.hint}>
