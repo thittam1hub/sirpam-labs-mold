@@ -28,6 +28,7 @@ import {
 } from './services/projectStorage';
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import GuidedTour from './components/GuidedTour';
+import TopBar from './components/layout/TopBar';
 
 export type { Axis } from './types';
 
@@ -1014,6 +1015,9 @@ export default function App() {
     tier2GeomKey(state.generatedParams.tier2) !== tier2GeomKey(state.tier2) ||
     sprueOverrideChanged
   );
+  const genLabel = state.generating ? 'Generating…'
+    : state.moldGenerated ? (paramsChanged ? 'Regenerate' : 'Up to date') : 'Generate Mold';
+  const genDisabled = state.generating || (state.moldGenerated && !paramsChanged);
   const showPartingPlaneIndicator =
     !!state.originalGeometry && !!state.boundingBox && (!state.moldGenerated || paramsChanged);
 
@@ -1023,14 +1027,36 @@ export default function App() {
           can't express pseudo-classes, so any focusable element (button,
           input, etc.) gets a brand-colored ring via this rule. */}
       <style>{focusVisibleCss}</style>
+      <style>{`
+        .sirpam-show-sm{display:none}
+        @media (max-width: 900px){
+          .sirpam-hide-sm{display:none !important}
+          .sirpam-show-sm{display:block}
+          .sirpam-body{flex-direction:column}
+          .sirpam-body > main{min-height:45vh}
+          .sirpam-panel{width:100% !important;max-height:55vh;border-radius:20px 20px 0 0}
+        }
+      `}</style>
 
-      <div
-        data-sirpam
-        style={{
-          display: 'flex', width: '100vw', height: '100vh',
-          background: colors.appBg, fontFamily: fonts.body, color: colors.textBody,
-        }}
-      >
+      <div data-sirpam style={{
+        display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh',
+        background: colors.appBg, fontFamily: fonts.body, color: colors.textBody,
+      }}>
+      <TopBar
+        fileName={state.fileName}
+        hasModel={!!state.originalGeometry}
+        hasMold={state.moldGenerated}
+        generateLabel={genLabel}
+        generateDisabled={genDisabled}
+        stepExporting={stepExporting}
+        onOpen={handleFileLoad}
+        onSample={handleLoadSample}
+        onProjects={() => { setStep(4); setTimeout(() => document.getElementById('sirpam-projects')?.scrollIntoView({ behavior: 'smooth' }), 50); }}
+        onHelp={() => setShortcutHelpOpen(true)}
+        onGenerate={handleGenerate}
+        onExport={handleExport}
+      />
+      <div className="sirpam-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         {/* 3D Viewport */}
         <main
           style={{ flex: 1, position: 'relative' }}
@@ -1331,12 +1357,34 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {state.originalGeometry && (
+            <div role="toolbar" aria-label="View options" style={{
+              position: 'absolute', left: spacing.lg, bottom: spacing.lg + 40, display: 'flex', gap: 4, padding: 4,
+              background: colors.sectionBg, borderRadius: radii.pill, boxShadow: shadows.raisedSm, zIndex: 6, flexWrap: 'wrap',
+            }}>
+              {([
+                ['Wireframe', state.wireframe, () => setState(p => ({ ...p, wireframe: !p.wireframe })), true],
+                ['Heatmap', state.showHeatmap, () => setState(p => ({ ...p, showHeatmap: !p.showHeatmap })), true],
+                ['Exploded', state.explodedView, () => setState(p => ({ ...p, explodedView: !p.explodedView })), state.moldGenerated],
+                ['Original', state.showOriginal, () => setState(p => ({ ...p, showOriginal: !p.showOriginal })), state.moldGenerated],
+              ] as const).filter(c => c[3]).map(([label, on, fn]) => (
+                <button key={label} type="button" aria-pressed={on} onClick={fn} style={{
+                  border: 'none', borderRadius: radii.pill, padding: `6px ${spacing.md}px`, cursor: 'pointer', fontFamily: 'inherit',
+                  fontSize: fontSizes.xs, fontWeight: 600, background: colors.sectionBg,
+                  color: on ? colors.primary : colors.textMuted, boxShadow: on ? shadows.inset : 'none',
+                }}>{label}</button>
+              ))}
+            </div>
+          )}
         </main>
 
         {/* Control Panel — axis/offset changes no longer wipe the mold; the
             Generate button relabels to "Regenerate Mold" when params drift. */}
         <ControlPanel
           state={state}
+          step={step}
+          onStepChange={setStep}
           onLoadFile={handleFileLoad}
           onAxisChange={(axis: Axis) => setState(prev => ({ ...prev, axis }))}
           onOffsetChange={(offset: number) => setState(prev => ({ ...prev, planeOffset: offset }))}
@@ -1452,6 +1500,7 @@ export default function App() {
             />
           }
         />
+      </div>
       </div>
 
       {/* Floating help button — always available as a mouse affordance for
