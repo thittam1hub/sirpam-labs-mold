@@ -1415,8 +1415,8 @@ export default function ControlPanel({
       {/* Projects — browser-only save/load. The library lives in IndexedDB
           (embeds the model geometry, so localStorage wouldn't fit); Export
           writes a shareable .sirpam.json with everything inside. */}
-      {true && (
-
+      <div style={styles.section}>
+          <div style={styles.sectionTitle}>Projects</div>
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
             <button
               type="button"
