@@ -64,12 +64,12 @@ export function ModelFixPanel({ geometry, onReplaceModel }: {
     const { geometry: g, report } = await repairModel(geometry);
     const txt = `Repaired: ${describeRepair(report)}.`;
     onReplaceModel(g, txt);
-    setMsg(report.solidOk ? `${txt} The model is now a clean solid.` : `${txt} Some damage is too deep — try Reduce detail, which rebuilds the surface.`);
+    setMsg(!report.solidOk ? `${txt} Some damage is too deep to fix automatically.` : report.rebuilt ? `${txt} The file was badly damaged, so the surface was rebuilt — fine details may be softer. A cleaner source file gives a sharper mold.` : `${txt} Full detail kept — the model is now a clean solid.`);
   });
   const doReduce = () => run('Reducing…', async () => {
     const { geometry: g, report } = await reduceDetail(geometry, target);
     onReplaceModel(g, `Detail reduced from ${report.inputTris.toLocaleString()} to ${report.outputTris.toLocaleString()} triangles`);
-    setMsg(`Now ${report.outputTris.toLocaleString()} triangles${report.solidOk ? ', clean solid' : ''}.`);
+    setMsg(`Now ${report.outputTris.toLocaleString()} triangles${report.solidOk ? ', clean solid' : ''}.${report.rebuilt ? ' The file was badly damaged, so the surface was rebuilt — fine details may be softer.' : ' Fine details kept.'}`);
   });
   const doFit = () => run('Applying…', async () => {
     const mm = parseFloat(size);

@@ -17,28 +17,46 @@ export type Database = {
       gallery_items: {
         Row: {
           created_at: string
+          currency: string | null
           id: string
           material: string | null
           notes: string | null
           photo_paths: string[]
+          price_paid: number | null
+          size_x_mm: number | null
+          size_y_mm: number | null
+          size_z_mm: number | null
+          source: string | null
           title: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          currency?: string | null
           id?: string
           material?: string | null
           notes?: string | null
           photo_paths?: string[]
+          price_paid?: number | null
+          size_x_mm?: number | null
+          size_y_mm?: number | null
+          size_z_mm?: number | null
+          source?: string | null
           title: string
           user_id?: string
         }
         Update: {
           created_at?: string
+          currency?: string | null
           id?: string
           material?: string | null
           notes?: string | null
           photo_paths?: string[]
+          price_paid?: number | null
+          size_x_mm?: number | null
+          size_y_mm?: number | null
+          size_z_mm?: number | null
+          source?: string | null
           title?: string
           user_id?: string
         }
