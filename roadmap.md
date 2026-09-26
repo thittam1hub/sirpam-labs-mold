@@ -9,10 +9,10 @@
 
 ## New requests (Sep 26)
 - [x] List current mold features + research competitor features (Meshcast, SpliceSTL, Mold Studio)
-- [ ] Tier 1: split-line preview (live parting-line overlay)
-- [ ] Tier 1: auto-suggest best parting setup (split advisor)
-- [ ] Tier 1: material & cost estimator
-- [ ] Tier 1: save/load projects (IndexedDB + .sirpam.json export/import)
+- [x] Tier 1: split-line preview (live parting-line overlay)
+- [x] Tier 1: auto-suggest best parting setup (split advisor)
+- [x] Tier 1: material & cost estimator
+- [x] Tier 1: save/load projects (IndexedDB + .sirpam.json export/import)
 - [ ] Tier 2 backlog: seal type choice, pry pockets, material presets, side-specific silicone thickness, gate advisor, multi-cavity tray, radial splits, auto-orient for printing
 
 ## Done

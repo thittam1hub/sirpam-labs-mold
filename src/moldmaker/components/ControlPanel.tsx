@@ -1415,19 +1415,17 @@ export default function ControlPanel({
       {/* Projects — browser-only save/load. The library lives in IndexedDB
           (embeds the model geometry, so localStorage wouldn't fit); Export
           writes a shareable .sirpam.json with everything inside. */}
-      {hasModel && (
-        <div style={styles.section}>
+      <div style={styles.section}>
           <div style={styles.sectionTitle}>Projects</div>
-
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
             <button
               type="button"
               style={{
                 ...styles.button, ...styles.secondaryBtn, flex: 1,
-                ...(projectBusy ? styles.disabledBtn : {}),
+                ...((projectBusy || !hasModel) ? styles.disabledBtn : {}),
               }}
               onClick={onSaveProject}
-              disabled={projectBusy}
+              disabled={projectBusy || !hasModel}
             >
               Save Project
             </button>
@@ -1514,7 +1512,7 @@ export default function ControlPanel({
             </div>
           )}
         </div>
-      )}
+
 
       {/* View Options — promoted from hasMold-only to hasModel-and-up because
           Wireframe is useful on the *loaded* model too (CSG debugging, topology

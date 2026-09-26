@@ -601,7 +601,7 @@ export function useMoldGenerator() {
     }
   }, [exportStepViaWorker]);
 
-  return { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane };
+  return { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane, suggestParting };
 }
 
 // Re-export the Axis type for backward compat with anything importing it from here.
