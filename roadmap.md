@@ -29,7 +29,8 @@
 - [x] Phase C: fill preview, print-farm plate planner, AI text/photo to model (Lovable AI via server function) — browser-verified
 
 ## Requests (Sep 26, round 3)
-- [ ] Shop page: researched mold/print services, pricing, how to send .sirpam
-- [ ] Gallery: upload photos + notes of printed molds (online account, sign-in)
-- [ ] Faster/more accurate: generation, Suggest Best Split, big STL handling
+- [x] Shop page: researched mold/print services, pricing, how to send .sirpam
+- [x] Gallery: upload photos + notes of printed molds (online account, sign-in)
+- [x] Suggest Best Split: coarse-to-fine (faster on big STLs, 2% precision)
+- [ ] Faster mold generation for big STLs (needs a real large STL to measure)
 - [ ] Mold from user's real STL → STL pair (waiting for the file)
