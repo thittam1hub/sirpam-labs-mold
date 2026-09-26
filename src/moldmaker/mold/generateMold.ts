@@ -28,6 +28,14 @@ import {
 } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold } from './moldBox';
 import { envelopeAroundManifold, offsetOutward } from './moldOffset';
+import { primaryAxisIndex } from './moldBox';
+import {
+  type MoldExtras,
+  applyTongueGroove,
+  applyPryPockets,
+  applyRadialSplit,
+  lateralToWorld,
+} from './moldFeatures';
 
 /**
  * Optional overrides for tunables that are otherwise read from ./constants.
@@ -107,6 +115,8 @@ export interface GenerateMoldOptions {
    * (Minkowski offset), so the UI warns that generation takes longer.
    */
   formFit?: boolean;
+  /** Tier-2 extras: seal type, pry pockets, radial split, multi-cavity sprues. */
+  extras?: MoldExtras;
 }
 
 /**
@@ -306,7 +316,22 @@ export async function generateMold(
   let topResult = topHalf;
   let bottomResult = bottomHalf;
 
-  for (const pinPos of pinPositions) {
+  // Seal type (Tier 2). Tongue & groove needs an axis-aligned plane and an
+  // analytic wall; otherwise we silently fall back to keyed pins.
+  const extras: MoldExtras = options.extras ?? {};
+  const cavityCenters = extras.cavityCenters ?? [];
+  let sealed = false;
+  if (extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
+    const res = applyTongueGroove(wasm, topResult, bottomResult, {
+      axis,
+      cavityBox: boundingBox.clone().expandByScalar(clearance),
+      envMin: envelope.moldMin, envSize: envelope.moldSize,
+      splitPos, wallThickness, clearance,
+    });
+    if (res) { [topResult, bottomResult] = res; sealed = true; }
+  }
+
+  for (const pinPos of (sealed ? [] : pinPositions)) {
     // Registration pins MUST span the parting plane: half inside the top
     // mold's solid body (the `add` is a no-op there — there's already
     // material) and half protruding into the bottom mold's region (where
@@ -388,7 +413,9 @@ export async function generateMold(
     envelope, boundingBox, splitPos, geometry,
     { sprueMargin, ventMargin },
     cutAngle,
-    options.sprueOverride ? { sprueOverride: options.sprueOverride } : {},
+    cavityCenters.length > 1
+      ? { sprueOverride: cavityCenters[0] }
+      : options.sprueOverride ? { sprueOverride: options.sprueOverride } : {},
   );
 
   // Guard against degenerate sprue heights. If the parting plane is pushed
@@ -424,6 +451,15 @@ export async function generateMold(
 
       topResult = topResult.subtract(vent);
     }
+
+    // Multi-cavity tray: one sprue per extra cavity, same depth/taper.
+    for (const c of cavityCenters.slice(1)) {
+      const pos = lateralToWorld(axis, c.a, c.b, channels.spruePos[primaryAxisIndex(axis)]);
+      topResult = topResult.subtract(
+        Manifold.cylinder(channels.sprueHeight, sprueGateRadius, sprueTopRadius, 24)
+          .rotate(channels.rotation).translate(pos),
+      );
+    }
   }
 
   // ── Additional sequential cuts ──
@@ -441,6 +477,13 @@ export async function generateMold(
   // primary-plus-features first, the sequential cuts become a pure topology
   // operation on already-finished mold geometry.
   let pieces: any[] = [topResult, bottomResult];
+
+  // Pry pockets (Tier 2) on the primary parting line.
+  if (extras.pryPockets) {
+    pieces = applyPryPockets(wasm, pieces, {
+      axis, envMin: envelope.moldMin, envSize: envelope.moldSize, splitPos, wallThickness,
+    });
+  }
 
   if (options.additionalPlanes && options.additionalPlanes.length > 0) {
     for (const plane of options.additionalPlanes) {
@@ -482,6 +525,13 @@ export async function generateMold(
   // EmptyManifoldError for zero-tri inputs — but we filtered those above,
   // so any throw here is a real failure (e.g. CSG collapsed the primary
   // halves) that should propagate.
+  // Radial split (Tier 2): wedge every piece around the parting axis.
+  const radial = extras.radialSegments ?? 0;
+  if (radial >= 3) {
+    const center = new THREE.Vector3().copy(envelope.moldMin).addScaledVector(envelope.moldSize, 0.5);
+    pieces = applyRadialSplit(pieces, { axis, center, segments: radial }).pieces;
+  }
+
   const pieceGeos = pieces.map(p => manifoldToGeometry(p));
 
   return { pieces: pieceGeos, repairs };

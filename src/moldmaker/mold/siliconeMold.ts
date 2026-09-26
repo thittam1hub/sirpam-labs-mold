@@ -24,6 +24,10 @@ import {
   lateralAxisIndices,
 } from './moldBox';
 import { envelopeAroundManifold, offsetOutward } from './moldOffset';
+import {
+  type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit,
+  asymmetricCavityBox, lateralToWorld,
+} from './moldFeatures';
 
 /**
  * Silicone mold generation — the three workflows the casting industry
@@ -79,6 +83,8 @@ export interface SiliconeMoldOptions {
    * skinCore — its mother mold already hugs the inflated model.
    */
   formFit?: boolean;
+  /** Tier-2 extras (seal, pry pockets, radial split, per-side margins, multi-cavity). */
+  extras?: MoldExtras;
 }
 
 export interface SiliconeMoldResult {
@@ -180,6 +186,8 @@ export async function generateSiliconeMold(
   const primary = primaryAxisIndex(axis);
   const [latA, latB] = lateralAxisIndices(axis);
 
+  const extras: MoldExtras = options.extras ?? {};
+  let lastEnv: any = null;
   const pieces: any[] = [];
   const labels: string[] = [];
   let siliconeVolumeCm3 = 0;
@@ -196,9 +204,15 @@ export async function generateSiliconeMold(
     spruePos[latA] = center.getComponent(latA);
     spruePos[latB] = center.getComponent(latB);
 
-    let out = solid.subtract(
-      axialCylinder(wasm, axis, holeHeight, sprueRadius * 0.7, sprueRadius, 24, spruePos),
-    );
+    const centers = (extras.cavityCenters ?? []).length > 1
+      ? extras.cavityCenters!.map(c => lateralToWorld(axis, c.a, c.b, spruePos[primary]))
+      : [spruePos];
+    let out = solid;
+    for (const sp of centers) {
+      out = out.subtract(
+        axialCylinder(wasm, axis, holeHeight, sprueRadius * 0.7, sprueRadius, 24, sp),
+      );
+    }
 
     // Two vents at opposite lateral corners of the cavity — air escapes at
     // the extremities last, so that's where they belong.
@@ -238,7 +252,15 @@ export async function generateSiliconeMold(
 
     let top = above;
     let bottom = below;
-    for (const pinPos of pinPositions) {
+    let sealed = false;
+    if (extras.seal === 'tongueGroove' && cutAngle === 0 && !(options.formFit && options.type !== 'skinCore')) {
+      const res = applyTongueGroove(wasm, top, bottom, {
+        axis, cavityBox: refBox, envMin: env.moldMin, envSize: env.moldSize,
+        splitPos, wallThickness, clearance,
+      });
+      if (res) { [top, bottom] = res; sealed = true; }
+    }
+    for (const pinPos of (sealed ? [] : pinPositions)) {
       top = top.add(
         axialCylinder(wasm, axis, pinHeight, pinRadius, pinRadius, 16, pinPos),
       );
@@ -252,6 +274,12 @@ export async function generateSiliconeMold(
           pinPos,
         ),
       );
+    }
+    lastEnv = env;
+    if (extras.pryPockets) {
+      [top, bottom] = applyPryPockets(wasm, [top, bottom], {
+        axis, envMin: env.moldMin, envSize: env.moldSize, splitPos, wallThickness,
+      });
     }
     return [top, bottom];
   };
@@ -273,7 +301,12 @@ export async function generateSiliconeMold(
       cavityBox = expandedBox(boundingBox, margin);
       outerEnv = envelopeAroundManifold(outer, axis, wallThickness);
     } else {
-      cavityBox = expandedBox(boundingBox, margin);
+      const sm = extras.siliconeMargins;
+      cavityBox = sm && (sm.top > 0 || sm.bottom > 0 || sm.sides > 0)
+        ? asymmetricCavityBox(boundingBox, axis, {
+            top: sm.top || margin, bottom: sm.bottom || margin, sides: sm.sides || margin,
+          })
+        : expandedBox(boundingBox, margin);
       const innerEnv = computeMoldEnvelope(cavityBox, shape, axis, 0);
       outerEnv = computeMoldEnvelope(cavityBox, shape, axis, wallThickness);
       outer = createMoldBoxManifold(wasm, outerEnv);
@@ -346,6 +379,21 @@ export async function generateSiliconeMold(
     }
   }
 
-  const pieceGeos = pieces.map(p => manifoldToGeometry(p));
-  return { pieces: pieceGeos, labels, repairs, siliconeVolumeCm3 };
+  // Radial split (Tier 2) — the printable core is never wedged.
+  let finalPieces = pieces;
+  let finalLabels = labels;
+  const radial = extras.radialSegments ?? 0;
+  if (radial >= 3 && lastEnv) {
+    const center = new THREE.Vector3().copy(lastEnv.moldMin).addScaledVector(lastEnv.moldSize, 0.5);
+    const cutIdx = pieces.map((_, i) => i).filter(i => labels[i] !== 'core');
+    const r = applyRadialSplit(cutIdx.map(i => pieces[i]), { axis, center, segments: radial });
+    finalPieces = r.pieces;
+    finalLabels = r.pieces.map((_, k) => `${labels[cutIdx[r.sourceIndex[k]]]}_r${r.segmentIndex[k] + 1}`);
+    pieces.forEach((p, i) => {
+      if (labels[i] === 'core') { finalPieces.push(p); finalLabels.push('core'); }
+    });
+  }
+
+  const pieceGeos = finalPieces.map(p => manifoldToGeometry(p));
+  return { pieces: pieceGeos, labels: finalLabels, repairs, siliconeVolumeCm3 };
 }

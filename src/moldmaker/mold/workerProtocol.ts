@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape, SiliconeMoldType } from '../types';
 import type { MeshRepairLog } from './validateMesh';
+import type { MoldExtras } from './moldFeatures';
 
 /**
  * Message protocol between the main thread and the mold-generation worker.
@@ -99,6 +100,8 @@ export type WorkerRequest = {
      * block workflows; ignored by skinCore. Omitted → false.
      */
     formFit?: boolean;
+    /** Tier-2 extras — see mold/moldFeatures.ts. Omitted → legacy output. */
+    extras?: MoldExtras;
     /**
      * Silicone-workflow parameters. Present only for `type: 'silicone'`
      * requests; ignored by the rigid path.

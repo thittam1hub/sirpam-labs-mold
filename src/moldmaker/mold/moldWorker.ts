@@ -96,6 +96,7 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
             cutAngle: req.payload.cutAngle,
             isHollow: req.payload.isHollow,
             formFit: req.payload.formFit,
+            extras: req.payload.extras,
           },
         )
       : await generateMold(
@@ -113,6 +114,7 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
             additionalPlanes: req.payload.additionalPlanes,
             isHollow: req.payload.isHollow,
             formFit: req.payload.formFit,
+            extras: req.payload.extras,
           },
         );
 
