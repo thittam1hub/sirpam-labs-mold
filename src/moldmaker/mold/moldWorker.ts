@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { generateMold } from './generateMold';
 import { generateSiliconeMold } from './siliconeMold';
+import { suggestBestParting } from './suggestParting';
 import {
   deserializeGeometry,
   serializeGeometry,
@@ -28,7 +29,7 @@ const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobal
 
 ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
   const req = ev.data;
-  if (req.type !== 'generate' && req.type !== 'silicone') {
+  if (req.type !== 'generate' && req.type !== 'silicone' && req.type !== 'suggest') {
     // Unknown message — reply with a structured error so the main thread
     // doesn't silently stall waiting on a response.
     const res: WorkerResponse = {
@@ -56,10 +57,27 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
       new THREE.Vector3(...req.payload.bboxMax),
     );
 
-    // Two pipelines share this worker: rigid two-part casting molds and the
-    // silicone tooling workflows. Both are Manifold CSG over the same
-    // Manifold WASM singleton, so keeping them in one worker means one
-    // WASM init and no risk of two CSG graphs running concurrently.
+    // Three pipelines share this worker: rigid two-part casting molds, the
+    // silicone tooling workflows, and the split advisor. All are Manifold
+    // WASM / draft-math over the same singletons, so keeping them in one
+    // worker means one init and no risk of concurrent CSG graphs.
+    if (req.type === 'suggest') {
+      // Advisor sweep: pure draft-math over the mesh — no CSG, no WASM.
+      const suggestion = suggestBestParting(geo, bbox);
+      const res: WorkerResponse = {
+        type: 'suggestResult',
+        id: req.id,
+        payload: {
+          axis: suggestion.axis,
+          offset: suggestion.offset,
+          cutAngle: suggestion.cutAngle,
+          undercut: suggestion.undercut,
+        },
+      };
+      ctx.postMessage(res);
+      return;
+    }
+
     const result = req.type === 'silicone'
       ? await generateSiliconeMold(
           geo,
