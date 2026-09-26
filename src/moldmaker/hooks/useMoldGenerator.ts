@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Axis, MoldBoxShape } from '../types';
 
 import { autoDetectPlane as autoDetectPlaneImpl } from '../mold/generateMold';
+import { suggestBestParting, type SuggestResult } from '../mold/suggestParting';
 import { exportSTL, exportOBJ, export3MF } from '../mold/exporters';
 import {
   collectTransferables,
@@ -317,6 +318,80 @@ export function useMoldGenerator() {
   );
 
   const autoDetectPlane = useCallback(autoDetectPlaneImpl, []);
+
+  /**
+   * Split advisor — sweeps candidate parting setups (axis × offset × tilt)
+   * in the mold worker and returns the one with the fewest true undercuts.
+   * Runs off the UI thread: 45 scoring passes over the mesh would otherwise
+   * jank the render loop on detailed models.
+   */
+  const suggestParting = useCallback(
+    async (
+      geometry: THREE.BufferGeometry,
+      boundingBox: THREE.Box3,
+    ): Promise<SuggestResult> => {
+      const worker = getWorker();
+      const id = ++requestIdRef.current;
+
+      const positionAttr = geometry.attributes.position;
+      if (!positionAttr) {
+        throw new Error('Geometry has no position attribute.');
+      }
+      // Cloned, not transferred — the live preview mesh keeps its buffers.
+      const positions = new Float32Array(positionAttr.array as Float32Array);
+      const index = geometry.index
+        ? new Uint32Array(geometry.index.array as Uint16Array | Uint32Array)
+        : undefined;
+
+      const req: WorkerRequest = {
+        type: 'suggest',
+        id,
+        payload: {
+          positions,
+          index,
+          bboxMin: [boundingBox.min.x, boundingBox.min.y, boundingBox.min.z],
+          bboxMax: [boundingBox.max.x, boundingBox.max.y, boundingBox.max.z],
+          // Unused by the advisor (it sweeps all axes itself) but required
+          // by the shared payload shape.
+          axis: 'z',
+          offset: 0.5,
+        },
+      };
+
+      return new Promise((resolve, reject) => {
+        const onMessage = (ev: MessageEvent<WorkerResponse>) => {
+          const res = ev.data;
+          if (res.id !== id) return;
+          if (res.type === 'suggestResult') {
+            worker.removeEventListener('message', onMessage);
+            worker.removeEventListener('error', onError);
+            resolve({
+              axis: res.payload.axis,
+              offset: res.payload.offset,
+              cutAngle: res.payload.cutAngle,
+              undercut: res.payload.undercut,
+              evaluated: 45, // 3 axes × 5 offsets × 3 tilts — matches the grid
+            });
+            return;
+          }
+          if (res.type === 'error') {
+            worker.removeEventListener('message', onMessage);
+            worker.removeEventListener('error', onError);
+            reject(new Error(res.message));
+          }
+        };
+        const onError = (ev: ErrorEvent) => {
+          worker.removeEventListener('message', onMessage);
+          worker.removeEventListener('error', onError);
+          reject(new Error(ev.message || 'Mold worker crashed'));
+        };
+        worker.addEventListener('message', onMessage);
+        worker.addEventListener('error', onError);
+        worker.postMessage(req);
+      });
+    },
+    [getWorker],
+  );
 
   // ── STEP-export cancel state ──
   // STEP is the only exporter that can sensibly be cancelled (it runs for 20-30s
