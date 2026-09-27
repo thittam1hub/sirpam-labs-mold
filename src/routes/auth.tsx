@@ -10,7 +10,8 @@ function safeRedirect(value: unknown): string {
   if (typeof value === "string" && value.startsWith("/") && !value.startsWith("//") && !value.startsWith("/auth")) {
     return value;
   }
-  return "/";
+  // Default landing after sign-in: the app itself, not the marketing page.
+  return "/studio";
 }
 
 export const Route = createFileRoute("/auth")({
