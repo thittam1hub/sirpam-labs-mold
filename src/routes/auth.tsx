@@ -16,7 +16,7 @@ function safeRedirect(value: unknown): string {
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>) => ({
-    redirect: safeRedirect(search.redirect),
+    redirect: safeRedirect(search["redirect"]),
   }),
   head: () => ({
     meta: [
