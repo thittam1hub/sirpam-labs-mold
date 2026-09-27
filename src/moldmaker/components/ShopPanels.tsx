@@ -73,17 +73,23 @@ function AdviceList({ items }: { items: Advice[] }) {
 
 /* ═════════════ Step 2 (Mold): shrink/fit + pour presets ═════════════ */
 
-export function MoldPrepPanel({ geometry, onReplaceModel, onSetClearance, onApplyPreset }: {
-  geometry: THREE.BufferGeometry | null;
-  onReplaceModel: (g: THREE.BufferGeometry, note: string) => void;
+/** Shrink % of each casting material (single source: tier2.castingMaterial). */
+const CAST_TO_SHRINK: Partial<Record<CastingMaterialId, string>> = { pu_resin: 'pu', epoxy: 'epoxy', wax: 'wax', concrete: 'concrete' };
+const METALS = CAST_SHRINK.filter(c => ['gold', 'silver', 'bronze'].includes(c.id));
+
+export function MoldPrepPanel({ castingMaterial, scale, onScaleChange, onSetClearance, onApplyPreset }: {
+  castingMaterial: CastingMaterialId;
+  /** Shared print scale — the same value as Printer Fit. */
+  scale: number;
+  onScaleChange: (s: number) => void;
   onSetClearance: (mm: number) => void;
   onApplyPreset: (p: PourPreset) => void;
 }) {
   const [printId, setPrintId] = useState('pla');
-  const [castId, setCastId] = useState('none');
+  const [metal, setMetal] = useState('');
   const [preset, setPreset] = useState<string | null>(null);
   const pr = PRINT_SHRINK.find(p => p.id === printId)!;
-  const ca = CAST_SHRINK.find(c => c.id === castId)!;
+  const ca = CAST_SHRINK.find(c => c.id === (metal || CAST_TO_SHRINK[castingMaterial] || 'none'))!;
   const f = shrinkScale(pr.pct, ca.pct);
   const active = POUR_PRESETS.find(p => p.id === preset);
 
@@ -96,27 +102,29 @@ export function MoldPrepPanel({ geometry, onReplaceModel, onSetClearance, onAppl
             onClick={() => { setPreset(p.id); onApplyPreset(p); }}>{p.label}</button>
         ))}
       </div>
-      <div style={s.hint}>{active ? active.notes : 'One click sets mold type, silicone thickness, pour hole size and material.'}</div>
+      <div style={s.hint}>{active ? active.notes : 'One click sets mold type, silicone thickness, pour hole size and casting material.'}</div>
 
       <div style={s.sub}>Shrink & fit compensation</div>
-      <label style={s.hint}>Printer / material
+      <label style={s.hint}>Printer material
         <select style={s.input} value={printId} onChange={e => setPrintId(e.target.value)} aria-label="Print material">
           {PRINT_SHRINK.map(p => <option key={p.id} value={p.id}>{p.label} (~{p.pct}%)</option>)}
         </select>
       </label>
-      <label style={s.hint}>Cast material
-        <select style={s.input} value={castId} onChange={e => setCastId(e.target.value)} aria-label="Cast shrink material">
-          {CAST_SHRINK.map(c => <option key={c.id} value={c.id}>{c.label}{c.pct ? ` (~${c.pct}%)` : ''}</option>)}
+      <label style={s.hint}>Lost-wax metal (jewelry only)
+        <select style={s.input} value={metal} onChange={e => setMetal(e.target.value)} aria-label="Lost-wax metal">
+          <option value="">None — use casting material</option>
+          {METALS.map(c => <option key={c.id} value={c.id}>{c.label} (~{c.pct}%)</option>)}
         </select>
       </label>
-      <div style={{ ...s.kv, marginTop: spacing.sm }}><span>Scale master by</span><span>{((f - 1) * 100).toFixed(2)}% (×{f.toFixed(4)})</span></div>
+      <div style={{ ...s.kv, marginTop: spacing.sm }}><span>Cast shrink ({ca.label})</span><span>{ca.pct}%</span></div>
+      <div style={s.kv}><span>Compensation</span><span>+{((f - 1) * 100).toFixed(2)}%</span></div>
+      <div style={s.kv}><span>Print scale now</span><span>×{scale.toFixed(4)}</span></div>
       <div style={s.kv}><span>Suggested clearance</span><span>{pr.clearanceMm} mm</span></div>
-      <button type="button" style={s.btn} disabled={!geometry}
-        onClick={() => geometry && onReplaceModel(scaledCopy(geometry, f), `Scaled model ×${f.toFixed(4)} for shrink`)}>
-        Scale model to compensate
+      <button type="button" style={s.btn} onClick={() => onScaleChange(scale * f)}>
+        Add shrink compensation to print scale
       </button>
       <button type="button" style={s.btn} onClick={() => onSetClearance(pr.clearanceMm)}>Use suggested clearance</button>
-      <div style={s.hint}>Typical values — print a small test piece to dial in your own printer.</div>
+      <div style={s.hint}>Print scale is one setting shared with Printer Fit and Model → Scale. Typical values — print a test piece to dial in your printer.</div>
     </div>
   );
 }
@@ -142,9 +150,7 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
   const [depth, setDepth] = useState(1.2);
   const [mode, setMode] = useState<'raise' | 'engrave'>('raise');
   // Split
-  const [bedX, setBedX] = useState(bed?.x ?? 220);
-  const [bedY, setBedY] = useState(bed?.y ?? 220);
-  const [bedZ, setBedZ] = useState(bed?.z ?? 250);
+  const b = bed ?? { x: 220, y: 220, z: 250 };
   const [dowel, setDowel] = useState(1.75);
   const [pieces, setPieces] = useState<THREE.BufferGeometry[]>([]);
   // Tree
@@ -155,7 +161,7 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
   const [baseMm, setBaseMm] = useState(5);
   const [style, setStyle] = useState<'solid' | 'ring'>('solid');
 
-  const base = (fileName ?? 'model').replace(/\.[^.]+$/, '');
+  const baseName = (fileName ?? 'model').replace(/\.[^.]+$/, '');
   const run = async (fn: () => Promise<void>) => {
     setBusy(true); setErr(null);
     try { await fn(); } catch (e) { setErr(e instanceof Error ? e.message : 'That did not work on this model.'); }
@@ -200,14 +206,13 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
 
       {tool === 'split' && (<>
         <div style={s.hint}>Cuts an oversized prop into pieces that fit your printer bed, with matching dowel holes (use filament or dowel pins) so they line up.</div>
-        <Slider label="Bed width" value={bedX} min={100} max={400} step={5} unit=" mm" onChange={setBedX} />
-        <Slider label="Bed depth" value={bedY} min={100} max={400} step={5} unit=" mm" onChange={setBedY} />
-        <Slider label="Bed height" value={bedZ} min={100} max={400} step={5} unit=" mm" onChange={setBedZ} />
+        <div style={s.kv}><span>Printer bed</span><span>{b.x}×{b.y}×{b.z} mm</span></div>
+        <div style={s.hint}>{bed ? 'From the printer picked in Printer Fit.' : 'Default size — pick your printer in Printer Fit to use its bed.'}</div>
         <div style={s.row}>
           {[1.75, 3, 6].map(d => <button key={d} type="button" style={s.chip(dowel === d)} onClick={() => setDowel(d)}>{d} mm pin</button>)}
         </div>
         <button type="button" style={s.btn} disabled={busy} onClick={() => run(async () => {
-          const r = await splitForBed(geometry, { bed: { x: bedX, y: bedY, z: bedZ }, dowelDiameterMm: dowel, dowelDepthMm: 8 });
+          const r = await splitForBed(geometry, { bed: b, dowelDiameterMm: dowel, dowelDepthMm: 8 });
           setPieces(r.pieces);
           if (r.pieces.length <= 1) setErr('The model already fits this bed — no split needed.');
         })}>{busy ? 'Cutting…' : 'Split model'}</button>
@@ -215,7 +220,7 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
           <div style={s.hint}>{pieces.length} pieces. Download each, or load one as the model to make a mold of it.</div>
           {pieces.map((p, i) => (
             <div key={i} style={{ ...s.row, marginTop: 4 }}>
-              <button type="button" style={s.chip(false)} onClick={() => download(p, `${base}_piece${i + 1}.stl`)}>Piece {i + 1} STL</button>
+              <button type="button" style={s.chip(false)} onClick={() => download(p, `${baseName}_piece${i + 1}.stl`)}>Piece {i + 1} STL</button>
               <button type="button" style={s.chip(false)} onClick={() => onReplaceModel(p, `Using piece ${i + 1}`)}>Use as model</button>
             </div>
           ))}
@@ -229,7 +234,7 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
           setTree(await buildWaxTree(geometry, { count, sprueDiameterMm: 6, gateDiameterMm: 2.5, gapMm: 6 }));
         })}>{busy ? 'Building…' : 'Build tree'}</button>
         {tree && (<div style={s.row}>
-          <button type="button" style={s.chip(false)} onClick={() => download(tree, `${base}_wax_tree.stl`)}>Download tree STL</button>
+          <button type="button" style={s.chip(false)} onClick={() => download(tree, `${baseName}_wax_tree.stl`)}>Download tree STL</button>
           <button type="button" style={s.chip(false)} onClick={() => onReplaceModel(tree, 'Wax tree')}>Show in viewer</button>
         </div>)}
         <div style={s.hint}>Check your flask size. Gates attach at each part's centre — move them to a hidden spot in your modeling tool if needed.</div>
