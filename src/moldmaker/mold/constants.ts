@@ -22,7 +22,7 @@ export const WALL_THICKNESS_RATIO = 0.08;
  *  programmer's abstraction, not a user's mental model. 0.15 mm is the common
  *  FDM tight-fit clearance (loose enough to demold, tight enough to register).
  *  Users can dial to 0.05 mm for resin prints or 1.0 mm for rough clearance. */
-export const CLEARANCE_MM = 0.15;
+export const CLEARANCE_MM = 0.2;
 
 /** Default sprue diameter (top / pour end), in mm. Same rationale as
  *  CLEARANCE_MM — absolute mm matches how casters think. The sprue tapers

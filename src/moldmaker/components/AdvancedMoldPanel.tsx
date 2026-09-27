@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type * as THREE from 'three';
 import type { Axis, MoldMode, SiliconeMoldType } from '../types';
-import type { SealType } from '../mold/moldFeatures';
+import type { SealType, LockStyle } from '../mold/moldFeatures';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { CASTING_MATERIALS, adviseGate, solidProps, type CastingMaterialId, type GateAdvice } from '../utils/tier2';
 
@@ -29,6 +29,14 @@ export interface Tier2Settings {
   moldFeet?: boolean;
   gapFiller?: boolean;
   pieceCount?: 2 | 3 | 4;
+  /** Round 8 — sizes. 0 = automatic. Optional so older projects still load. */
+  wallMm?: number;
+  ventDiameterMm?: number;
+  /** -1 = automatic, 0 = no vents. */
+  ventCount?: number;
+  lockStyle?: LockStyle;
+  lockDiameterMm?: number;
+  lockCount?: 2 | 4;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -52,6 +60,12 @@ export const DEFAULT_TIER2: Tier2Settings = {
   moldFeet: false,
   gapFiller: false,
   pieceCount: 2,
+  wallMm: 0,
+  ventDiameterMm: 0,
+  ventCount: -1,
+  lockStyle: 'round',
+  lockDiameterMm: 0,
+  lockCount: 4,
 };
 
 interface Props {
@@ -227,11 +241,56 @@ export default function AdvancedMoldPanel(p: Props) {
               : 'Four locating pins — quick to print, fine for thicker materials.'}
           </div>
 
+          {t.seal === 'pins' && isRigid && (
+            <>
+              <div style={s.sub}>Lock type</div>
+              <div style={s.row}>
+                {([['round', 'Round pin'], ['cone', 'Cone key'], ['square', 'Square key'], ['magnet', 'Magnets']] as const).map(([id, name]) => (
+                  <button key={id} style={s.chip((t.lockStyle ?? 'round') === id)} onClick={() => onChange({ lockStyle: id })}>{name}</button>
+                ))}
+              </div>
+              <div style={s.hint}>
+                {({
+                  round: 'Classic pin and hole. Simple and strong.',
+                  cone: 'Tapered key: guides the halves shut and never jams. Best for most printed molds.',
+                  square: 'Cannot twist, so the halves stay perfectly lined up.',
+                  magnet: 'Pockets for 3 mm thick disc magnets in both halves — glue them in and the mold snaps shut. Needs a flat split.',
+                } as const)[t.lockStyle ?? 'round']}
+              </div>
+              <Slider label={t.lockStyle === 'magnet' ? 'Magnet size' : 'Lock size'} value={t.lockDiameterMm ?? 0} min={0} max={14} step={1}
+                unit={(t.lockDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ lockDiameterMm: v })} />
+              <div style={s.sub}>Number of locks</div>
+              <div style={s.row}>
+                {([2, 4] as const).map(n => (
+                  <button key={n} style={s.chip((t.lockCount ?? 4) === n)} onClick={() => onChange({ lockCount: n })}>{n}</button>
+                ))}
+              </div>
+              <div style={s.hint}>0 = sized automatically from the wall. Locks are kept inside the wall so they never break through the edge.</div>
+            </>
+          )}
+
           <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
             <input type="checkbox" checked={t.pryPockets} onChange={e => onChange({ pryPockets: e.target.checked })} />
             Pry slots on the split line
           </label>
           <div style={s.hint}>Two screwdriver notches so the halves open without damaging the cavity.</div>
+        </>
+      )}
+
+      {isRigid && (
+        <>
+          <div style={s.sub}>Wall &amp; air vents</div>
+          <Slider label="Wall thickness" value={t.wallMm ?? 0} min={0} max={15} step={0.5}
+            unit={(t.wallMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ wallMm: v })} />
+          <Slider label="Air vent size" value={t.ventDiameterMm ?? 0} min={0} max={5} step={0.5}
+            unit={(t.ventDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ ventDiameterMm: v })} />
+          <div style={s.sub}>Number of air vents</div>
+          <div style={s.row}>
+            {([-1, 0, 1, 2, 3, 4] as const).map(n => (
+              <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
+            ))}
+          </div>
+          <div style={s.hint}>Typical: 4–6 mm wall, 1.5–3 mm vents. 0 / Auto = worked out from your model size.</div>
         </>
       )}
 
@@ -379,5 +438,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount]);
 }
