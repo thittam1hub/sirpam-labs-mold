@@ -320,10 +320,10 @@ export async function generateMold(
 
   // Seal type (Tier 2). Tongue & groove needs an axis-aligned plane and an
   // analytic wall; otherwise we silently fall back to keyed pins.
-  const extras: MoldExtras = options.extras ?? {};
   const cavityCenters = extras.cavityCenters ?? [];
-  let sealed = false;
-  if (extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
+  // A curved split is self-registering (the halves nest), so no pins/seal.
+  let sealed = !!curved;
+  if (!curved && extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
     const res = applyTongueGroove(wasm, topResult, bottomResult, {
       axis,
       cavityBox: boundingBox.clone().expandByScalar(clearance),
@@ -364,6 +364,21 @@ export async function generateMold(
         .rotate(getRotationForAxis(axis))
         .translate(pinPos),
     );
+  }
+
+  // Clamp wings + stand-fins (flat, untilted split only). Added before the
+  // channels are drilled so they never refill a sprue or vent.
+  const flatSplit = !curved && cutAngle === 0;
+  const envMaxV = envelope.moldMin.clone().add(envelope.moldSize);
+  if (flatSplit && r6.clampBoltMm) {
+    [topResult, bottomResult] = applyClampWings(wasm, topResult, bottomResult, {
+      axis, envMin: envelope.moldMin, envMax: envMaxV, splitPos, wall: wallThickness,
+      boltMm: r6.clampBoltMm, cavityCut,
+    });
+  }
+  if (flatSplit && r6.standFins) {
+    const fins = buildStandFins(wasm, { axis, envMin: envelope.moldMin, envMax: envMaxV, splitPos, wall: wallThickness, cavityCut });
+    if (fins) bottomResult = bottomResult.add(fins);
   }
 
   // ── Pour sprue, runner, gate, and vent system ──
