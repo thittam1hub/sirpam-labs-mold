@@ -182,48 +182,6 @@ export type Database = {
         }
         Relationships: []
       }
-      quote_requests: {
-        Row: {
-          casting_material: string | null
-          contact_email: string
-          contact_name: string
-          created_at: string
-          id: string
-          maker: string
-          notes: string | null
-          project_path: string | null
-          quantity: number
-          size_class: string | null
-          user_id: string
-        }
-        Insert: {
-          casting_material?: string | null
-          contact_email: string
-          contact_name: string
-          created_at?: string
-          id?: string
-          maker: string
-          notes?: string | null
-          project_path?: string | null
-          quantity?: number
-          size_class?: string | null
-          user_id?: string
-        }
-        Update: {
-          casting_material?: string | null
-          contact_email?: string
-          contact_name?: string
-          created_at?: string
-          id?: string
-          maker?: string
-          notes?: string | null
-          project_path?: string | null
-          quantity?: number
-          size_class?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
