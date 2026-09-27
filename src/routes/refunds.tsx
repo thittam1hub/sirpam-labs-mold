@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/LegalFooter";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/refunds")({
@@ -28,6 +29,7 @@ function RefundsPage() {
         <p className="mt-2 text-muted-foreground">If an export was charged but did not produce a file, contact us and we will return those credits.</p>
         <h2 className="mt-8 text-xl font-semibold">How to ask</h2>
         <p className="mt-2 text-muted-foreground">Email us from the address on your account with the date of purchase. Refunds go back to the original payment method.</p>
+        <LegalFooter />
       </main>
     </div>
   );

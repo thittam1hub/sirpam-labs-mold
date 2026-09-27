@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/LegalFooter";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/privacy")({
@@ -30,6 +31,7 @@ function PrivacyPage() {
         <p className="mt-2 text-muted-foreground">Payments are handled by our payment provider, which receives your payment details directly; we never see your card number.</p>
         <h2 className="mt-8 text-xl font-semibold">Your choices</h2>
         <p className="mt-2 text-muted-foreground">You can delete gallery items at any time, and ask us to delete your account and data.</p>
+        <LegalFooter />
       </main>
     </div>
   );
