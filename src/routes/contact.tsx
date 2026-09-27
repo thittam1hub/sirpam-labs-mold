@@ -1,0 +1,72 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { BrandLink } from "@/components/BrandLink";
+import { LegalFooter } from "@/components/LegalFooter";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/contact")({
+  staticData: { sitemap: true },
+  head: () => ({
+    meta: [
+      { title: "Contact us — Sirpam 3D Labs Mold" },
+      { name: "description", content: "Questions about mold making, credits or your account? Contact Sirpam 3D Labs." },
+      { property: "og:title", content: "Contact us — Sirpam 3D Labs Mold" },
+      { property: "og:description", content: "Get in touch with Sirpam 3D Labs." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: ContactPage,
+});
+
+function ContactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    await supabase.from("contact_messages").insert({ name, email, message });
+    setSent(true);
+    setBusy(false);
+  };
+
+  const inputCls = "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm";
+
+  return (
+    <div className="neu-page min-h-screen bg-background text-foreground">
+      <header className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 bg-background px-6 py-3 text-sm">
+        <BrandLink />
+        <div className="flex-1" />
+        <Link to="/studio">Mold Maker</Link>
+        <Link to="/pricing">Pricing</Link>
+      </header>
+      <main className="mx-auto max-w-2xl px-6 pb-16">
+        <h1 className="text-3xl font-bold">Contact us</h1>
+        <p className="mt-2 text-muted-foreground">
+          Questions about mold making, credits, or your account? Write to us here, or email{" "}
+          <a href="mailto:sirpam3dlabs@gmail.com" className="text-primary">sirpam3dlabs@gmail.com</a>.
+        </p>
+        {sent ? (
+          <div className="mt-6 rounded-3xl bg-card p-6 shadow-sm">
+            <p className="font-semibold">Message sent.</p>
+            <p className="mt-1 text-sm text-muted-foreground">We'll reply to your email as soon as we can.</p>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-card p-6 shadow-sm">
+            <input required placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+            <input required type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+            <textarea required rows={5} placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} className={inputCls} />
+            <button disabled={busy} className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+              {busy ? "Sending…" : "Send message"}
+            </button>
+          </form>
+        )}
+      </main>
+      <LegalFooter />
+    </div>
+  );
+}
