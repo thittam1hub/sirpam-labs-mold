@@ -3,6 +3,7 @@ import { BrandLink } from "@/components/BrandLink";
 import { LegalFooter } from "@/components/LegalFooter";
 
 export const Route = createFileRoute("/help")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Help & guides — Sirpam 3D Labs Mold" },

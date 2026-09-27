@@ -3,6 +3,7 @@ import { BrandLink } from "@/components/BrandLink";
 import { LegalFooter } from "@/components/LegalFooter";
 
 export const Route = createFileRoute("/licenses")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Open-source licenses — Sirpam 3D Labs Mold" },
