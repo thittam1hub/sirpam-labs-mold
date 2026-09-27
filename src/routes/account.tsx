@@ -21,14 +21,50 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPage() {
+  const nav = useNavigate();
   const [status, setStatus] = useState<CreditStatus | null | undefined>(undefined);
   const [rows, setRows] = useState<LedgerRow[]>([]);
+  const [email, setEmail] = useState<string>("");
+  const [curPw, setCurPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
+  const [pwBusy, setPwBusy] = useState(false);
+  const [delConfirm, setDelConfirm] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
     getCreditStatus()
       .then(async (s) => { setStatus(s); if (s) setRows(await getCreditHistory()); })
       .catch(() => setStatus(null));
   }, []);
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwBusy(true);
+    setPwMsg(null);
+    const { error } = await supabase.auth.updateUser({ password: newPw, current_password: curPw } as never);
+    setPwMsg(error ? error.message : "Password updated.");
+    setPwBusy(false);
+    if (!error) { setCurPw(""); setNewPw(""); }
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    nav({ to: "/", replace: true });
+  };
+
+  const deleteAccount = async () => {
+    setDelBusy(true);
+    try {
+      await deleteMyAccount();
+      await supabase.auth.signOut();
+      nav({ to: "/", replace: true });
+    } catch (err) {
+      setPwMsg(err instanceof Error ? err.message : "Could not delete the account. Please try again.");
+      setDelBusy(false);
+    }
+  };
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
