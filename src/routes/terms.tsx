@@ -1,5 +1,6 @@
 import { LegalFooter } from "@/components/LegalFooter";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/terms")({
   staticData: { sitemap: true },
@@ -19,9 +20,9 @@ export const Route = createFileRoute("/terms")({
 function TermsPage() {
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
+      <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link to="/" className="text-sm text-muted-foreground">← Sirpam 3D Labs Mold</Link>
-        <h1 className="mt-4 text-4xl font-bold">Terms of Service</h1>
+        <h1 className="text-4xl font-bold">Terms of Service</h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated September 2026</p>
         <h2 className="mt-8 text-xl font-semibold">Using the service</h2>
         <p className="mt-2 text-muted-foreground">Sirpam 3D Labs Mold lets you design 3D-printable molds in your browser. You are responsible for the models you upload and for having the right to use them.</p>
