@@ -27,7 +27,7 @@ Home, Studio (mold tool), Pricing, Checkout (x3 packs), Shop, Gallery, Your cred
 - Changelog ("What's new"), status page, blog/tutorials for SEO, public shared-gallery links.
 
 ## Order
-1. Reset password + Google sign-in
+1. Sign-in/sign-up rebuild (stay on same page, reset password, Google)
 2. Account settings (profile, password, delete account)
 3. Contact, About, Help, Licenses pages (shared header/footer, own titles for search)
 4. My quote requests
