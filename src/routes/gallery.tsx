@@ -21,7 +21,7 @@ export const Route = createFileRoute("/gallery")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { sort?: GallerySort } => ({
-    sort: gallerySorts.includes(search.sort as GallerySort) ? search.sort as GallerySort : "new",
+    sort: gallerySorts.includes(search["sort"] as GallerySort) ? search["sort"] as GallerySort : "new",
   }),
   component: GalleryPage,
 });

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/account")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { tab?: AccountTab } => ({
-    tab: accountTabs.includes(search.tab as AccountTab) ? search.tab as AccountTab : "profile",
+    tab: accountTabs.includes(search["tab"] as AccountTab) ? search["tab"] as AccountTab : "profile",
   }),
   component: AccountPage,
 });

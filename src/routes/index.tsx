@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
+import { BrandLink } from "@/components/BrandLink";
 import showcase from "@/assets/real-mold-workbench.jpg";
 
 export const Route = createFileRoute("/")({
