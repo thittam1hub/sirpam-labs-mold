@@ -1455,7 +1455,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                 position: 'absolute',
                 bottom: spacing.lg,
                 right: spacing.lg,
-                background: 'rgba(224, 229, 236, 0.92)',
+                background: 'color-mix(in srgb, var(--sm-panel-bg) 92%, transparent)',
                 border: 'none',
                 boxShadow: shadows.raisedSm,
                 borderRadius: radii.md,
@@ -1487,7 +1487,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                 position: 'absolute', inset: 0,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(224, 229, 236, 0.88)',
+                background: 'color-mix(in srgb, var(--sm-panel-bg) 88%, transparent)',
                 color: colors.textPrimary,
                 fontFamily: fonts.body,
                 // Let mouse drags fall through to the 3D canvas so the empty
