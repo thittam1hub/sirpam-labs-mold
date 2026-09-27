@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { BrandLink } from "@/components/BrandLink";
 
 export const Route = createFileRoute("/gallery")({
   staticData: { sitemap: false },
@@ -106,8 +107,8 @@ function GalleryPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="flex items-center gap-4 border-b border-border px-6 py-4">
-        <a href="/" className="font-bold">Sirpam 3D Labs Mold</a>
+      <header className="flex min-h-16 items-center gap-4 border-b border-border bg-background px-6 py-3">
+        <BrandLink />
         <span className="text-muted-foreground">/ Gallery</span>
         <div className="flex-1" />
         <a href="/shop" className="text-sm">Shop</a>

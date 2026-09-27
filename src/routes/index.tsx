@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import showcase from "@/assets/mold-showcase.jpg";
+import { BrandLink } from "@/components/BrandLink";
+import showcase from "@/assets/real-mold-workbench.jpg";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -109,11 +110,8 @@ function LandingPage() {
   const { session, ready } = useSession();
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-border px-6 py-4">
-        <a href="/" className="flex items-center gap-2 font-bold">
-          <img src="/logo.svg" alt="Sirpam logo" width={28} height={28} className="h-7 w-7 rounded-full" />
-          Sirpam <span className="text-primary">3D Labs</span> Mold
-        </a>
+      <header className="sticky top-0 z-20 flex min-h-16 items-center gap-4 border-b border-border bg-background px-4 py-3 sm:px-6">
+        <BrandLink />
         <div className="flex-1" />
         <nav className="hidden items-center gap-4 text-sm sm:flex">
           <Link to="/studio">Mold Maker</Link>
@@ -154,10 +152,11 @@ function LandingPage() {
           </div>
           <img
             src={showcase}
-            alt="Two halves of a 3D-printed mold with the cast part beside them"
-            width={1200}
-            height={640}
-            className="mx-auto mt-10 w-full max-w-4xl rounded-2xl border border-border shadow-lg"
+            alt="A real two-part 3D-printed mold with registration pins, vents and its orange cast part"
+            width={1600}
+            height={1000}
+            fetchPriority="high"
+            className="mx-auto mt-10 aspect-[8/5] w-full max-w-4xl rounded-2xl border border-border object-cover shadow-lg"
           />
         </section>
 
@@ -218,7 +217,7 @@ function LandingPage() {
 
       <footer className="border-t border-border px-6 py-6">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 text-sm">
-          <span className="font-semibold">Sirpam 3D Labs Mold</span>
+          <BrandLink />
           <div className="flex-1" />
           <Link to="/studio">Mold Maker</Link>
           <Link to="/shop">Shop</Link>

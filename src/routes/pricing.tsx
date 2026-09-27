@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CREDIT_COSTS, CREDIT_PACKS, REGION_TIERS, guessRegion, getCreditStatus, type CreditStatus, type RegionTier } from "@/lib/credits";
+import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditStatus, type CreditStatus, type RegionTier } from "@/lib/credits";
+import { BrandLink } from "@/components/BrandLink";
 
 export const Route = createFileRoute("/pricing")({
   staticData: { sitemap: true },
@@ -34,8 +35,8 @@ function PricingPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-5 text-sm">
-        <Link to="/" className="font-semibold">Sirpam 3D Labs Mold</Link>
+      <header className="sticky top-0 z-20 mx-auto flex min-h-16 max-w-6xl items-center gap-4 bg-background px-6 py-3 text-sm">
+        <BrandLink />
         <div className="flex-1" />
         <Link to="/studio">Mold Maker</Link>
         <Link to="/shop">Shop</Link>
@@ -56,16 +57,10 @@ function PricingPage() {
           </div>
         )}
 
-        <div className="mt-8 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Prices for:</span>
-          {REGION_TIERS.map((r) => (
-            <button key={r.id} onClick={() => setTier(r.id)} title={r.examples}
-              className={`rounded-full px-4 py-1.5 font-semibold ${tier === r.id ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-              {r.name}
-            </button>
-          ))}
+        <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
+          <span aria-hidden>◎</span>
+          Local pricing has been applied automatically. Final currency and tax follow your billing country.
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">{REGION_TIERS.find((r) => r.id === tier)!.examples}. Your region is picked automatically; the final price is set by your billing country at checkout.</p>
 
         <section className="mt-6 grid gap-6 md:grid-cols-3">
           {CREDIT_PACKS.map((p) => {
@@ -98,7 +93,7 @@ function PricingPage() {
               ))}
             </tbody>
           </table>
-          <p className="mt-4 text-xs text-muted-foreground">Prices shown in USD; local prices and sales tax are worked out at checkout.</p>
+          <p className="mt-4 text-xs text-muted-foreground">The displayed amount is a local estimate. Final currency and sales tax are worked out from your billing country at checkout.</p>
         </section>
 
         <p className="mt-8 text-sm text-muted-foreground">
