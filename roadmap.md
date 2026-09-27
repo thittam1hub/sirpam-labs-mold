@@ -69,3 +69,9 @@
 - [x] Shop: price per size + send-project form
 - [x] Auto-repair progress bar
 - [x] Gallery: STL name/size, best settings, rating
+
+## Brand refresh (Sep 27)
+- [x] Use the Sirpam logo consistently across customer-facing pages
+- [x] Make sticky navigation fully opaque
+- [x] Replace the homepage image with a realistic 3D-printed mold photograph
+- [x] Hide internal regional tiers and present automatic local pricing
