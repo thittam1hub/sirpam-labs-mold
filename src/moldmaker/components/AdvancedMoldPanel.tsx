@@ -116,6 +116,69 @@ function Slider({ label, value, min, max, step, unit, onChange }: {
   );
 }
 
+
+const MOLD_STYLES = [
+  ['standard', 'Two-part mold', 'The usual closed mold with a pour hole.'],
+  ['reliefTray', 'Relief tray', 'One open tray for flat things: logos, coins, badges. Pour and scrape level.'],
+  ['pressMold', 'Press mold', 'Open mold with a handle on the back. Press it into clay, soap or fondant.'],
+  ['slipCast', 'Plaster slip-cast', 'Prints your model with a pour funnel on top plus a frame. Pour plaster around it to make a mold for liquid clay.'],
+] as const;
+
+/** Mold-step settings. Single source of truth for mold type, casting material, vents and silicone thickness per side. */
+export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch: Partial<Tier2Settings>) => void; moldMode: MoldMode; siliconeType: SiliconeMoldType; formFit: boolean }) {
+  const { settings: t, onChange } = p;
+  const isRigid = p.moldMode === 'rigid';
+  const blockSilicone = p.moldMode === 'silicone' && p.siliconeType !== 'skinCore';
+  const style = t.moldStyle ?? 'standard';
+  return (
+    <div style={s.section}>
+      <div style={s.title}>Mold details</div>
+      <div style={s.sub}>Casting material</div>
+      <select style={s.input} value={t.castingMaterial} aria-label="Casting material"
+        onChange={e => onChange({ castingMaterial: e.target.value as CastingMaterialId })}>
+        {CASTING_MATERIALS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+      </select>
+      <div style={s.hint}>Used everywhere: shrink compensation, cast weight, advisor and report.</div>
+
+      {isRigid && (<>
+        <div style={s.sub}>Printed mold type</div>
+        <div style={s.row}>
+          {MOLD_STYLES.map(([id, label]) => (
+            <button key={id} style={s.chip(style === id)} onClick={() => onChange({ moldStyle: id })}>{label}</button>
+          ))}
+        </div>
+        <div style={s.hint}>{MOLD_STYLES.find(x => x[0] === style)![2]}{style !== 'standard' && ' The model’s top faces up — use Turn 90° in the Model step if needed.'}</div>
+
+        <div style={s.sub}>Air vents</div>
+        <Slider label="Air vent size" value={t.ventDiameterMm ?? 0} min={0} max={5} step={0.5}
+          unit={(t.ventDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ ventDiameterMm: v })} />
+        <div style={s.row}>
+          {([-1, 0, 1, 2, 3, 4] as const).map(n => (
+            <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
+          ))}
+        </div>
+        <div style={s.hint}>Typical: 1.5–3 mm vents. Auto = worked out from your pour hole.</div>
+      </>)}
+
+      {blockSilicone && (<>
+        <div style={s.sub}>Silicone thickness per side</div>
+        <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center' }}>
+          <input type="checkbox" checked={t.siliconeSides.enabled}
+            onChange={e => onChange({ siliconeSides: { ...t.siliconeSides, enabled: e.target.checked } })} />
+          Set top / bottom / sides instead of one margin
+        </label>
+        {t.siliconeSides.enabled && (<>
+          {(['top', 'bottom', 'sides'] as const).map(k => (
+            <Slider key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} value={t.siliconeSides[k]} min={3} max={40} step={1} unit=" mm"
+              onChange={v => onChange({ siliconeSides: { ...t.siliconeSides, [k]: v } })} />
+          ))}
+          <div style={s.hint}>{p.formFit ? 'Ignored while Form fit shell is on.' : 'Replaces Silicone margin above. Keep at least 5 mm.'}</div>
+        </>)}
+      </>)}
+    </div>
+  );
+}
+
 export default function AdvancedMoldPanel(p: Props) {
   const { settings: t, onChange } = p;
   const [advice, setAdvice] = useState<GateAdvice | null>(null);
@@ -136,22 +199,8 @@ export default function AdvancedMoldPanel(p: Props) {
       {isRigid && (() => {
         const style = t.moldStyle ?? 'standard';
         const std = style === 'standard';
-        const STYLES = [
-          ['standard', 'Two-part mold', 'The usual closed mold with a pour hole.'],
-          ['reliefTray', 'Relief tray', 'One open tray for flat things: logos, coins, badges. Pour and scrape level.'],
-          ['pressMold', 'Press mold', 'Open mold with a handle on the back. Press it into clay, soap or fondant.'],
-          ['slipCast', 'Plaster slip-cast', 'Prints your model with a pour funnel on top plus a frame. Pour plaster around it to make a mold for liquid clay.'],
-        ] as const;
         return (
           <>
-            <div style={s.sub}>Mold type</div>
-            <div style={s.row}>
-              {STYLES.map(([id, label]) => (
-                <button key={id} style={s.chip(style === id)} onClick={() => onChange({ moldStyle: id })}>{label}</button>
-              ))}
-            </div>
-            <div style={s.hint}>{STYLES.find(x => x[0] === style)![2]}{!std && ' The model’s top faces up — use Turn 90° in the Model step if needed.'}</div>
-
             {std && (
               <>
                 <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
@@ -277,21 +326,6 @@ export default function AdvancedMoldPanel(p: Props) {
         </>
       )}
 
-      {isRigid && (
-        <>
-          <div style={s.sub}>Air vents</div>
-          <Slider label="Air vent size" value={t.ventDiameterMm ?? 0} min={0} max={5} step={0.5}
-            unit={(t.ventDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ ventDiameterMm: v })} />
-          <div style={s.sub}>Number of air vents</div>
-          <div style={s.row}>
-            {([-1, 0, 1, 2, 3, 4] as const).map(n => (
-              <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
-            ))}
-          </div>
-          <div style={s.hint}>Typical: 1.5–3 mm vents. Auto = worked out from your pour hole. Wall thickness is set in the Mold step.</div>
-        </>
-      )}
-
       <div style={s.sub}>Radial split (around the part)</div>
       <div style={s.row}>
         {([0, 3, 4, 6] as const).map(n => (
@@ -303,28 +337,6 @@ export default function AdvancedMoldPanel(p: Props) {
       <div style={s.hint}>
         For vases, busts and tall round parts. Each mold piece is also cut into wedges around the pour axis — hold them together with rubber bands or clamps.
       </div>
-
-      {blockSilicone && (
-        <>
-          <div style={s.sub}>Silicone thickness per side</div>
-          <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center' }}>
-            <input type="checkbox" checked={t.siliconeSides.enabled}
-              onChange={e => onChange({ siliconeSides: { ...t.siliconeSides, enabled: e.target.checked } })} />
-            Override Silicone margin (Mold step) per side
-          </label>
-          {t.siliconeSides.enabled && (
-            <>
-              {(['top', 'bottom', 'sides'] as const).map(k => (
-                <Slider key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} value={t.siliconeSides[k]} min={3} max={40} step={1} unit=" mm"
-                  onChange={v => onChange({ siliconeSides: { ...t.siliconeSides, [k]: v } })} />
-              ))}
-              <div style={s.hint}>
-                {p.formFit ? 'Ignored while Form fit shell is on.' : 'Thicker walls where the mold flexes most; thinner where it rests. Keep at least 5 mm.'}
-              </div>
-            </>
-          )}
-        </>
-      )}
 
       {!isSkin && (
         <>
@@ -404,10 +416,7 @@ export default function AdvancedMoldPanel(p: Props) {
       )}
 
       <div style={s.sub}>Casting material</div>
-      <select style={s.input} value={t.castingMaterial} aria-label="Casting material"
-        onChange={e => onChange({ castingMaterial: e.target.value as CastingMaterialId })}>
-        {CASTING_MATERIALS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-      </select>
+      <div style={s.hint}>{mat.label} — change it in the Mold step (“What are you casting?”).</div>
       <div style={{ marginTop: spacing.sm }}>
         <div style={s.kv}><span>Cast weight{t.cavityCount > 1 ? ` (×${t.cavityCount})` : ''}</span><span>{castGrams.toFixed(0)} g</span></div>
         <div style={s.kv}><span>Mold silicone</span><span>{mat.silicone}</span></div>
