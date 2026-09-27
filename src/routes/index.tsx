@@ -90,7 +90,7 @@ function useSession() {
 
 function AccountLinks({ session }: { session: Session | null }) {
   if (!session) {
-    return <Link to="/auth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
+    return <Link to="/auth" search={{ redirect: "/" }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
   }
   return (
     <div className="flex items-center gap-3">
@@ -222,7 +222,7 @@ function LandingPage() {
           <Link to="/studio">Mold Maker</Link>
           <Link to="/shop">Shop</Link>
           <Link to="/gallery">Gallery</Link>
-          <Link to="/auth">Sign in</Link>
+          <Link to="/auth" search={{ redirect: "/" }}>Sign in</Link>
         </div>
       </footer>
     </div>

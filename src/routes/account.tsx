@@ -40,7 +40,7 @@ function AccountPage() {
         <h1 className="text-3xl font-bold">Your credits</h1>
         {status === undefined && <p className="mt-4 text-muted-foreground">Loading…</p>}
         {status === null && (
-          <p className="mt-4">Please <Link to="/auth" className="text-primary">sign in</Link> to see your credits.</p>
+          <p className="mt-4">Please <Link to="/auth" search={{ redirect: "/account" }} className="text-primary">sign in</Link> to see your credits.</p>
         )}
         {status && (
           <>

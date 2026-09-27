@@ -159,7 +159,7 @@ function SendForm({ pick, setPick }: { pick: string; setPick: (v: string) => voi
         Attach your exported STL/STEP ZIP (best — every service accepts it) or your .sirpam.json project. We save the request and give you a private download link to pass on.
       </p>
       {!session ? (
-        <a href="/auth" className="mt-3 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in to send a request</a>
+        <a href="/auth?redirect=/shop" className="mt-3 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in to send a request</a>
       ) : done ? (
         <div className="mt-3 space-y-2 text-sm">
           <p><b>Request saved.</b> Last step — send it to {maker.name}:</p>
