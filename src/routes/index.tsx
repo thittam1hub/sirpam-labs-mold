@@ -37,12 +37,12 @@ const FEATURES = [
   {
     title: "Sprues, vents & pins",
     body: "Pour hole, air vents and registration pins are generated automatically — no CAD work needed.",
-    icon: "🧩",
+    icon: "💧",
   },
   {
     title: "Curved & multi-part molds",
     body: "Curved split lines for shapes that won't pull straight out, plus 3- or 4-piece molds for wide models.",
-    icon: "🌀",
+    icon: "🔄",
   },
   {
     title: "Auto-repair broken STLs",
@@ -52,7 +52,7 @@ const FEATURES = [
   {
     title: "Material & cost estimator",
     body: "See how much casting material to mix and what the print will cost before you print.",
-    icon: "🧪",
+    icon: "⚗️",
   },
   {
     title: "Print-farm planner",
