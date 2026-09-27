@@ -27,11 +27,12 @@ export const Route = createFileRoute("/studio")({
     links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
   validateSearch: (search: Record<string, unknown>): { step?: number; tool?: string } => {
-    const step = Number(search.step);
-    return {
-      step: Number.isInteger(step) && step >= 1 && step <= 5 ? step : undefined,
-      tool: typeof search.tool === "string" && /^[a-z0-9-]{1,40}$/i.test(search.tool) ? search.tool : undefined,
-    };
+    const step = Number(search["step"]);
+    const result: { step?: number; tool?: string } = {};
+    if (Number.isInteger(step) && step >= 1 && step <= 5) result.step = step;
+    const tool = search["tool"];
+    if (typeof tool === "string" && /^[a-z0-9-]{1,40}$/i.test(tool)) result.tool = tool;
+    return result;
   },
   component: Studio,
 });
@@ -54,7 +55,7 @@ function Studio() {
         }
       >
         <div className="fixed inset-0">
-          <MoldMakerApp initialStep={search.step} initialTool={search.tool} />
+          <MoldMakerApp {...(search.step ? { initialStep: search.step } : {})} {...(search.tool ? { initialTool: search.tool } : {})} />
         </div>
       </Suspense>
     </ClientOnly>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditStatus, type CreditStatus, type RegionTier } from "@/lib/credits";
-import { BrandLink } from "@/components/BrandLink";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/pricing")({
   staticData: { sitemap: true },
@@ -35,13 +35,7 @@ function PricingPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 mx-auto flex min-h-16 max-w-6xl items-center gap-4 bg-background px-6 py-3 text-sm">
-        <BrandLink />
-        <div className="flex-1" />
-        <Link to="/studio">Mold Maker</Link>
-        <Link to="/shop">Shop</Link>
-        {status && <Link to="/account">Your credits</Link>}
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-6xl px-6 pb-16">
         <h1 className="text-4xl font-bold">Simple, pay-as-you-go pricing</h1>
@@ -53,7 +47,7 @@ function PricingPage() {
         {status && (
           <div className="mt-6 inline-block rounded-2xl bg-card px-5 py-3 shadow-sm">
             You have <b className="text-primary">{status.balance} credits</b> plus <b>{status.monthlyFreeLeft}</b> free this month.{" "}
-            <Link to="/account" className="text-primary">See history</Link>
+             <Link to="/account" search={{ tab: "credits" }} className="text-primary">See history</Link>
           </div>
         )}
 

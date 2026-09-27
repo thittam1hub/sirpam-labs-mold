@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BrandLink } from "@/components/BrandLink";
 import { LegalFooter } from "@/components/LegalFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/about")({
   staticData: { sitemap: true },
@@ -20,12 +20,7 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 bg-background px-6 py-3 text-sm">
-        <BrandLink />
-        <div className="flex-1" />
-        <Link to="/studio">Mold Maker</Link>
-        <Link to="/pricing">Pricing</Link>
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 pb-16">
         <h1 className="text-3xl font-bold">About Sirpam 3D Labs</h1>
         <p className="mt-4 text-muted-foreground">

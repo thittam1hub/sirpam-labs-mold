@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLink } from "@/components/BrandLink";
@@ -66,7 +66,7 @@ function ResetPasswordPage() {
         {!ready ? (
           <p className="mt-3 text-sm text-muted-foreground">
             This page only works from the reset link in your email.{" "}
-            <a href="/auth" className="text-primary">Request a new link</a>.
+            <Link to="/auth" search={{ redirect: "/studio" }} className="text-primary">Request a new link</Link>.
           </p>
         ) : (
           <form onSubmit={submit} className="mt-4 space-y-3">

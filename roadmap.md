@@ -79,5 +79,14 @@
 ## Page audit + auth (Sep 27)
 - [x] Rebuild sign-in/sign-up: stay on same page, forgot/reset password, Google sign-in
 - [x] Account settings: profile, change password, delete account
-- [ ] New pages: Contact, About, Help/Guides, Licenses, My quote requests
-- [ ] Wire new pages into footer, top menu, sitemap
+- [x] New pages: Contact, About, Help/Guides and Licenses
+- [x] Wire new pages into footer, top menu and sitemap
+
+## App shell, accounts and deep links
+- [x] Shared responsive navigation and one app-wide session source
+- [x] Account tabs with shareable Profile, Credits and Security links
+- [x] Gallery sorting and Studio step/tool state in the URL
+- [x] Remove quote requests, uploads, records and access policies
+- [x] Bound Gallery reads and sign only returned photo paths
+- [ ] Verify signed-in account, gallery and Studio links in the browser
+- [ ] Complete final build, responsive and security checks

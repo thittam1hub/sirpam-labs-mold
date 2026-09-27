@@ -20,8 +20,8 @@ export const Route = createFileRoute("/gallery")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { sort: GallerySort } => ({
-    sort: gallerySorts.includes(search.sort as GallerySort) ? search.sort as GallerySort : "new",
+  validateSearch: (search: Record<string, unknown>): { sort?: GallerySort } => ({
+    sort: gallerySorts.includes(search["sort"] as GallerySort) ? search["sort"] as GallerySort : "new",
   }),
   component: GalleryPage,
 });
@@ -39,7 +39,7 @@ const perCm3 = (it: Item) => { const v = boxCm3(it); return v && it.price_paid !
 
 function GalleryPage() {
   const { session, ready } = useAppSession();
-  const { sort } = Route.useSearch();
+  const sort = Route.useSearch().sort ?? "new";
   const navigate = useNavigate({ from: "/gallery" });
   const [items, setItems] = useState<Item[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
