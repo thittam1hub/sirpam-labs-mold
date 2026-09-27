@@ -502,6 +502,7 @@ export default function App() {
 
   const autoRepairTried = useRef(false);
   const retryAfterRepair = useRef(false);
+  const [repairProgress, setRepairProgress] = useState<{ pct: number; label: string } | null>(null);
   const pendingAutoRepairNote = useRef<string | null>(null);
   const handleGenerate = useCallback(async () => {
     if (!state.originalGeometry || !state.boundingBox) return;
@@ -677,7 +678,9 @@ export default function App() {
         autoRepairTried.current = true;
         setState(prev => ({ ...prev, infoMessage: 'Broken spots found — repairing the model automatically…' }));
         try {
-          const { geometry: fixed, report } = await repairModel(state.originalGeometry);
+          setRepairProgress({ pct: 0, label: 'Starting repair' });
+          const { geometry: fixed, report } = await repairModel(state.originalGeometry, (pct, label) => setRepairProgress({ pct, label }))
+            .finally(() => setRepairProgress(null));
           if (report.solidOk) {
             fixed.computeBoundingBox();
             undoGeo.current = state.originalGeometry;
