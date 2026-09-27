@@ -10,7 +10,9 @@ import { lateralAxisIndices, primaryAxisIndex } from './moldBox';
  */
 export type SealType = 'pins' | 'tongueGroove';
 
-export interface MoldExtras {
+import type { Round6Extras } from './proFeatures';
+
+export interface MoldExtras extends Round6Extras {
   /** How the two halves register and seal. 'pins' = legacy keyed pins,
    *  'tongueGroove' = continuous perimeter tongue + groove (leak-tight). */
   seal?: SealType;

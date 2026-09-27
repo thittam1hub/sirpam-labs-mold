@@ -38,6 +38,16 @@ import {
   buildHollowCore,
   buildRunners,
 } from './moldFeatures';
+import { lateralAxisIndices } from './moldBox';
+import {
+  type Round6Extras,
+  buildCurvedSplit,
+  applyClampWings,
+  buildStandFins,
+  trappedAirPoints,
+  axialCylinder,
+  buildStyleMold,
+} from './proFeatures';
 
 /**
  * Optional overrides for tunables that are otherwise read from ./constants.
@@ -277,38 +287,57 @@ export async function generateMold(
   // the part at a uniform distance, which saves a lot of print material on
   // organic shapes. The envelope (used downstream only for its AABB, by pin
   // and channel placement) becomes the offset solid's own bounding box.
+  const extras: MoldExtras = options.extras ?? {};
+  const r6: Round6Extras = extras;
+
+  // Extra mold styles (relief tray, press mold, plaster slip-cast kit) use
+  // their own simple geometry — no split, pins or sprue.
+  if (r6.style && r6.style !== 'standard') {
+    const pi = primaryAxisIndex(axis);
+    const [la, lb] = lateralAxisIndices(axis);
+    const pos = cleanGeometry.attributes.position.array;
+    let hiP = -Infinity, hiA = 0, hiB = 0;
+    for (let i = 0; i < pos.length; i += 3) if (pos[i + pi] > hiP) { hiP = pos[i + pi]; hiA = pos[i + la]; hiB = pos[i + lb]; }
+    const res = buildStyleMold(wasm, r6.style, modelManifold, boundingBox, axis, wallThickness, { a: hiA, b: hiB });
+    return { pieces: res.pieces.map(p => manifoldToGeometry(p)), repairs, labels: res.labels };
+  }
+
   let moldCavity;
+  let cavityCut = modelManifold;
   if (options.formFit) {
     const cavitySolid = offsetOutward(wasm, modelManifold, clearance, boundingBox);
     const fullBox = offsetOutward(wasm, modelManifold, clearance + wallThickness, boundingBox);
     envelope = envelopeAroundManifold(fullBox, axis, wallThickness);
     moldCavity = fullBox.subtract(cavitySolid);
+    cavityCut = cavitySolid;
   } else {
     const fullBox = createMoldBoxManifold(wasm, envelope);
     moldCavity = fullBox.subtract(modelManifold);
   }
 
-  // Split the cavity into top and bottom halves along the parting plane.
-  //
-  // Prior implementation: construct two giant AABB "cutter boxes" (one for
-  // each side) with a tiny planeEpsilon overlap to avoid zero-size boxes at
-  // offset=0 or 1, then intersect. That approach is impossible to extend to
-  // oblique planes without rotating the cutters — fiddly and error-prone.
-  //
-  // Current implementation: Manifold.splitByPlane(normal, originOffset)
-  // returns [above, below] directly, for any unit normal. For cutAngle=0 the
-  // plane normal is the axis unit vector and originOffset is the old splitPos,
-  // so the result is equivalent to the legacy cutter-box intersect. The
-  // "above" half is the side the normal points toward (our top half).
-  const plane = getPlaneEquation(
-    [bboxMin.x, bboxMin.y, bboxMin.z],
-    [bboxMax.x, bboxMax.y, bboxMax.z],
-    axis, offset, cutAngle,
-  );
-  const [topHalf, bottomHalf] = moldCavity.splitByPlane(
-    plane.normal as [number, number, number],
-    plane.originOffset,
-  );
+  // Split the cavity into top and bottom halves along the parting plane
+  // (Manifold.splitByPlane returns [above, below]; "above" = top half).
+  // Curved split: cut with a surface that runs through the middle of the
+  // model in every column instead of a flat plane.
+  const curved = r6.curvedSplit && cutAngle === 0
+    ? buildCurvedSplit(wasm, cleanGeometry, axis, envelope.moldMin,
+        envelope.moldMin.clone().add(envelope.moldSize), splitPos, wallThickness)
+    : null;
+  let topHalf, bottomHalf;
+  if (curved) {
+    topHalf = moldCavity.intersect(curved.cutter);
+    bottomHalf = moldCavity.subtract(curved.cutter);
+  } else {
+    const plane = getPlaneEquation(
+      [bboxMin.x, bboxMin.y, bboxMin.z],
+      [bboxMax.x, bboxMax.y, bboxMax.z],
+      axis, offset, cutAngle,
+    );
+    [topHalf, bottomHalf] = moldCavity.splitByPlane(
+      plane.normal as [number, number, number],
+      plane.originOffset,
+    );
+  }
 
   // Add registration pins/keys to help alignment
   const pinRadius = wallThickness * PIN_RADIUS_RATIO;
@@ -320,10 +349,10 @@ export async function generateMold(
 
   // Seal type (Tier 2). Tongue & groove needs an axis-aligned plane and an
   // analytic wall; otherwise we silently fall back to keyed pins.
-  const extras: MoldExtras = options.extras ?? {};
   const cavityCenters = extras.cavityCenters ?? [];
-  let sealed = false;
-  if (extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
+  // A curved split is self-registering (the halves nest), so no pins/seal.
+  let sealed = !!curved;
+  if (!curved && extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
     const res = applyTongueGroove(wasm, topResult, bottomResult, {
       axis,
       cavityBox: boundingBox.clone().expandByScalar(clearance),
@@ -364,6 +393,21 @@ export async function generateMold(
         .rotate(getRotationForAxis(axis))
         .translate(pinPos),
     );
+  }
+
+  // Clamp wings + stand-fins (flat, untilted split only). Added before the
+  // channels are drilled so they never refill a sprue or vent.
+  const flatSplit = !curved && cutAngle === 0;
+  const envMaxV = envelope.moldMin.clone().add(envelope.moldSize);
+  if (flatSplit && r6.clampBoltMm) {
+    [topResult, bottomResult] = applyClampWings(wasm, topResult, bottomResult, {
+      axis, envMin: envelope.moldMin, envMax: envMaxV, splitPos, wall: wallThickness,
+      boltMm: r6.clampBoltMm, cavityCut,
+    });
+  }
+  if (flatSplit && r6.standFins) {
+    const fins = buildStandFins(wasm, { axis, envMin: envelope.moldMin, envMax: envMaxV, splitPos, wall: wallThickness, cavityCut });
+    if (fins) bottomResult = bottomResult.add(fins);
   }
 
   // ── Pour sprue, runner, gate, and vent system ──
@@ -456,6 +500,7 @@ export async function generateMold(
     ).rotate(channels.rotation).translate(channels.spruePos);
 
     topResult = topResult.subtract(sprue);
+    if (curved) bottomResult = bottomResult.subtract(sprue);
 
     // Vent holes at extremities and high points
     for (const ventPos of channels.ventPositions) {
@@ -467,6 +512,18 @@ export async function generateMold(
       ).rotate(channels.rotation).translate(ventPos);
 
       topResult = topResult.subtract(vent);
+      if (curved) bottomResult = bottomResult.subtract(vent);
+    }
+
+    // Curved split: the channels start on the flat reference plane, so link
+    // each one down/up to where the curved surface actually meets the cavity.
+    if (curved) {
+      const [la, lb] = lateralAxisIndices(axis);
+      for (const [pos, r] of [[channels.spruePos, sprueGateRadius], ...channels.ventPositions.map(v => [v, ventRadius])] as Array<[number[], number]>) {
+        const a = pos[la]!, b = pos[lb]!;
+        const link = axialCylinder(wasm, axis, a, b, curved.heightAt(a, b), splitPos, r, r, 16);
+        if (link) { topResult = topResult.subtract(link); bottomResult = bottomResult.subtract(link); }
+      }
     }
 
     // Multi-cavity tray: one sprue per extra cavity, same depth/taper.
@@ -476,6 +533,19 @@ export async function generateMold(
         Manifold.cylinder(channels.sprueHeight, sprueGateRadius, sprueTopRadius, 24)
           .rotate(channels.rotation).translate(pos),
       );
+    }
+  }
+
+  // Automatic air vents at the model's trapped-air high points.
+  if (r6.autoVents) {
+    const [la, lb] = lateralAxisIndices(axis);
+    const pts = trappedAirPoints(geometry, axis, boundingBox,
+      [[channels.spruePos[la]!, channels.spruePos[lb]!]], sprueTopRadius * 3);
+    const envTop = envelope.moldMin.getComponent(primaryAxisIndex(axis)) + envelope.moldSize.getComponent(primaryAxisIndex(axis)) + 1;
+    const vr = Math.max(0.75, ventRadius);
+    for (const q of pts) {
+      const v = axialCylinder(wasm, axis, q.a, q.b, q.p - 0.3, envTop, vr, vr * 1.3, 12);
+      if (v) { topResult = topResult.subtract(v); bottomResult = bottomResult.subtract(v); }
     }
   }
 
@@ -509,7 +579,7 @@ export async function generateMold(
   let pieces: any[] = [topResult, bottomResult];
 
   // Pry pockets (Tier 2) on the primary parting line.
-  if (extras.pryPockets) {
+  if (extras.pryPockets && !curved) {
     pieces = applyPryPockets(wasm, pieces, {
       axis, envMin: envelope.moldMin, envSize: envelope.moldSize, splitPos, wallThickness,
     });

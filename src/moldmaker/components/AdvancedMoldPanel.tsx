@@ -17,6 +17,12 @@ export interface Tier2Settings {
   /** Optional so projects saved before these existed still load. */
   hollowCore?: { enabled: boolean; wallMm: number; opening: 'top' | 'bottom' };
   runner?: boolean;
+  /** Round 6 (rigid molds). Optional so older projects still load. */
+  moldStyle?: 'standard' | 'reliefTray' | 'pressMold' | 'slipCast';
+  curvedSplit?: boolean;
+  clampBoltMm?: 0 | 3 | 4 | 5;
+  autoVents?: boolean;
+  standFins?: boolean;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -30,6 +36,11 @@ export const DEFAULT_TIER2: Tier2Settings = {
   castingMaterial: 'pu_resin',
   hollowCore: { enabled: false, wallMm: 3, opening: 'top' },
   runner: false,
+  moldStyle: 'standard',
+  curvedSplit: false,
+  clampBoltMm: 0,
+  autoVents: false,
+  standFins: false,
 };
 
 interface Props {
@@ -96,6 +107,63 @@ export default function AdvancedMoldPanel(p: Props) {
   return (
     <div style={s.section}>
       <div style={s.title}>Pro Mold Features</div>
+
+      {isRigid && (() => {
+        const style = t.moldStyle ?? 'standard';
+        const std = style === 'standard';
+        const STYLES = [
+          ['standard', 'Two-part mold', 'The usual closed mold with a pour hole.'],
+          ['reliefTray', 'Relief tray', 'One open tray for flat things: logos, coins, badges. Pour and scrape level.'],
+          ['pressMold', 'Press mold', 'Open mold with a handle on the back. Press it into clay, soap or fondant.'],
+          ['slipCast', 'Plaster slip-cast', 'Prints your model with a pour funnel on top plus a frame. Pour plaster around it to make a mold for liquid clay.'],
+        ] as const;
+        return (
+          <>
+            <div style={s.sub}>Mold type</div>
+            <div style={s.row}>
+              {STYLES.map(([id, label]) => (
+                <button key={id} style={s.chip(style === id)} onClick={() => onChange({ moldStyle: id })}>{label}</button>
+              ))}
+            </div>
+            <div style={s.hint}>{STYLES.find(x => x[0] === style)![2]}{!std && ' The model’s top faces up — use Turn 90° in the Model step if needed.'}</div>
+
+            {std && (
+              <>
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.curvedSplit} onChange={e => onChange({ curvedSplit: e.target.checked })} />
+                  Curved split line (follows the model)
+                </label>
+                <div style={s.hint}>
+                  {p.cutAngle !== 0 ? 'Needs an untilted split — set the tilt back to 0°.' :
+                    'The cut runs through the middle of the part everywhere, so each half pulls straight off. The halves nest into each other, so no pins are needed.'}
+                </div>
+
+                <div style={s.sub}>Clamp wings</div>
+                <div style={s.row}>
+                  {([0, 3, 4, 5] as const).map(n => (
+                    <button key={n} style={s.chip((t.clampBoltMm ?? 0) === n)} onClick={() => onChange({ clampBoltMm: n })}>
+                      {n === 0 ? 'Off' : `M${n} bolts`}
+                    </button>
+                  ))}
+                </div>
+                <div style={s.hint}>{t.curvedSplit ? 'Not available with the curved split.' : 'Flanges with bolt holes on two sides — bolt the halves tight so nothing leaks.'}</div>
+
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.autoVents} onChange={e => onChange({ autoVents: e.target.checked })} />
+                  Automatic air vents
+                </label>
+                <div style={s.hint}>Adds thin air holes above every high spot where bubbles would get stuck.</div>
+
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.standFins} onChange={e => onChange({ standFins: e.target.checked })} />
+                  Stand-fins
+                </label>
+                <div style={s.hint}>{t.curvedSplit ? 'Not available with the curved split.' : 'Four fins under the bottom half so a rounded (form-fit) mold stands level while you pour.'}</div>
+              </>
+            )}
+          </>
+        );
+      })()}
 
       {hasSplit && (
         <>
@@ -264,5 +332,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins]);
 }
