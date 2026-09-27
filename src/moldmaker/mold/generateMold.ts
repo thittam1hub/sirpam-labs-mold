@@ -38,6 +38,16 @@ import {
   buildHollowCore,
   buildRunners,
 } from './moldFeatures';
+import { lateralAxisIndices } from './moldBox';
+import {
+  type Round6Extras,
+  buildCurvedSplit,
+  applyClampWings,
+  buildStandFins,
+  trappedAirPoints,
+  axialCylinder,
+  buildStyleMold,
+} from './proFeatures';
 
 /**
  * Optional overrides for tunables that are otherwise read from ./constants.
@@ -277,38 +287,57 @@ export async function generateMold(
   // the part at a uniform distance, which saves a lot of print material on
   // organic shapes. The envelope (used downstream only for its AABB, by pin
   // and channel placement) becomes the offset solid's own bounding box.
+  const extras: MoldExtras = options.extras ?? {};
+  const r6: Round6Extras = extras;
+
+  // Extra mold styles (relief tray, press mold, plaster slip-cast kit) use
+  // their own simple geometry — no split, pins or sprue.
+  if (r6.style && r6.style !== 'standard') {
+    const pi = primaryAxisIndex(axis);
+    const [la, lb] = lateralAxisIndices(axis);
+    const pos = cleanGeometry.attributes.position.array;
+    let hiP = -Infinity, hiA = 0, hiB = 0;
+    for (let i = 0; i < pos.length; i += 3) if (pos[i + pi] > hiP) { hiP = pos[i + pi]; hiA = pos[i + la]; hiB = pos[i + lb]; }
+    const res = buildStyleMold(wasm, r6.style, modelManifold, boundingBox, axis, wallThickness, { a: hiA, b: hiB });
+    return { pieces: res.pieces.map(p => manifoldToGeometry(p)), repairs, labels: res.labels };
+  }
+
   let moldCavity;
+  let cavityCut = modelManifold;
   if (options.formFit) {
     const cavitySolid = offsetOutward(wasm, modelManifold, clearance, boundingBox);
     const fullBox = offsetOutward(wasm, modelManifold, clearance + wallThickness, boundingBox);
     envelope = envelopeAroundManifold(fullBox, axis, wallThickness);
     moldCavity = fullBox.subtract(cavitySolid);
+    cavityCut = cavitySolid;
   } else {
     const fullBox = createMoldBoxManifold(wasm, envelope);
     moldCavity = fullBox.subtract(modelManifold);
   }
 
-  // Split the cavity into top and bottom halves along the parting plane.
-  //
-  // Prior implementation: construct two giant AABB "cutter boxes" (one for
-  // each side) with a tiny planeEpsilon overlap to avoid zero-size boxes at
-  // offset=0 or 1, then intersect. That approach is impossible to extend to
-  // oblique planes without rotating the cutters — fiddly and error-prone.
-  //
-  // Current implementation: Manifold.splitByPlane(normal, originOffset)
-  // returns [above, below] directly, for any unit normal. For cutAngle=0 the
-  // plane normal is the axis unit vector and originOffset is the old splitPos,
-  // so the result is equivalent to the legacy cutter-box intersect. The
-  // "above" half is the side the normal points toward (our top half).
-  const plane = getPlaneEquation(
-    [bboxMin.x, bboxMin.y, bboxMin.z],
-    [bboxMax.x, bboxMax.y, bboxMax.z],
-    axis, offset, cutAngle,
-  );
-  const [topHalf, bottomHalf] = moldCavity.splitByPlane(
-    plane.normal as [number, number, number],
-    plane.originOffset,
-  );
+  // Split the cavity into top and bottom halves along the parting plane
+  // (Manifold.splitByPlane returns [above, below]; "above" = top half).
+  // Curved split: cut with a surface that runs through the middle of the
+  // model in every column instead of a flat plane.
+  const curved = r6.curvedSplit && cutAngle === 0
+    ? buildCurvedSplit(wasm, cleanGeometry, axis, envelope.moldMin,
+        envelope.moldMin.clone().add(envelope.moldSize), splitPos, wallThickness)
+    : null;
+  let topHalf, bottomHalf;
+  if (curved) {
+    topHalf = moldCavity.intersect(curved.cutter);
+    bottomHalf = moldCavity.subtract(curved.cutter);
+  } else {
+    const plane = getPlaneEquation(
+      [bboxMin.x, bboxMin.y, bboxMin.z],
+      [bboxMax.x, bboxMax.y, bboxMax.z],
+      axis, offset, cutAngle,
+    );
+    [topHalf, bottomHalf] = moldCavity.splitByPlane(
+      plane.normal as [number, number, number],
+      plane.originOffset,
+    );
+  }
 
   // Add registration pins/keys to help alignment
   const pinRadius = wallThickness * PIN_RADIUS_RATIO;
