@@ -26,12 +26,15 @@ function ContactPage() {
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    await supabase.from("contact_messages").insert({ name, email, message });
-    setSent(true);
+    setErrorMessage(null);
+    const { error } = await supabase.from("contact_messages").insert({ name, email, message });
+    if (error) setErrorMessage("Your message could not be sent. Please email us instead.");
+    else setSent(true);
     setBusy(false);
   };
 
@@ -59,6 +62,7 @@ function ContactPage() {
             <Button disabled={busy}>
               {busy ? "Sending…" : "Send message"}
             </Button>
+            {errorMessage && <p role="alert" className="text-sm text-destructive">{errorMessage}</p>}
           </form>
         )}
       </main>

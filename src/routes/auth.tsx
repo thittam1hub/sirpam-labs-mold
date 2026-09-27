@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -124,7 +124,7 @@ function AuthPage() {
     <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
         <BrandLink />
-        <a href="/" className="mt-4 block text-sm text-muted-foreground">← Back to homepage</a>
+        <Link to="/" className="mt-4 block text-sm text-muted-foreground">← Back to homepage</Link>
         <h1 className="mt-3 text-2xl font-bold">
           {mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Reset password"}
         </h1>

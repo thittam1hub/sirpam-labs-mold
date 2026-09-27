@@ -18,6 +18,7 @@ export const Route = createFileRoute("/gallery")({
       { property: "og:description", content: "Photos and notes of your printed molds and casts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { sort?: GallerySort } => ({
@@ -55,6 +56,7 @@ function GalleryPage() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(24);
 
   const load = async () => {
     setLoading(true);
@@ -83,7 +85,11 @@ function GalleryPage() {
     try {
       const paths: string[] = [];
       for (const f of Array.from(files ?? [])) {
-        const path = `${session.user.id}/${crypto.randomUUID()}-${f.name.replace(/[^\w.-]/g, "_")}`;
+        if (!f.type.startsWith("image/")) throw new Error(`${f.name} is not an image.`);
+        if (f.size > 8 * 1024 * 1024) throw new Error(`${f.name} is larger than 8 MB.`);
+        const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
+        if (!["jpg", "jpeg", "png", "webp", "heic", "heif"].includes(ext)) throw new Error(`${f.name} uses an unsupported format.`);
+        const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
         const { error } = await supabase.storage.from("mold-photos").upload(path, f, { contentType: f.type });
         if (error) throw error;
         paths.push(path);
@@ -94,7 +100,10 @@ function GalleryPage() {
         price_paid: num(price), currency: currency || null, size_x_mm: num(sx), size_y_mm: num(sy), size_z_mm: num(sz), source: source || null,
         stl_name: stlName.trim() || null, stl_size: stlSize.trim() || null, best_settings: best.trim() || null, rating: rating || null,
       });
-      if (error) throw error;
+      if (error) {
+        if (paths.length) await supabase.storage.from("mold-photos").remove(paths);
+        throw error;
+      }
       setTitle(""); setNotes(""); setMaterial(""); setFiles(null); setPrice(""); setSx(""); setSy(""); setSz(""); setSource(""); setStlName(""); setStlSize(""); setBest(""); setRating(0);
       (document.getElementById("photos") as HTMLInputElement | null)?.value && ((document.getElementById("photos") as HTMLInputElement).value = "");
       await load();
@@ -206,10 +215,10 @@ function GalleryPage() {
               <p className="mt-8 text-muted-foreground">No molds yet — add your first one above.</p>
             ) : (
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {[...items].sort((a, b) => sort === "new" ? 0
+                 {[...items].sort((a, b) => sort === "new" ? 0
                   : sort === "best" ? ((b.rating ?? 0) - (a.rating ?? 0))
                   : sort === "price" ? (Number(a.price_paid ?? Infinity) - Number(b.price_paid ?? Infinity))
-                  : ((perCm3(a) ?? Infinity) - (perCm3(b) ?? Infinity))).map((it) => (
+                   : ((perCm3(a) ?? Infinity) - (perCm3(b) ?? Infinity))).slice(0, visibleCount).map((it) => (
                   <article key={it.id} className="overflow-hidden rounded-2xl border border-border bg-card">
                     {it.photo_paths[0] && urls[it.photo_paths[0]] ? (
                       <img src={urls[it.photo_paths[0]]} alt={it.title} className="aspect-[4/3] w-full object-cover" />
@@ -223,6 +232,11 @@ function GalleryPage() {
                         ))}
                       </div>
                     )}
+             {items.length > visibleCount && (
+               <button type="button" onClick={() => setVisibleCount((value) => value + 24)} className="mx-auto mt-6 block rounded-lg border border-input bg-background px-4 py-2 text-sm font-semibold">
+                 Load more molds
+               </button>
+             )}
                     <div className="p-4">
                       <h2 className="font-semibold">{it.title}</h2>
                       {it.material && <p className="text-xs text-muted-foreground">{it.material}</p>}
