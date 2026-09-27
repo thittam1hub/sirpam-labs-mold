@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 import { supabase } from '@/integrations/supabase/client';
-import type { Session } from '@supabase/supabase-js';
 import { getCreditStatus, CREDITS_EVENT, type CreditStatus } from '@/lib/credits';
+import { useAppSession } from '@/components/AppSession';
 
 import logo from '@/assets/sirpam-logo.svg.asset.json';
 
@@ -34,17 +35,11 @@ const pill = (primary = false, disabled = false) => ({
 
 export default function TopBar(p: Props) {
   const [menu, setMenu] = useState<null | 'export' | 'more' | 'account'>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
+  const { session, ready, signOut: appSignOut } = useAppSession();
   const ref = useRef<HTMLDivElement>(null);
 
   const [credits, setCredits] = useState<CreditStatus | null>(null);
   const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); setReady(true); });
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
-    return () => data.subscription.unsubscribe();
-  }, []);
   useEffect(() => {
     if (!session) { setCredits(null); return; }
     const load = () => getCreditStatus().then(setCredits).catch(() => {});
@@ -77,8 +72,7 @@ export default function TopBar(p: Props) {
 
   const signOut = async () => {
     setMenu(null);
-    await supabase.auth.signOut();
-    window.location.assign('/');
+    await appSignOut();
   };
 
   const menuBox = {
@@ -114,17 +108,17 @@ export default function TopBar(p: Props) {
         <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
         <button type="button" style={pill()} onClick={p.onSample}>Try sample</button>
         <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
-        <a href="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</a>
-        <a href="/gallery" style={{ ...pill(), textDecoration: 'none' }}>Gallery</a>
+        <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
+        <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
         <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
       </div>
       {ready && (session ? (
         <div style={{ position: 'relative', display: 'flex', gap: spacing.sm }}>
           {credits && (
-            <a href="/account" className="sirpam-hide-sm" title={`${credits.balance} credits + ${credits.monthlyFreeLeft} free this month`}
+            <Link to="/account" search={{ tab: 'credits' }} className="sirpam-hide-sm" title={`${credits.balance} credits + ${credits.monthlyFreeLeft} free this month`}
               style={{ ...pill(), textDecoration: 'none', color: colors.primary }}>
               {credits.balance + credits.monthlyFreeLeft} credits
-            </a>
+            </Link>
           )}
           <button type="button" style={{ ...pill(), display: 'flex', alignItems: 'center', gap: 6 }}
             onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
@@ -137,15 +131,15 @@ export default function TopBar(p: Props) {
           {menu === 'account' && (
             <div role="menu" style={menuBox}>
               {credits && <div style={{ ...item, cursor: 'default' }}>{credits.balance} credits · {credits.monthlyFreeLeft} free this month</div>}
-              <a role="menuitem" href="/account" style={linkItem}>Profile &amp; credits</a>
-              <a role="menuitem" href="/pricing" style={linkItem}>Buy credits</a>
-              <a role="menuitem" href="/gallery" style={linkItem}>Gallery</a>
+              <Link role="menuitem" to="/account" search={{ tab: 'profile' }} style={linkItem}>Profile</Link>
+              <Link role="menuitem" to="/pricing" style={linkItem}>Buy credits</Link>
+              <Link role="menuitem" to="/gallery" search={{ sort: 'new' }} style={linkItem}>Gallery</Link>
               <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
             </div>
           )}
         </div>
       ) : (
-        <a href="/auth?redirect=/studio" style={{ ...pill(), textDecoration: "none" }} className="sirpam-hide-sm">Sign in</a>
+        <Link to="/auth" search={{ redirect: '/studio' }} style={{ ...pill(), textDecoration: "none" }} className="sirpam-hide-sm">Sign in</Link>
       ))}
       <div className="sirpam-show-sm" style={{ position: 'relative' }}>
         <button type="button" style={pill()} onClick={() => setMenu(menu === 'more' ? null : 'more')} aria-label="More actions">☰</button>
@@ -155,15 +149,15 @@ export default function TopBar(p: Props) {
             <button type="button" style={item} onClick={() => { setMenu(null); p.onSample(); }}>Try sample</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onProjects(); }}>Projects</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onHelp(); }}>Keyboard shortcuts</button>
-            <a href="/shop" style={linkItem}>Shop</a>
-            <a href="/gallery" style={linkItem}>Gallery</a>
+            <Link to="/shop" style={linkItem}>Shop</Link>
+            <Link to="/gallery" search={{ sort: 'new' }} style={linkItem}>Gallery</Link>
             {session ? (
               <>
-                <a href="/gallery" style={linkItem}>{accountLabel}</a>
+                <Link to="/account" search={{ tab: 'profile' }} style={linkItem}>{accountLabel}</Link>
                 <button type="button" style={item} onClick={signOut}>Sign out</button>
               </>
             ) : (
-              <a href="/auth?redirect=/studio" style={linkItem}>Sign in</a>
+              <Link to="/auth" search={{ redirect: '/studio' }} style={linkItem}>Sign in</Link>
             )}
           </div>
         )}
