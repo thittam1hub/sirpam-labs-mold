@@ -75,7 +75,7 @@ function AccountPage() {
         <Link to="/pricing">Pricing</Link>
       </header>
       <main className="mx-auto max-w-4xl px-6 pb-16">
-        <h1 className="text-3xl font-bold">Your credits</h1>
+        <h1 className="text-3xl font-bold">Your account</h1>
         {status === undefined && <p className="mt-4 text-muted-foreground">Loading…</p>}
         {status === null && (
           <p className="mt-4">Please <Link to="/auth" search={{ redirect: "/account" }} className="text-primary">sign in</Link> to see your credits.</p>
