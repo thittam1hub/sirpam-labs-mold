@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ACTION_LABEL, getCreditHistory, getCreditStatus, type CreditStatus, type LedgerRow } from "@/lib/credits";
-import { BrandLink } from "@/components/BrandLink";
 import { supabase } from "@/integrations/supabase/client";
 import { deleteMyAccount } from "@/lib/account.functions";
+import { SiteHeader } from "@/components/SiteHeader";
+import { useAppSession } from "@/components/AppSession";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const accountTabs = ["profile", "credits", "security"] as const;
+type AccountTab = (typeof accountTabs)[number];
 
 export const Route = createFileRoute("/account")({
   staticData: { sitemap: false },
@@ -17,15 +23,18 @@ export const Route = createFileRoute("/account")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { tab: AccountTab } => ({
+    tab: accountTabs.includes(search.tab as AccountTab) ? search.tab as AccountTab : "profile",
+  }),
   component: AccountPage,
 });
 
 function AccountPage() {
-  const nav = useNavigate();
+  const { session, ready, signOut } = useAppSession();
+  const { tab } = Route.useSearch();
   const [status, setStatus] = useState<CreditStatus | null | undefined>(undefined);
   const [rows, setRows] = useState<LedgerRow[]>([]);
   const [email, setEmail] = useState<string>("");
-  const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [pwMsg, setPwMsg] = useState<string | null>(null);
   const [pwBusy, setPwBusy] = useState(false);
@@ -38,10 +47,12 @@ function AccountPage() {
   const [profMsg, setProfMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const user = data.user;
+    if (!ready) return;
+    if (!session) { setStatus(null); return; }
+    let active = true;
+    const load = async () => {
+      const user = session.user;
       setEmail(user?.email ?? "");
-      if (!user) return;
       let prof: { display_name: string; avatar_url: string | null } | null = null;
       const got = await supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
       prof = got.data;
@@ -49,18 +60,22 @@ function AccountPage() {
         const ins = await supabase.from("profiles").insert({ id: user.id }).select("display_name, avatar_url").single();
         prof = ins.data;
       }
+      if (!active) return;
       setDisplayName(prof?.display_name ?? "");
       const path = prof?.avatar_url ?? null;
       setAvatarPath(path);
       if (path) {
         const s = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60);
-        setAvatarSigned(s.data?.signedUrl ?? null);
+        if (active) setAvatarSigned(s.data?.signedUrl ?? null);
       }
-    });
-    getCreditStatus()
-      .then(async (s) => { setStatus(s); if (s) setRows(await getCreditHistory()); })
-      .catch(() => setStatus(null));
-  }, []);
+      const creditStatus = await getCreditStatus();
+      if (!active) return;
+      setStatus(creditStatus);
+      if (creditStatus) setRows(await getCreditHistory());
+    };
+    load().catch(() => { if (active) setStatus(null); });
+    return () => { active = false; };
+  }, [ready, session]);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,15 +129,10 @@ function AccountPage() {
     e.preventDefault();
     setPwBusy(true);
     setPwMsg(null);
-    const { error } = await supabase.auth.updateUser({ password: newPw, current_password: curPw } as never);
+    const { error } = await supabase.auth.updateUser({ password: newPw });
     setPwMsg(error ? error.message : "Password updated.");
     setPwBusy(false);
-    if (!error) { setCurPw(""); setNewPw(""); }
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    nav({ to: "/", replace: true });
+    if (!error) setNewPw("");
   };
 
   const deleteAccount = async () => {
@@ -130,7 +140,7 @@ function AccountPage() {
     try {
       await deleteMyAccount();
       await supabase.auth.signOut();
-      nav({ to: "/", replace: true });
+      window.location.assign("/");
     } catch (err) {
       setPwMsg(err instanceof Error ? err.message : "Could not delete the account. Please try again.");
       setDelBusy(false);
@@ -139,21 +149,21 @@ function AccountPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 bg-background px-6 py-3 text-sm">
-        <BrandLink />
-        <div className="flex-1" />
-        <Link to="/studio">Mold Maker</Link>
-        <Link to="/pricing">Pricing</Link>
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-4xl px-6 pb-16">
-        <h1 className="text-3xl font-bold">Your account</h1>
-        {status === undefined && <p className="mt-4 text-muted-foreground">Loading…</p>}
+        <h1 className="mt-8 text-3xl font-bold">Your account</h1>
+        <nav aria-label="Account sections" className="mt-6 flex gap-1 overflow-x-auto border-b border-border">
+          {([['profile', 'Profile'], ['credits', 'Credits & history'], ['security', 'Security']] as const).map(([value, label]) => (
+            <Link key={value} to="/account" search={{ tab: value }} className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold ${tab === value ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>{label}</Link>
+          ))}
+        </nav>
+        {status === undefined && <div className="mt-6 space-y-3"><Skeleton className="h-8 w-48" /><Skeleton className="h-40 w-full" /></div>}
         {status === null && (
           <p className="mt-4">Please <Link to="/auth" search={{ redirect: "/account" }} className="text-primary">sign in</Link> to see your credits.</p>
         )}
         {status && (
           <>
-            <section className="mt-6 grid gap-4 sm:grid-cols-2">
+            {tab === "credits" && <><section className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl bg-card p-6 shadow-sm">
                 <p className="text-sm text-muted-foreground">Your credits (never expire)</p>
                 <p className="mt-1 text-4xl font-bold text-primary">{status.balance}</p>
@@ -163,9 +173,9 @@ function AccountPage() {
                 <p className="mt-1 text-4xl font-bold">{status.monthlyFreeLeft}<span className="text-lg text-muted-foreground"> / {status.monthlyFreeLimit}</span></p>
               </div>
             </section>
-            <Link to="/pricing" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 font-semibold text-primary-foreground">Buy credits</Link>
+            <Button asChild className="mt-4"><Link to="/pricing">Buy credits</Link></Button></>}
 
-            <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
+            {tab === "profile" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-xl font-semibold">Profile</h2>
               <div className="mt-4 flex flex-wrap items-center gap-5">
                 <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted shadow-sm">
@@ -183,9 +193,9 @@ function AccountPage() {
                     <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={profBusy} />
                   </label>
                   {avatarSigned && (
-                    <button type="button" onClick={removeAvatar} disabled={profBusy} className="ml-2 text-muted-foreground">
+                     <Button type="button" variant="ghost" size="sm" onClick={removeAvatar} disabled={profBusy} className="ml-2">
                       Remove photo
-                    </button>
+                     </Button>
                   )}
                   <p className="text-xs text-muted-foreground">JPG or PNG, up to 2 MB. Only you can see your profile.</p>
                 </div>
@@ -196,15 +206,15 @@ function AccountPage() {
                 <input id="display-name" type="text" maxLength={60} placeholder="How should we greet you?"
                   value={displayName} onChange={(e) => setDisplayName(e.target.value)}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-                <button disabled={profBusy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+                 <Button disabled={profBusy}>
                   {profBusy ? "Saving…" : "Save profile"}
-                </button>
+                 </Button>
               </form>
               {profMsg && <p className="mt-3 text-sm text-muted-foreground">{profMsg}</p>}
-            </section>
+            </section>}
 
 
-            <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
+            {tab === "credits" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-xl font-semibold">History</h2>
               {rows.length === 0 ? (
                 <p className="mt-3 text-sm text-muted-foreground">No activity yet.</p>
@@ -226,31 +236,29 @@ function AccountPage() {
                   </tbody>
                 </table>
               )}
-            </section>
+            </section>}
 
-            <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
-              <h2 className="text-xl font-semibold">Account settings</h2>
+            {tab === "security" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-xl font-semibold">Security</h2>
               <p className="mt-1 text-sm text-muted-foreground">Signed in as {email}</p>
 
               <form onSubmit={changePassword} className="mt-4 max-w-sm space-y-3">
                 <h3 className="text-sm font-semibold">Change password</h3>
-                <input required type="password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
                 <input required minLength={6} type="password" placeholder="New password (6+ characters)" value={newPw} onChange={(e) => setNewPw(e.target.value)}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-                <button disabled={pwBusy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+                 <Button disabled={pwBusy}>
                   {pwBusy ? "Saving…" : "Update password"}
-                </button>
+                 </Button>
               </form>
               {pwMsg && <p className="mt-3 text-sm text-muted-foreground">{pwMsg}</p>}
 
               <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                <button onClick={signOut} className="rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium">Sign out</button>
+                 <Button variant="outline" onClick={() => void signOut()}>Sign out</Button>
                 {!delConfirm ? (
                   <button onClick={() => setDelConfirm(true)} className="text-sm text-muted-foreground">Delete my account…</button>
                 ) : (
                   <span className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-destructive">This permanently deletes your gallery, requests, credits and account.</span>
+                     <span className="text-destructive">This permanently deletes your gallery, credits and account.</span>
                     <button onClick={deleteAccount} disabled={delBusy} className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
                       {delBusy ? "Deleting…" : "Yes, delete everything"}
                     </button>
@@ -258,7 +266,7 @@ function AccountPage() {
                   </span>
                 )}
               </div>
-            </section>
+            </section>}
           </>
         )}
       </main>

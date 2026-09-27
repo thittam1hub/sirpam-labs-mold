@@ -1,8 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandLink } from "@/components/BrandLink";
+import { SiteHeader } from "@/components/SiteHeader";
+import { useAppSession } from "@/components/AppSession";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const gallerySorts = ["new", "best", "perCm3", "price"] as const;
+type GallerySort = (typeof gallerySorts)[number];
 
 export const Route = createFileRoute("/gallery")({
   staticData: { sitemap: false },
@@ -15,6 +19,9 @@ export const Route = createFileRoute("/gallery")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+  }),
+  validateSearch: (search: Record<string, unknown>): { sort: GallerySort } => ({
+    sort: gallerySorts.includes(search.sort as GallerySort) ? search.sort as GallerySort : "new",
   }),
   component: GalleryPage,
 });
@@ -31,8 +38,9 @@ const boxCm3 = (it: Item) =>
 const perCm3 = (it: Item) => { const v = boxCm3(it); return v && it.price_paid != null ? Number(it.price_paid) / v : null; };
 
 function GalleryPage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
+  const { session, ready } = useAppSession();
+  const { sort } = Route.useSearch();
+  const navigate = useNavigate({ from: "/gallery" });
   const [items, setItems] = useState<Item[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
@@ -44,19 +52,16 @@ function GalleryPage() {
   const [sx, setSx] = useState(""); const [sy, setSy] = useState(""); const [sz, setSz] = useState("");
   const [source, setSource] = useState("");
   const [stlName, setStlName] = useState(""); const [stlSize, setStlSize] = useState(""); const [best, setBest] = useState(""); const [rating, setRating] = useState(0);
-  const [sort, setSort] = useState<"new" | "best" | "perCm3" | "price">("new");
+  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
-    return () => data.subscription.unsubscribe();
-  }, []);
-
   const load = async () => {
-    const { data, error } = await supabase.from("gallery_items").select("*").order("created_at", { ascending: false });
-    if (error) return setErr(error.message);
+    setLoading(true);
+    const { data, error } = await supabase.from("gallery_items")
+      .select("id,title,notes,material,photo_paths,created_at,price_paid,currency,size_x_mm,size_y_mm,size_z_mm,source,stl_name,stl_size,best_settings,rating")
+      .order("created_at", { ascending: false }).limit(60);
+    if (error) { setErr(error.message); setLoading(false); return; }
     const list = (data ?? []) as Item[];
     setItems(list);
     const paths = list.flatMap((i) => i.photo_paths);
@@ -66,6 +71,7 @@ function GalleryPage() {
       signed?.forEach((s) => { if (s.path && s.signedUrl) map[s.path] = s.signedUrl; });
       setUrls(map);
     }
+    setLoading(false);
   };
 
   useEffect(() => { if (session) load(); }, [session]);
@@ -107,18 +113,12 @@ function GalleryPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="flex min-h-16 items-center gap-4 border-b border-border bg-background px-6 py-3">
-        <BrandLink />
-        <span className="text-muted-foreground">/ Gallery</span>
-        <div className="flex-1" />
-        <a href="/shop" className="text-sm">Shop</a>
-        {session && <button className="text-sm text-muted-foreground" onClick={() => supabase.auth.signOut()}>Sign out</button>}
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-5xl p-6">
         <h1 className="text-3xl font-bold">My printed molds</h1>
         <p className="mt-1 text-muted-foreground">Photos and notes of the real molds you've printed and cast. Only you can see them.</p>
 
-        {!ready ? null : !session ? (
+        {!ready ? <div className="mt-8 grid gap-4 sm:grid-cols-2"><Skeleton className="h-48" /><Skeleton className="h-48" /></div> : !session ? (
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
             <p>Sign in to start your gallery.</p>
             <Link to="/auth" search={{ redirect: "/gallery" }} className="mt-3 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>
@@ -195,12 +195,14 @@ function GalleryPage() {
               <div className="mt-6 flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Sort:</span>
                 {([["new", "Newest"], ["best", "Worked best"], ["perCm3", "Price per cm³"], ["price", "Price paid"]] as const).map(([k, l]) => (
-                  <button key={k} onClick={() => setSort(k)} className={`rounded-full border border-border px-3 py-1 ${sort === k ? "bg-primary text-primary-foreground" : ""}`}>{l}</button>
+                   <button key={k} onClick={() => void navigate({ search: { sort: k }, replace: true })} className={`rounded-full border border-border px-3 py-1 ${sort === k ? "bg-primary text-primary-foreground" : ""}`}>{l}</button>
                 ))}
               </div>
             )}
 
-            {items.length === 0 ? (
+            {loading ? (
+              <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map((n) => <Skeleton key={n} className="h-72" />)}</div>
+            ) : items.length === 0 ? (
               <p className="mt-8 text-muted-foreground">No molds yet — add your first one above.</p>
             ) : (
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

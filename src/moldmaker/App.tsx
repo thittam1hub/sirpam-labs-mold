@@ -41,6 +41,8 @@ import { spendCredits, getCreditStatus, describeCharge, chargeFor, type CreditAc
 
 export type { Axis } from './types';
 
+type MoldMakerAppProps = { initialStep?: number; initialTool?: string };
+
 /**
  * Re-aims the camera along the parting axis whenever it changes, so the
  * "top" face of the mold (where the sprue exits) always faces the viewer.
@@ -308,7 +310,7 @@ const initialState: AppState = {
   selectedPrinterId: null,
 };
 
-export default function App() {
+export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
   const [state, setState] = useState<AppState>(initialState);
   /**
    * Cheat-sheet overlay visibility. Pure UI ephemeral state — doesn't need
@@ -316,10 +318,15 @@ export default function App() {
    * lives outside AppState.
    */
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
-  const [step, setStepRaw] = useState(0);
+  const [step, setStepRaw] = useState(() => initialStep ? initialStep - 1 : 0);
   useEffect(() => {
+    if (initialStep) return;
     try { const v = Number(localStorage.getItem('sirpam.step')); if (v >= 0 && v <= 4) setStepRaw(v); } catch { /* ignore */ }
-  }, []);
+  }, [initialStep]);
+  useEffect(() => {
+    if (!initialTool) return;
+    window.requestAnimationFrame(() => document.getElementById(initialTool)?.scrollIntoView({ block: 'start' }));
+  }, [initialTool]);
   const setStep = useCallback((n: number) => {
     setStepRaw(n);
     try { localStorage.setItem('sirpam.step', String(n)); } catch { /* ignore */ }
