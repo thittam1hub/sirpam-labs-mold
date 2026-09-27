@@ -456,6 +456,7 @@ export async function generateMold(
     ).rotate(channels.rotation).translate(channels.spruePos);
 
     topResult = topResult.subtract(sprue);
+    if (curved) bottomResult = bottomResult.subtract(sprue);
 
     // Vent holes at extremities and high points
     for (const ventPos of channels.ventPositions) {
@@ -467,7 +468,33 @@ export async function generateMold(
       ).rotate(channels.rotation).translate(ventPos);
 
       topResult = topResult.subtract(vent);
+      if (curved) bottomResult = bottomResult.subtract(vent);
     }
+
+    // Curved split: the channels start on the flat reference plane, so link
+    // each one down/up to where the curved surface actually meets the cavity.
+    if (curved) {
+      const [la, lb] = lateralAxisIndices(axis);
+      for (const [pos, r] of [[channels.spruePos, sprueGateRadius], ...channels.ventPositions.map(v => [v, ventRadius])] as Array<[number[], number]>) {
+        const a = pos[la]!, b = pos[lb]!;
+        const link = axialCylinder(wasm, axis, a, b, curved.heightAt(a, b), splitPos, r, r, 16);
+        if (link) { topResult = topResult.subtract(link); bottomResult = bottomResult.subtract(link); }
+      }
+    }
+  }
+
+  // Automatic air vents at the model's trapped-air high points.
+  if (r6.autoVents) {
+    const [la, lb] = lateralAxisIndices(axis);
+    const pts = trappedAirPoints(geometry, axis, boundingBox,
+      [[channels.spruePos[la]!, channels.spruePos[lb]!]], sprueTopRadius * 3);
+    const envTop = envelope.moldMin.getComponent(primaryAxisIndex(axis)) + envelope.moldSize.getComponent(primaryAxisIndex(axis)) + 1;
+    const vr = Math.max(0.75, ventRadius);
+    for (const q of pts) {
+      const v = axialCylinder(wasm, axis, q.a, q.b, q.p - 0.3, envTop, vr, vr * 1.3, 12);
+      if (v) { topResult = topResult.subtract(v); bottomResult = bottomResult.subtract(v); }
+    }
+    autoVentCount = pts.length;
 
     // Multi-cavity tray: one sprue per extra cavity, same depth/taper.
     for (const c of useRunner ? [] : cavityCenters.slice(1)) {
@@ -509,7 +536,7 @@ export async function generateMold(
   let pieces: any[] = [topResult, bottomResult];
 
   // Pry pockets (Tier 2) on the primary parting line.
-  if (extras.pryPockets) {
+  if (extras.pryPockets && !curved) {
     pieces = applyPryPockets(wasm, pieces, {
       axis, envMin: envelope.moldMin, envSize: envelope.moldSize, splitPos, wallThickness,
     });
