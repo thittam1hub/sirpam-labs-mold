@@ -30,11 +30,11 @@ export const CLEARANCE_MM = 0.15;
 export const SPRUE_DIAMETER_MM = 10;
 
 /** Registration pin radius as a fraction of wall thickness. */
-export const PIN_RADIUS_RATIO = 0.3;
+export const PIN_RADIUS_RATIO = 0.2;
 /** Registration pin height as a fraction of wall thickness. */
 export const PIN_HEIGHT_RATIO = 0.6;
 /** Inset of registration pins from the bbox corners, as fraction of wall thickness. */
-export const PIN_INSET_RATIO = 0.7;
+export const PIN_INSET_RATIO = 0.5;
 /** Sprue top (pour end) radius multiplier vs. gate radius. The gate end is
  *  narrower than the top so material flows from wide to narrow (helps demolding
  *  and reduces cavity-side stress). 2:1 is a compromise between pour ergonomics
