@@ -224,7 +224,7 @@ function LandingPage() {
           <Link to="/studio">Mold Maker</Link>
           <Link to="/shop">Shop</Link>
           <Link to="/gallery">Gallery</Link>
-          <Link to="/auth" search={{ redirect: "/" }}>Sign in</Link>
+          <Link to="/auth" search={{ redirect: "/studio" }}>Sign in</Link>
         </div>
       </footer>
     </div>
