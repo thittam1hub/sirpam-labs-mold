@@ -77,9 +77,10 @@ function PricingPage() {
                 <p className="mt-2 text-3xl font-bold">{pr.label}</p>
                 <p className="mt-4 font-semibold">{p.credits} credits</p>
                 <p className="text-sm text-muted-foreground">{pr.per} per credit · never expire</p>
-                <p className="mt-6 rounded-2xl bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
-                  Online checkout is not connected yet — contact us to buy this pack.
-                </p>
+                <Link to="/checkout/$pack" params={{ pack: p.id }}
+                  className={`mt-6 block rounded-2xl px-4 py-2.5 text-center font-semibold ${best ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  Buy {p.name}
+                </Link>
               </div>
             );
           })}

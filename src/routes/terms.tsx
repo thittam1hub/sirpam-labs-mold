@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/LegalFooter";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/terms")({
@@ -32,6 +33,7 @@ function TermsPage() {
         <p className="mt-2 text-muted-foreground">Molds are generated automatically. Check them before printing or casting; we are not liable for failed prints, casts or materials.</p>
         <h2 className="mt-8 text-xl font-semibold">Changes</h2>
         <p className="mt-2 text-muted-foreground">We may update these terms or prices; credits you already bought keep their value.</p>
+        <LegalFooter />
       </main>
     </div>
   );
