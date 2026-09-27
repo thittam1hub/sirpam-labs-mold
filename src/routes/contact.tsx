@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { BrandLink } from "@/components/BrandLink";
 import { LegalFooter } from "@/components/LegalFooter";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/contact")({
   staticData: { sitemap: true },
@@ -38,12 +39,7 @@ function ContactPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 bg-background px-6 py-3 text-sm">
-        <BrandLink />
-        <div className="flex-1" />
-        <Link to="/studio">Mold Maker</Link>
-        <Link to="/pricing">Pricing</Link>
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 pb-16">
         <h1 className="text-3xl font-bold">Contact us</h1>
         <p className="mt-2 text-muted-foreground">
@@ -60,9 +56,9 @@ function ContactPage() {
             <input required placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
             <input required type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
             <textarea required rows={5} placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} className={inputCls} />
-            <button disabled={busy} className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+            <Button disabled={busy}>
               {busy ? "Sending…" : "Send message"}
-            </button>
+            </Button>
           </form>
         )}
       </main>

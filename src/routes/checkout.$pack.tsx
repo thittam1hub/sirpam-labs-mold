@@ -3,7 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CREDIT_PACKS, guessRegion, type RegionTier } from "@/lib/credits";
 import { BUSINESS } from "@/lib/business";
 import { LegalFooter } from "@/components/LegalFooter";
-import { BrandLink } from "@/components/BrandLink";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/checkout/$pack")({
   staticData: { sitemap: false },
@@ -34,11 +34,13 @@ export const Route = createFileRoute("/checkout/$pack")({
 
 function CheckoutPage() {
   const { id } = Route.useLoaderData();
-  const pack = CREDIT_PACKS.find((p) => p.id === id)!;
+  const pack = CREDIT_PACKS.find((p) => p.id === id);
   const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
   const [agree, setAgree] = useState(false);
   useEffect(() => { const g = guessRegion(); setTier(g.tier); setIndia(g.india); }, []);
+
+  if (!pack) return null;
 
   const inr = tier === "value" && india;
   const price = inr ? `₹${pack.inr.toLocaleString("en-IN")}` : `$${pack.usd[tier]}`;
@@ -46,9 +48,7 @@ function CheckoutPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 flex min-h-16 items-center bg-background px-6 py-3">
-        <BrandLink />
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 py-12">
         <Link to="/pricing" className="text-sm text-muted-foreground">← Back to pricing</Link>
         <h1 className="mt-4 text-4xl font-bold">Checkout — {pack.name} pack</h1>
