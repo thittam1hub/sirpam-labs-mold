@@ -51,3 +51,7 @@
 - [x] Clamp wings, air vents, stand-fins
 - [x] Curved split line (follows the model)
 - [x] New mold types: plaster slip-cast, press mold, relief tray
+
+## Round 7 (Sep 27)
+- [x] Polish pass: all pages load with no errors; tour text fixed; styled photo button
+- [ ] Research picks awaiting user choice (casting volume label, mold feet, base filler, 3–4 part molds, printer overhang draft)

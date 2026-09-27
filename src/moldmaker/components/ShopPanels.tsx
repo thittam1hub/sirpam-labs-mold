@@ -370,8 +370,9 @@ export function AiShapePanel({ onCommit }: { onCommit: (g: THREE.BufferGeometry,
           <button key={ex} type="button" style={s.chip(false)} onClick={() => setPrompt(ex)}>{ex}</button>
         ))}
       </div>
-      <label style={{ ...s.hint, display: 'block' }}>Photo (optional):
-        <input type="file" accept="image/*" aria-label="Photo to trace" onChange={async e => {
+      <label style={{ ...s.btn, display: 'block', textAlign: 'center', cursor: 'pointer' }}>
+        {image ? 'Change photo' : 'Add a photo (optional)'}
+        <input type="file" accept="image/*" aria-label="Photo to trace" style={{ display: 'none' }} onChange={async e => {
           const f = e.target.files?.[0]; setImage(f ? await shrinkImage(f) : null);
         }} />
       </label>
