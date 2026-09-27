@@ -123,7 +123,7 @@ export default function TopBar(p: Props) {
           )}
         </div>
       ) : (
-        <a href="/auth" style={{ ...pill(), textDecoration: 'none' }} className="sirpam-hide-sm">Sign in</a>
+        <a href="/auth?redirect=/studio" style={{ ...pill(), textDecoration: "none" }} className="sirpam-hide-sm">Sign in</a>
       ))}
       <div className="sirpam-show-sm" style={{ position: 'relative' }}>
         <button type="button" style={pill()} onClick={() => setMenu(menu === 'more' ? null : 'more')} aria-label="More actions">☰</button>
@@ -141,7 +141,7 @@ export default function TopBar(p: Props) {
                 <button type="button" style={item} onClick={signOut}>Sign out</button>
               </>
             ) : (
-              <a href="/auth" style={linkItem}>Sign in</a>
+              <a href="/auth?redirect=/studio" style={linkItem}>Sign in</a>
             )}
           </div>
         )}

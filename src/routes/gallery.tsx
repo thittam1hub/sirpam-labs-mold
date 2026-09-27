@@ -121,7 +121,7 @@ function GalleryPage() {
         {!ready ? null : !session ? (
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
             <p>Sign in to start your gallery.</p>
-            <Link to="/auth" className="mt-3 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>
+            <Link to="/auth" search={{ redirect: "/gallery" }} className="mt-3 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>
           </div>
         ) : (
           <>
