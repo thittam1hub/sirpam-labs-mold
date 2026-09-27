@@ -20,6 +20,7 @@ export const Route = createFileRoute("/gallery")({
 type Item = {
   id: string; title: string; notes: string | null; material: string | null; photo_paths: string[]; created_at: string;
   price_paid: number | null; currency: string | null; size_x_mm: number | null; size_y_mm: number | null; size_z_mm: number | null; source: string | null;
+  stl_name: string | null; stl_size: string | null; best_settings: string | null; rating: number | null;
 };
 
 /** Box volume in cm³ from the mold's outer size. */
@@ -40,7 +41,8 @@ function GalleryPage() {
   const [currency, setCurrency] = useState("INR");
   const [sx, setSx] = useState(""); const [sy, setSy] = useState(""); const [sz, setSz] = useState("");
   const [source, setSource] = useState("");
-  const [sort, setSort] = useState<"new" | "perCm3" | "price">("new");
+  const [stlName, setStlName] = useState(""); const [stlSize, setStlSize] = useState(""); const [best, setBest] = useState(""); const [rating, setRating] = useState(0);
+  const [sort, setSort] = useState<"new" | "best" | "perCm3" | "price">("new");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -82,9 +84,10 @@ function GalleryPage() {
       const { error } = await supabase.from("gallery_items").insert({
         title, notes: notes || null, material: material || null, photo_paths: paths,
         price_paid: num(price), currency: currency || null, size_x_mm: num(sx), size_y_mm: num(sy), size_z_mm: num(sz), source: source || null,
+        stl_name: stlName.trim() || null, stl_size: stlSize.trim() || null, best_settings: best.trim() || null, rating: rating || null,
       });
       if (error) throw error;
-      setTitle(""); setNotes(""); setMaterial(""); setFiles(null); setPrice(""); setSx(""); setSy(""); setSz(""); setSource("");
+      setTitle(""); setNotes(""); setMaterial(""); setFiles(null); setPrice(""); setSx(""); setSy(""); setSz(""); setSource(""); setStlName(""); setStlSize(""); setBest(""); setRating(0);
       (document.getElementById("photos") as HTMLInputElement | null)?.value && ((document.getElementById("photos") as HTMLInputElement).value = "");
       await load();
     } catch (x) {
@@ -143,6 +146,15 @@ function GalleryPage() {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground md:col-span-2">Mold size = the outside box of the printed mold. The Finish step and the mold report show it for each piece.</p>
+              <input maxLength={200} placeholder="STL file used (e.g. bala_murugan_v1.stl)" value={stlName} onChange={(e) => setStlName(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+              <input maxLength={100} placeholder="STL size (e.g. 60 × 40 × 90 mm)" value={stlSize} onChange={(e) => setStlSize(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+              <textarea maxLength={2000} placeholder="Settings that worked best: split axis, wall, clearance, layer height, infill, casting material…" value={best} onChange={(e) => setBest(e.target.value)} className="min-h-16 rounded-lg border border-input bg-background px-3 py-2 text-sm md:col-span-2" />
+              <div className="flex items-center gap-1 text-sm md:col-span-2" role="radiogroup" aria-label="How well it worked">
+                <span className="mr-2 text-muted-foreground">How well it worked:</span>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button type="button" key={n} aria-label={`${n} of 5`} onClick={() => setRating(n)} className={`text-xl ${n <= rating ? "text-primary" : "text-muted-foreground"}`}>★</button>
+                ))}
+              </div>
               <input id="photos" type="file" accept="image/*" multiple onChange={(e) => setFiles(e.target.files)} className="text-sm" />
               <button disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                 {busy ? "Uploading…" : "Add to gallery"}
@@ -180,7 +192,7 @@ function GalleryPage() {
             {items.length > 1 && (
               <div className="mt-6 flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Sort:</span>
-                {([["new", "Newest"], ["perCm3", "Price per cm³"], ["price", "Price paid"]] as const).map(([k, l]) => (
+                {([["new", "Newest"], ["best", "Worked best"], ["perCm3", "Price per cm³"], ["price", "Price paid"]] as const).map(([k, l]) => (
                   <button key={k} onClick={() => setSort(k)} className={`rounded-full border border-border px-3 py-1 ${sort === k ? "bg-primary text-primary-foreground" : ""}`}>{l}</button>
                 ))}
               </div>
@@ -191,6 +203,7 @@ function GalleryPage() {
             ) : (
               <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {[...items].sort((a, b) => sort === "new" ? 0
+                  : sort === "best" ? ((b.rating ?? 0) - (a.rating ?? 0))
                   : sort === "price" ? (Number(a.price_paid ?? Infinity) - Number(b.price_paid ?? Infinity))
                   : ((perCm3(a) ?? Infinity) - (perCm3(b) ?? Infinity))).map((it) => (
                   <article key={it.id} className="overflow-hidden rounded-2xl border border-border bg-card">
@@ -217,6 +230,9 @@ function GalleryPage() {
                           {perCm3(it) != null && <> · <b>{perCm3(it)!.toFixed(2)} {it.currency}/cm³</b></>}
                         </p>
                       )}
+                      {(it.stl_name || it.stl_size) && <p className="mt-1 text-xs">STL: {it.stl_name ?? "—"}{it.stl_size && <> · {it.stl_size}</>}</p>}
+                      {it.rating && <p className="text-sm text-primary" aria-label={`${it.rating} of 5`}>{"★".repeat(it.rating)}<span className="text-muted-foreground">{"★".repeat(5 - it.rating)}</span></p>}
+                      {it.best_settings && <p className="mt-2 rounded-lg bg-muted p-2 text-xs"><b>Best settings:</b> {it.best_settings}</p>}
                       {it.notes && <p className="mt-2 whitespace-pre-wrap text-sm">{it.notes}</p>}
                       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                         <span>{new Date(it.created_at).toLocaleDateString()}</span>
