@@ -17,7 +17,7 @@ import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
-import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts } from './theme';
+import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts, sceneColors } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
@@ -312,6 +312,8 @@ const initialState: AppState = {
 };
 
 export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
+  const themeMode = useTheme();
+  const sceneCols = sceneColors[themeMode];
   const [state, setState] = useState<AppState>(initialState);
   /**
    * Cheat-sheet overlay visibility. Pure UI ephemeral state — doesn't need
