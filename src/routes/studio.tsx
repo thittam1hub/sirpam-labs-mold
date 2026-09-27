@@ -1,9 +1,11 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
+import { StudioLoader } from "@/components/StudioLoader";
 
 // The mold generator uses WebGL, Web Workers, and WASM — browser-only APIs.
 // Lazy-load the whole app behind ClientOnly so SSR never evaluates it.
-const MoldMakerApp = lazy(() => import("../moldmaker/App"));
+const loadApp = () => import("../moldmaker/App");
+const MoldMakerApp = lazy(loadApp);
 
 const studioTools = {
   "sirpam-model-tools": 1,
@@ -47,6 +49,10 @@ export const Route = createFileRoute("/studio")({
     }
     return result;
   },
+  // Start downloading the 3D app as soon as the route is matched/preloaded (e.g. on link hover).
+  loader: () => {
+    if (typeof window !== "undefined") void loadApp();
+  },
   component: Studio,
 });
 
@@ -54,11 +60,7 @@ function Studio() {
   const search = Route.useSearch();
   return (
     <ClientOnly
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-          Loading Mold Maker…
-        </div>
-      }
+      fallback={<StudioLoader />}
     >
       <Suspense
         fallback={
