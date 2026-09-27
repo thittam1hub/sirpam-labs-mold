@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { BrandLink } from "@/components/BrandLink";
+import { SiteHeader } from "@/components/SiteHeader";
 import showcase from "@/assets/real-mold-workbench.jpg";
 
 export const Route = createFileRoute("/")({
@@ -77,59 +74,10 @@ const FAQ = [
   { q: "I don't own a 3D printer — can I still use it?", a: "Yes. Export the mold files and send them to any of the ten print and casting services listed on our Shop page, with price estimates per mold size." },
 ];
 
-function useSession() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
-    return () => data.subscription.unsubscribe();
-  }, []);
-  return { session, ready };
-}
-
-function AccountLinks({ session }: { session: Session | null }) {
-  if (!session) {
-    return <Link to="/auth" search={{ redirect: "/studio" }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
-  }
-  return (
-    <div className="flex items-center gap-3">
-      <Link to="/account" className="rounded-lg border border-border px-4 py-2 text-sm font-semibold">
-        Account
-      </Link>
-      <button
-        type="button"
-        className="text-sm text-muted-foreground"
-        onClick={async () => { await supabase.auth.signOut(); window.location.assign("/"); }}
-      >
-        Sign out ({(session.user.email ?? "account").split("@")[0]})
-      </button>
-    </div>
-  );
-}
-
 function LandingPage() {
-  const { session, ready } = useSession();
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 flex min-h-16 items-center gap-4 border-b border-border bg-background px-4 py-3 sm:px-6">
-        <BrandLink />
-        <div className="flex-1" />
-        <nav className="hidden items-center gap-4 text-sm sm:flex">
-          <Link to="/studio">Mold Maker</Link>
-          <Link to="/shop">Shop</Link>
-          <Link to="/pricing">Pricing</Link>
-          <Link to="/gallery">Gallery</Link>
-          <Link to="/terms">Terms</Link>
-          <Link to="/privacy">Privacy</Link>
-        </nav>
-        <div className="flex min-h-10 min-w-28 items-center justify-end gap-3">
-          {ready && <AccountLinks session={session} />}
-          <Link to="/studio" className="hidden rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground sm:block">
-            Open the mold maker
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main>
         {/* Hero */}
