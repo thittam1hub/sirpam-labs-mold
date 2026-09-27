@@ -117,6 +117,38 @@ function AccountPage() {
                 </table>
               )}
             </section>
+
+            <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
+              <h2 className="text-xl font-semibold">Account settings</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Signed in as {email}</p>
+
+              <form onSubmit={changePassword} className="mt-4 max-w-sm space-y-3">
+                <h3 className="text-sm font-semibold">Change password</h3>
+                <input required type="password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                <input required minLength={6} type="password" placeholder="New password (6+ characters)" value={newPw} onChange={(e) => setNewPw(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                <button disabled={pwBusy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+                  {pwBusy ? "Saving…" : "Update password"}
+                </button>
+              </form>
+              {pwMsg && <p className="mt-3 text-sm text-muted-foreground">{pwMsg}</p>}
+
+              <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-4">
+                <button onClick={signOut} className="rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium">Sign out</button>
+                {!delConfirm ? (
+                  <button onClick={() => setDelConfirm(true)} className="text-sm text-muted-foreground">Delete my account…</button>
+                ) : (
+                  <span className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="text-destructive">This permanently deletes your gallery, requests, credits and account.</span>
+                    <button onClick={deleteAccount} disabled={delBusy} className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
+                      {delBusy ? "Deleting…" : "Yes, delete everything"}
+                    </button>
+                    <button onClick={() => setDelConfirm(false)} className="text-sm text-muted-foreground">Cancel</button>
+                  </span>
+                )}
+              </div>
+            </section>
           </>
         )}
       </main>
