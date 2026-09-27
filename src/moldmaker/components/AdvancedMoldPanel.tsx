@@ -203,7 +203,7 @@ export default function AdvancedMoldPanel(p: Props) {
                   maxLength={24}
                   placeholder="Your name or brand (letters and numbers)"
                   onChange={e => onChange({ watermark: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: radii.md, border: `1px solid ${colors.border}`, background: colors.inputBg ?? colors.sectionBg, color: colors.text, fontSize: fontSizes.sm }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: radii.md, border: `1px solid ${colors.borderSubtle}`, background: colors.viewportBg, color: colors.textPrimary, fontSize: fontSizes.sm }}
                 />
                 <div style={s.hint}>Engraved under the bottom half. Text only (A–Z, 0–9, . - &amp; @).</div>
               </>

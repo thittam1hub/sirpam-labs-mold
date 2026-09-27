@@ -1635,7 +1635,7 @@ export default function App() {
             <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} />
             <AiShapePanel onCommit={commitGeometry} />
           </>}
-          reportSlot={
+          reportSlot={<>
             <MoldReportPanel
               geometry={state.originalGeometry}
               pieces={state.moldPieces}
@@ -1651,6 +1651,8 @@ export default function App() {
               wallMm={state.moldMode === 'silicone' ? (state.siliconeMarginMm || 10) : 5}
               printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
             />
+            <OverhangPanel pieces={state.moldPieces} labels={state.pieceLabels} />
+          </>
           }
           packSlot={
             <PlatePackerPanel
