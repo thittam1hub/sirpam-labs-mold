@@ -1,5 +1,5 @@
-import type { Round7Extras } from './round7';
 // @ts-nocheck — Manifold WASM objects are untyped here, same as generateMold.ts
+import type { Round7Extras } from './round7';
 import * as THREE from 'three';
 import type { Axis } from '../types';
 import { lateralAxisIndices, primaryAxisIndex } from './moldBox';
