@@ -1180,6 +1180,7 @@ export default function App() {
                   offset={state.planeOffset}
                   boundingBox={state.boundingBox}
                   cutAngle={state.cutAngle}
+                  onOffsetChange={(offset: number) => setState(prev => ({ ...prev, planeOffset: offset }))}
                 />
               )}
 
