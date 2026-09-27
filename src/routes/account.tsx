@@ -31,13 +31,84 @@ function AccountPage() {
   const [pwBusy, setPwBusy] = useState(false);
   const [delConfirm, setDelConfirm] = useState(false);
   const [delBusy, setDelBusy] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [avatarSigned, setAvatarSigned] = useState<string | null>(null);
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [profBusy, setProfBusy] = useState(false);
+  const [profMsg, setProfMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data.user;
+      setEmail(user?.email ?? "");
+      if (!user) return;
+      let prof: { display_name: string; avatar_url: string | null } | null = null;
+      const got = await supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
+      prof = got.data;
+      if (!prof) {
+        const ins = await supabase.from("profiles").insert({ id: user.id }).select("display_name, avatar_url").single();
+        prof = ins.data;
+      }
+      setDisplayName(prof?.display_name ?? "");
+      const path = prof?.avatar_url ?? null;
+      setAvatarPath(path);
+      if (path) {
+        const s = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60);
+        setAvatarSigned(s.data?.signedUrl ?? null);
+      }
+    });
     getCreditStatus()
       .then(async (s) => { setStatus(s); if (s) setRows(await getCreditHistory()); })
       .catch(() => setStatus(null));
   }, []);
+
+  const saveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfBusy(true);
+    setProfMsg(null);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) { setProfBusy(false); return; }
+    const { error } = await supabase.from("profiles").upsert({ id: data.user.id, display_name: displayName.trim() });
+    setProfMsg(error ? error.message : "Profile saved.");
+    setProfBusy(false);
+  };
+
+  const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setProfMsg(null);
+    if (!file.type.startsWith("image/")) { setProfMsg("Please choose an image file."); return; }
+    if (file.size > 2 * 1024 * 1024) { setProfMsg("Photo must be under 2 MB."); return; }
+    setProfBusy(true);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) { setProfBusy(false); return; }
+    const uid = data.user.id;
+    const ext = (file.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+    const path = `${uid}/avatar-${Date.now()}.${ext}`;
+    const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (up.error) { setProfMsg(up.error.message); setProfBusy(false); return; }
+    const upd = await supabase.from("profiles").upsert({ id: uid, avatar_url: path });
+    if (upd.error) { setProfMsg(upd.error.message); setProfBusy(false); return; }
+    if (avatarPath && avatarPath !== path) await supabase.storage.from("avatars").remove([avatarPath]);
+    const s = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60);
+    setAvatarPath(path);
+    setAvatarSigned(s.data?.signedUrl ?? null);
+    setProfMsg("Photo updated.");
+    setProfBusy(false);
+  };
+
+  const removeAvatar = async () => {
+    setProfBusy(true);
+    const { data } = await supabase.auth.getUser();
+    if (data.user) {
+      await supabase.from("profiles").upsert({ id: data.user.id, avatar_url: null });
+      if (avatarPath) await supabase.storage.from("avatars").remove([avatarPath]);
+    }
+    setAvatarPath(null);
+    setAvatarSigned(null);
+    setProfBusy(false);
+  };
 
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
