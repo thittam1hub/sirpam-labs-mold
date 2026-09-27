@@ -592,6 +592,12 @@ export default function App() {
         moldFeet: t2.moldFeet || undefined,
         gapFiller: t2.gapFiller || undefined,
         pieceCount: t2.pieceCount && t2.pieceCount > 2 ? t2.pieceCount : undefined,
+        wallMm: t2.wallMm && t2.wallMm > 0 ? t2.wallMm : undefined,
+        ventDiameterMm: t2.ventDiameterMm && t2.ventDiameterMm > 0 ? t2.ventDiameterMm : undefined,
+        ventCount: t2.ventCount !== undefined && t2.ventCount >= 0 ? t2.ventCount : undefined,
+        lockStyle: t2.lockStyle && t2.lockStyle !== 'round' ? t2.lockStyle : undefined,
+        lockDiameterMm: t2.lockDiameterMm && t2.lockDiameterMm > 0 ? t2.lockDiameterMm : undefined,
+        lockCount: t2.lockCount === 2 ? 2 : undefined,
       } : {}),
     };
 
