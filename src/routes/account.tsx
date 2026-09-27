@@ -67,7 +67,7 @@ function AccountPage() {
                         <td className="py-2 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
                         <td className="py-2">
                           {ACTION_LABEL[r.reason] ?? r.reason}
-                          {r.reference === "monthly_free" && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">free monthly</span>}
+                          {r.reference?.startsWith("monthly_free") && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">free monthly</span>}
                         </td>
                         <td className={`py-2 text-right font-semibold ${r.delta > 0 ? "text-primary" : ""}`}>
                           {r.delta > 0 ? `+${r.delta}` : r.delta}
