@@ -104,9 +104,9 @@ export default function TopBar(p: Props) {
       {ready && (session ? (
         <div style={{ position: 'relative', display: 'flex', gap: spacing.sm }}>
           {credits && (
-            <a href="/pricing" className="sirpam-hide-sm" title={`${credits.freeExportsLimit - credits.freeExportsUsed} free exports left this month`}
+            <a href="/account" className="sirpam-hide-sm" title={`${credits.balance} credits + ${credits.monthlyFreeLeft} free this month`}
               style={{ ...pill(), textDecoration: 'none', color: colors.primary }}>
-              {credits.balance} credits
+              {credits.balance + credits.monthlyFreeLeft} credits
             </a>
           )}
           <button type="button" style={pill()} onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
@@ -114,7 +114,8 @@ export default function TopBar(p: Props) {
           </button>
           {menu === 'account' && (
             <div role="menu" style={menuBox}>
-              {credits && <div style={{ ...item, cursor: 'default' }}>{credits.balance} credits · {credits.freeExportsLimit - credits.freeExportsUsed} free exports left</div>}
+              {credits && <div style={{ ...item, cursor: 'default' }}>{credits.balance} credits · {credits.monthlyFreeLeft} free this month</div>}
+              <a role="menuitem" href="/account" style={linkItem}>Credit history</a>
               <a role="menuitem" href="/pricing" style={linkItem}>Buy credits</a>
               <a role="menuitem" href="/gallery" style={linkItem}>Gallery</a>
               <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
