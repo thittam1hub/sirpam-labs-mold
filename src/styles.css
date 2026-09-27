@@ -62,26 +62,29 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --radius: 1rem;
+  --neu-raised: 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff;
+  --neu-raised-sm: 3px 3px 6px #b8b9be, -3px -3px 6px #ffffff;
+  --neu-inset: inset 2px 2px 5px #b8b9be, inset -2px -2px 5px #ffffff;
+  --background: #e0e5ec;
+  --foreground: #1e293b;
+  --card: #e0e5ec;
+  --card-foreground: #1e293b;
+  --popover: #e0e5ec;
+  --popover-foreground: #1e293b;
+  --primary: #e8632b;
+  --primary-foreground: #ffffff;
+  --secondary: #e0e5ec;
+  --secondary-foreground: #1e293b;
+  --muted: #e0e5ec;
+  --muted-foreground: #64748b;
+  --accent: #e8632b1f;
+  --accent-foreground: #1e293b;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: #d3d8e0;
+  --input: #c8cdd6;
+  --ring: #e8632b;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +143,27 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+  }
+}
+
+/* Soft neumorphic look for the plain pages (Shop, Gallery, Sign in),
+   matching the mold maker. */
+@layer components {
+  .neu-page { font-family: "DM Sans", system-ui, sans-serif; }
+  .neu-page h1, .neu-page h2, .neu-page h3, .neu-page header a:first-child { font-family: "Space Grotesk", system-ui, sans-serif; }
+  .neu-page header { border-color: transparent; box-shadow: var(--neu-raised-sm); }
+  .neu-page .bg-card { border-color: transparent; box-shadow: var(--neu-raised); }
+  .neu-page .bg-muted { box-shadow: var(--neu-inset); }
+  .neu-page input:not([type=file]):not([type=checkbox]):not([type=range]), .neu-page select, .neu-page textarea {
+    border-color: transparent; background: var(--background); box-shadow: var(--neu-inset);
+  }
+  .neu-page input:focus, .neu-page select:focus, .neu-page textarea:focus { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .neu-page a.bg-primary, .neu-page button.bg-primary { box-shadow: var(--neu-raised-sm); transition: box-shadow .15s, transform .15s; }
+  .neu-page a.bg-primary:hover, .neu-page button.bg-primary:hover { transform: translateY(-1px); }
+  .neu-page a.border, .neu-page button.border { border-color: transparent; box-shadow: var(--neu-raised-sm); }
+  .neu-page a.border:active, .neu-page button.border:active, .neu-page button.bg-primary:active { box-shadow: var(--neu-inset); }
+  .neu-page input[type=file]::file-selector-button {
+    border: 0; border-radius: 0.75rem; padding: 0.5rem 0.9rem; margin-right: 0.75rem; cursor: pointer;
+    background: var(--background); box-shadow: var(--neu-raised-sm); color: var(--foreground); font-weight: 600;
   }
 }

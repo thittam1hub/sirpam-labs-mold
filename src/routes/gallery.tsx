@@ -104,7 +104,7 @@ function GalleryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="neu-page min-h-screen bg-background text-foreground">
       <header className="flex items-center gap-4 border-b border-border px-6 py-4">
         <a href="/" className="font-bold">Sirpam 3D Labs Mold</a>
         <span className="text-muted-foreground">/ Gallery</span>
