@@ -126,7 +126,12 @@ export default function TopBar(p: Props) {
               {credits.balance + credits.monthlyFreeLeft} credits
             </a>
           )}
-          <button type="button" style={pill()} onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
+          <button type="button" style={{ ...pill(), display: 'flex', alignItems: 'center', gap: 6 }}
+            onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
+            {profile?.avatar_url && (
+              <img src={profile.avatar_url} alt="" width={20} height={20}
+                style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
+            )}
             {accountLabel} ▾
           </button>
           {menu === 'account' && (
