@@ -45,3 +45,9 @@
 - [x] Auto-repair + retry inside Generate Mold
 - [x] Gallery: price paid, mold size, price per cm³ comparison
 - [x] Reduce detail keeps fine detail (repair first, then solid-engine simplify)
+
+## Round 6 (Sep 27) — competitor gaps (Meshcast, MoldForge, Moldboxer)
+- [ ] Drag the split plane in the 3D view
+- [ ] Clamp wings, air vents, stand-fins
+- [ ] Curved split line (follows the model)
+- [ ] New mold types: plaster slip-cast, press mold, relief tray
