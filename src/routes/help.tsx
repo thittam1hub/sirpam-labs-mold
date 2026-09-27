@@ -44,7 +44,7 @@ const sections = [
   },
 ];
 
-export default function HelpPage() {
+function HelpPage() {
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
       <header className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 bg-background px-6 py-3 text-sm">

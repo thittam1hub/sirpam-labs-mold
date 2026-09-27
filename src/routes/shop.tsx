@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { createFileRoute } from "@tanstack/react-router";
-import { BrandLink } from "@/components/BrandLink";
+import { SiteHeader } from "@/components/SiteHeader";
+import { LegalFooter } from "@/components/LegalFooter";
 
 export const Route = createFileRoute("/shop")({
   staticData: { sitemap: true },
@@ -36,15 +34,9 @@ const MAKERS: Maker[] = [
 ];
 
 function ShopPage() {
-  const [pick, setPick] = useState(MAKERS[0]!.name);
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="flex min-h-16 items-center gap-4 border-b border-border bg-background px-6 py-3">
-        <BrandLink />
-        <span className="text-muted-foreground">/ Shop</span>
-        <div className="flex-1" />
-        <a href="/gallery" className="text-sm">Gallery</a>
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-6xl p-6">
         <h1 className="text-3xl font-bold">Get your mold made</h1>
         <p className="mt-1 max-w-2xl text-muted-foreground">
@@ -81,114 +73,15 @@ function ShopPage() {
                   ))}
                 </div>
               )}
-              <a href="#send" onClick={() => setPick(m.name)} className="mr-2 mt-4 inline-block rounded-lg border border-border px-4 py-2 text-sm font-semibold">Send my project</a>
               <a href={m.url} target="_blank" rel="noreferrer" className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                 Get a quote ↗
               </a>
             </article>
           ))}
         </div>
-        <SendForm pick={pick} setPick={setPick} />
         <p className="mt-6 text-xs text-muted-foreground">Price per size is our estimate for one two-part mold printed in the cheapest suitable plastic (resin or PLA-like), before shipping — not a quote. Prices are what each company advertises and change often — the real price comes from their instant quote. Sirpam isn't affiliated with these companies.</p>
       </main>
+      <LegalFooter />
     </div>
-  );
-}
-
-const SIZES = ["Small (~5 cm)", "Medium (~10 cm)", "Large (~20 cm)"];
-
-function SendForm({ pick, setPick }: { pick: string; setPick: (v: string) => void }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [qty, setQty] = useState("1");
-  const [size, setSize] = useState(SIZES[1]!);
-  const [material, setMaterial] = useState("");
-  const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [done, setDone] = useState<{ link: string | null } | null>(null);
-  const maker = MAKERS.find((m) => m.name === pick) ?? MAKERS[0]!;
-
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    return () => data.subscription.unsubscribe();
-  }, []);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session) return;
-    const q = parseInt(qty, 10);
-    if (!name.trim() || !/^\S+@\S+\.\S+$/.test(email) || !(q > 0 && q <= 10000)) { setErr("Please fill in your name, a valid email and a quantity."); return; }
-    if (file && file.size > 50 * 1024 * 1024) { setErr("The file is bigger than 50 MB."); return; }
-    setBusy(true); setErr(null);
-    try {
-      let path: string | null = null;
-      if (file) {
-        path = `${session.user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const { error } = await supabase.storage.from("project-files").upload(path, file);
-        if (error) throw error;
-      }
-      const { error } = await supabase.from("quote_requests").insert({
-        maker: maker.name, contact_name: name.trim().slice(0, 120), contact_email: email.trim().slice(0, 200),
-        quantity: q, size_class: size, casting_material: material.trim().slice(0, 120) || null,
-        notes: notes.trim().slice(0, 2000) || null, project_path: path,
-      });
-      if (error) throw error;
-      let link: string | null = null;
-      if (path) {
-        const { data } = await supabase.storage.from("project-files").createSignedUrl(path, 60 * 60 * 24 * 7);
-        link = data?.signedUrl ?? null;
-      }
-      setDone({ link });
-    } catch (x) { setErr(x instanceof Error ? x.message : "Could not send"); }
-    setBusy(false);
-  };
-
-  const body = encodeURIComponent(
-    `Hello ${maker.name},\n\nI'd like a quote for a mold.\nQuantity: ${qty}\nSize: ${size}\nCasting material: ${material || "-"}\n${notes ? `Notes: ${notes}\n` : ""}${done?.link ? `Project file (link valid 7 days): ${done.link}\n` : ""}\nThanks,\n${name}\n${email}`,
-  );
-  const inp = "rounded-lg border border-input bg-background px-3 py-2 text-sm";
-
-  return (
-    <section id="send" className="mt-8 rounded-2xl border border-border bg-card p-5">
-      <h2 className="text-lg font-semibold">Send my project to a mold maker</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Attach your exported STL/STEP ZIP (best — every service accepts it) or your .sirpam.json project. We save the request and give you a private download link to pass on.
-      </p>
-      {!session ? (
-        <a href="/auth?redirect=/shop" className="mt-3 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in to send a request</a>
-      ) : done ? (
-        <div className="mt-3 space-y-2 text-sm">
-          <p><b>Request saved.</b> Last step — send it to {maker.name}:</p>
-          <div className="flex flex-wrap gap-2">
-            {maker.email && <a className="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground" href={`mailto:${maker.email}?subject=${encodeURIComponent("Mold quote request")}&body=${body}`}>Email {maker.name}</a>}
-            <a className="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground" href={maker.url} target="_blank" rel="noreferrer">Open {maker.name} upload page ↗</a>
-            <button className="rounded-lg border border-border px-4 py-2" onClick={() => navigator.clipboard.writeText(decodeURIComponent(body))}>Copy request text</button>
-            <button className="rounded-lg border border-border px-4 py-2" onClick={() => setDone(null)}>New request</button>
-          </div>
-          {done.link && <p className="break-all text-xs text-muted-foreground">Private file link (7 days): {done.link}</p>}
-        </div>
-      ) : (
-        <form onSubmit={submit} className="mt-3 grid gap-3 md:grid-cols-2">
-          <select value={maker.name} onChange={(e) => setPick(e.target.value)} className={inp} aria-label="Mold maker">
-            {MAKERS.map((m) => <option key={m.name}>{m.name}</option>)}
-          </select>
-          <select value={size} onChange={(e) => setSize(e.target.value)} className={inp} aria-label="Mold size">
-            {SIZES.map((z) => <option key={z}>{z}</option>)}
-          </select>
-          <input required maxLength={120} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className={inp} />
-          <input required type="email" maxLength={200} placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className={inp} />
-          <input type="number" min={1} max={10000} placeholder="How many" value={qty} onChange={(e) => setQty(e.target.value)} className={inp} aria-label="Quantity" />
-          <input maxLength={120} placeholder="Casting material (e.g. resin, wax, chocolate)" value={material} onChange={(e) => setMaterial(e.target.value)} className={inp} />
-          <textarea maxLength={2000} placeholder="Notes: finish, colour, deadline…" value={notes} onChange={(e) => setNotes(e.target.value)} className={`${inp} min-h-20 md:col-span-2`} />
-          <input type="file" accept=".json,.sirpam,.zip,.stl,.step,.stp,.3mf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" aria-label="Project file" />
-          <button disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{busy ? "Sending…" : `Send to ${maker.name}`}</button>
-          {err && <p className="text-sm text-destructive md:col-span-2">{err}</p>}
-        </form>
-      )}
-    </section>
   );
 }
