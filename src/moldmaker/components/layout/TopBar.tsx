@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Link } from '@tanstack/react-router';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,6 +112,7 @@ export default function TopBar(p: Props) {
         <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
         <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
         <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
+        <ThemeToggle style={{ ...pill(), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px 10px' }} className="" />
       </div>
       {ready && (session ? (
         <div style={{ position: 'relative', display: 'flex', gap: spacing.sm }}>

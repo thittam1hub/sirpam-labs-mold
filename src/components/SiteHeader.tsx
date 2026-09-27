@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
@@ -31,6 +32,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
             </Link>
           ))}
         </nav>
+        <ThemeToggle />
         <div className="hidden min-h-9 min-w-28 items-center justify-end gap-2 sm:flex">
           {!ready ? <Skeleton className="h-9 w-28" /> : session ? (
             <>

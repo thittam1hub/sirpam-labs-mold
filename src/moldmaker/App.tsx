@@ -1,4 +1,5 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
+import { useTheme } from '@/components/ThemeToggle';
 import { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
@@ -16,7 +17,7 @@ import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator
 import { loadFile, parseFile } from './utils/fileLoader';
 import { createSampleModel } from './utils/sampleModel';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
-import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts } from './theme';
+import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts, sceneColors } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
 import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
@@ -311,6 +312,8 @@ const initialState: AppState = {
 };
 
 export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
+  const themeMode = useTheme();
+  const sceneCols = sceneColors[themeMode];
   const [state, setState] = useState<AppState>(initialState);
   /**
    * Cheat-sheet overlay visibility. Pure UI ephemeral state — doesn't need
@@ -1237,7 +1240,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
-            <color attach="background" args={[colors.sceneBg]} />
+            <color attach="background" args={[sceneCols.sceneBg]} />
             <CameraRig axis={state.axis} />
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
@@ -1336,7 +1339,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             </group>
 
             <OrbitControls makeDefault />
-            <gridHelper args={[200, 20, colors.gridMajor, colors.gridMinor]} />
+            <gridHelper key={themeMode} args={[200, 20, sceneCols.gridMajor, sceneCols.gridMinor]} />
 
             <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
               <GizmoViewport />
@@ -1399,7 +1402,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <b>Repairing broken spots…</b><span>{Math.round(repairProgress.pct)}%</span>
               </div>
-              <div style={{ height: 8, borderRadius: 999, background: colors.sceneBg, overflow: 'hidden' }}>
+              <div style={{ height: 8, borderRadius: 999, background: sceneCols.sceneBg, overflow: 'hidden' }}>
                 <div style={{ width: `${repairProgress.pct}%`, height: '100%', background: colors.primary, transition: 'width .3s' }} />
               </div>
               <div style={{ marginTop: 6, color: colors.textMuted }}>{repairProgress.label}</div>
@@ -1452,7 +1455,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                 position: 'absolute',
                 bottom: spacing.lg,
                 right: spacing.lg,
-                background: 'rgba(224, 229, 236, 0.92)',
+                background: 'color-mix(in srgb, var(--sm-panel-bg) 92%, transparent)',
                 border: 'none',
                 boxShadow: shadows.raisedSm,
                 borderRadius: radii.md,
@@ -1484,7 +1487,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                 position: 'absolute', inset: 0,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(224, 229, 236, 0.88)',
+                background: 'color-mix(in srgb, var(--sm-panel-bg) 88%, transparent)',
                 color: colors.textPrimary,
                 fontFamily: fonts.body,
                 // Let mouse drags fall through to the 3D canvas so the empty

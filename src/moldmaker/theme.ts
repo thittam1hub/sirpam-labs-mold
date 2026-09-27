@@ -17,32 +17,32 @@ export const colors = {
   // work: surfaces are the SAME color as what they sit on, differentiated
   // only by shadow. `viewportBg` doubles as the "well" color for inset
   // controls (inputs, slider tracks); `sceneBg` is the 3D canvas only.
-  appBg: '#e0e5ec',
-  viewportBg: '#e0e5ec',
+  appBg: 'var(--sm-app-bg, #e0e5ec)',
+  viewportBg: 'var(--sm-viewport-bg, #e0e5ec)',
   sceneBg: '#d1d9e6',
-  panelBg: '#e0e5ec',
-  sectionBg: '#e0e5ec',
+  panelBg: 'var(--sm-panel-bg, #e0e5ec)',
+  sectionBg: 'var(--sm-section-bg, #e0e5ec)',
 
   // Borders — barely-there; shadow does the real edge work.
-  borderPanel: '#c5c9d1',
-  borderSection: '#d3d8e0',
-  borderSubtle: '#c8cdd6',
+  borderPanel: 'var(--sm-border-panel, #c5c9d1)',
+  borderSection: 'var(--sm-border-section, #d3d8e0)',
+  borderSubtle: 'var(--sm-border-subtle, #c8cdd6)',
 
   // Brand / primary — Sirpam ember orange.
   primary: '#e8632b',
-  primaryAlpha: '#e8632b1f', // 12% alpha via 8-digit hex
+  primaryAlpha: 'var(--sm-primary-alpha, #e8632b1f)', // 12% alpha via 8-digit hex
 
   // Text — warm slate ramp on the light shell.
-  textPrimary: '#1e293b',
-  textBody: '#475569',
-  textMuted: '#64748b',
-  textDim: '#8b98a9',
-  textFaint: '#94a3b8',
-  fileInfo: '#4a6f99',
+  textPrimary: 'var(--sm-text-primary, #1e293b)',
+  textBody: 'var(--sm-text-body, #475569)',
+  textMuted: 'var(--sm-text-muted, #64748b)',
+  textDim: 'var(--sm-text-dim, #8b98a9)',
+  textFaint: 'var(--sm-text-faint, #94a3b8)',
+  fileInfo: 'var(--sm-file-info, #4a6f99)',
 
   // Semantic — saturated fills with white text; contrast holds on light bg.
-  errorBg: '#b91c1c',
-  infoBg: '#b45309',
+  errorBg: 'var(--sm-error-bg, #b91c1c)',
+  infoBg: 'var(--sm-info-bg, #b45309)',
 
   // Scene helpers — soft greys on the light canvas.
   gridMajor: '#aab4c4',
@@ -55,12 +55,12 @@ export const colors = {
  * idle controls use `raisedSm`.
  */
 export const shadows = {
-  raised: '6px 6px 12px #b8b9be, -6px -6px 12px #ffffff',
-  raisedSm: '3px 3px 6px #b8b9be, -3px -3px 6px #ffffff',
-  inset: 'inset 2px 2px 5px #b8b9be, inset -2px -2px 5px #ffffff',
-  insetDeep: 'inset 4px 4px 8px #b8b9be, inset -4px -4px 8px #ffffff',
+  raised: 'var(--neu-raised)',
+  raisedSm: 'var(--neu-raised-sm)',
+  inset: 'var(--neu-inset)',
+  insetDeep: 'var(--neu-inset-deep)',
   /** Ember glow for primary actions. */
-  primary: '4px 4px 10px rgba(232,99,43,0.35), -4px -4px 8px #ffffff',
+  primary: '4px 4px 10px rgba(232,99,43,0.35), -4px -4px 8px var(--neu-light)',
 } as const;
 
 export const radii = {
@@ -126,8 +126,8 @@ export const focusVisibleCss = `
     height: 18px;
     border-radius: 50%;
     background: ${colors.viewportBg};
-    border: 2px solid rgba(255,255,255,0.7);
-    box-shadow: 2px 2px 5px #b8b9be, -2px -2px 5px #ffffff;
+    border: 2px solid var(--neu-light);
+    box-shadow: 2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light);
     cursor: pointer;
   }
   [data-sirpam] input[type="range"]::-moz-range-thumb {
@@ -135,8 +135,8 @@ export const focusVisibleCss = `
     height: 14px;
     border-radius: 50%;
     background: ${colors.viewportBg};
-    border: 2px solid rgba(255,255,255,0.7);
-    box-shadow: 2px 2px 5px #b8b9be, -2px -2px 5px #ffffff;
+    border: 2px solid var(--neu-light);
+    box-shadow: 2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light);
     cursor: pointer;
   }
   [data-sirpam] input[type="range"]::-moz-range-track {
@@ -152,7 +152,13 @@ export const focusVisibleCss = `
     background: transparent;
   }
   [data-sirpam] ::-webkit-scrollbar-thumb {
-    background: #c8d0d9;
+    background: var(--sm-border-subtle);
     border-radius: 10px;
   }
 `;
+
+/** Three.js can't read CSS variables — resolved scene colours per theme. */
+export const sceneColors = {
+  light: { sceneBg: '#d1d9e6', gridMajor: '#aab4c4', gridMinor: '#c3cbd8' },
+  dark: { sceneBg: '#1b1f26', gridMajor: '#3a414d', gridMinor: '#2a3039' },
+} as const;
