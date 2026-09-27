@@ -23,7 +23,7 @@ export const Route = createFileRoute("/account")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { tab: AccountTab } => ({
+  validateSearch: (search: Record<string, unknown>): { tab?: AccountTab } => ({
     tab: accountTabs.includes(search.tab as AccountTab) ? search.tab as AccountTab : "profile",
   }),
   component: AccountPage,
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { session, ready, signOut } = useAppSession();
-  const { tab } = Route.useSearch();
+  const tab = Route.useSearch().tab ?? "profile";
   const [status, setStatus] = useState<CreditStatus | null | undefined>(undefined);
   const [rows, setRows] = useState<LedgerRow[]>([]);
   const [email, setEmail] = useState<string>("");
