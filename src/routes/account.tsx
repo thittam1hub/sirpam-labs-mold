@@ -21,6 +21,7 @@ export const Route = createFileRoute("/account")({
       { property: "og:description", content: "Credit balance and history for your Sirpam account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { tab?: AccountTab } => ({
@@ -34,6 +35,7 @@ function AccountPage() {
   const tab = Route.useSearch().tab ?? "profile";
   const [status, setStatus] = useState<CreditStatus | null | undefined>(undefined);
   const [rows, setRows] = useState<LedgerRow[]>([]);
+  const [historyLimit, setHistoryLimit] = useState(25);
   const [email, setEmail] = useState<string>("");
   const [newPw, setNewPw] = useState("");
   const [pwMsg, setPwMsg] = useState<string | null>(null);
@@ -53,12 +55,14 @@ function AccountPage() {
     const load = async () => {
       const user = session.user;
       setEmail(user?.email ?? "");
-      let prof: { display_name: string; avatar_url: string | null } | null = null;
-      const got = await supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
-      prof = got.data;
-      if (!prof) {
-        const ins = await supabase.from("profiles").insert({ id: user.id }).select("display_name, avatar_url").single();
-        prof = ins.data;
+      const profilePromise = supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
+      const creditPromise = getCreditStatus();
+      const historyPromise = getCreditHistory();
+      const [got, creditStatus, creditRows] = await Promise.all([profilePromise, creditPromise, historyPromise]);
+      let prof = got.data as { display_name: string; avatar_url: string | null } | null;
+      if (!prof && !got.error) {
+        const inserted = await supabase.from("profiles").insert({ id: user.id }).select("display_name, avatar_url").single();
+        prof = inserted.data;
       }
       if (!active) return;
       setDisplayName(prof?.display_name ?? "");
@@ -68,10 +72,8 @@ function AccountPage() {
         const s = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60);
         if (active) setAvatarSigned(s.data?.signedUrl ?? null);
       }
-      const creditStatus = await getCreditStatus();
-      if (!active) return;
       setStatus(creditStatus);
-      if (creditStatus) setRows(await getCreditHistory());
+      setRows(creditRows);
     };
     load().catch(() => { if (active) setStatus(null); });
     return () => { active = false; };
@@ -221,7 +223,7 @@ function AccountPage() {
               ) : (
                 <table className="mt-4 w-full text-sm">
                   <tbody>
-                    {rows.map((r) => (
+                     {rows.slice(0, historyLimit).map((r) => (
                       <tr key={r.id} className="border-t border-border">
                         <td className="py-2 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
                         <td className="py-2">
@@ -236,6 +238,11 @@ function AccountPage() {
                   </tbody>
                 </table>
               )}
+               {rows.length > historyLimit && (
+                 <Button type="button" variant="outline" className="mt-4" onClick={() => setHistoryLimit((value) => value + 25)}>
+                   Load more history
+                 </Button>
+               )}
             </section>}
 
             {tab === "security" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
@@ -255,14 +262,14 @@ function AccountPage() {
               <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-4">
                  <Button variant="outline" onClick={() => void signOut()}>Sign out</Button>
                 {!delConfirm ? (
-                  <button onClick={() => setDelConfirm(true)} className="text-sm text-muted-foreground">Delete my account…</button>
+                   <Button type="button" variant="ghost" size="sm" onClick={() => setDelConfirm(true)}>Delete my account…</Button>
                 ) : (
                   <span className="flex flex-wrap items-center gap-2 text-sm">
                      <span className="text-destructive">This permanently deletes your gallery, credits and account.</span>
-                    <button onClick={deleteAccount} disabled={delBusy} className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
+                     <Button type="button" variant="destructive" size="sm" onClick={deleteAccount} disabled={delBusy}>
                       {delBusy ? "Deleting…" : "Yes, delete everything"}
-                    </button>
-                    <button onClick={() => setDelConfirm(false)} className="text-sm text-muted-foreground">Cancel</button>
+                     </Button>
+                     <Button type="button" variant="ghost" size="sm" onClick={() => setDelConfirm(false)}>Cancel</Button>
                   </span>
                 )}
               </div>

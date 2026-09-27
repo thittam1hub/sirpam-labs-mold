@@ -325,7 +325,17 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
   }, [initialStep]);
   useEffect(() => {
     if (!initialTool) return;
-    window.requestAnimationFrame(() => document.getElementById(initialTool)?.scrollIntoView({ block: 'start' }));
+    let attempts = 0;
+    const reveal = () => {
+      const panel = document.getElementById(initialTool);
+      if (panel) {
+        panel.scrollIntoView({ block: 'start' });
+        return;
+      }
+      attempts += 1;
+      if (attempts < 20) window.setTimeout(reveal, 100);
+    };
+    window.requestAnimationFrame(reveal);
   }, [initialTool]);
   const setStep = useCallback((n: number) => {
     setStepRaw(n);

@@ -59,8 +59,6 @@ export function guessRegion(): { tier: RegionTier; india: boolean } {
 }
 
 export async function getCreditStatus(): Promise<CreditStatus | null> {
-  const { data: s } = await supabase.auth.getSession();
-  if (!s.session) return null;
   const { data, error } = await supabase.rpc("get_credit_status" as never);
   if (error) throw error;
   return data as unknown as CreditStatus;
