@@ -5,6 +5,7 @@ import { BUSINESS } from "@/lib/business";
 import { LegalFooter } from "@/components/LegalFooter";
 
 export const Route = createFileRoute("/checkout/$pack")({
+  staticData: { sitemap: false },
   loader: ({ params }) => {
     const pack = CREDIT_PACKS.find((p) => p.id === params.pack);
     if (!pack) throw notFound();
