@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/gallery")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "My Mold Gallery — Sirpam 3D Labs Mold" },
@@ -215,7 +216,7 @@ function GalleryPage() {
                     {it.photo_paths.length > 1 && (
                       <div className="flex gap-1 p-2">
                         {it.photo_paths.slice(1).map((p) => urls[p] && (
-                          <a key={p} href={urls[p]} target="_blank" rel="noreferrer"><img src={urls[p]} alt="" className="h-12 w-12 rounded object-cover" /></a>
+                          <a key={p} href={urls[p]} target="_blank" rel="noreferrer" aria-label={`Open full-size photo of ${it.title}`}><img src={urls[p]} alt="" className="h-12 w-12 rounded object-cover" /></a>
                         ))}
                       </div>
                     )}

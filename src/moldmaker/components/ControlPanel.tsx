@@ -436,7 +436,7 @@ export default function ControlPanel({
 
       {/* File Section */}
       {step === 0 && <div style={styles.section}>
-        <div style={styles.sectionTitle}>Model</div>
+        <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Model</h2>
         {state.fileName && (
           <div style={{ ...styles.fileInfo, marginBottom: spacing.sm + 2 }}>
             {state.fileName}
@@ -456,7 +456,7 @@ export default function ControlPanel({
           discarding the mold. */}
       {step === 1 && hasModel && (
         <div style={styles.section}>
-          <div style={styles.sectionTitle}>Parting Plane</div>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Parting Plane</h2>
 
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
             {(['x', 'y', 'z'] as Axis[]).map(a => (
@@ -835,7 +835,7 @@ export default function ControlPanel({
       {step === 2 && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionHeaderRow}>
-            <div style={{ ...styles.sectionTitle, marginBottom: 0 }}>Mold Box</div>
+            <h2 style={{ ...styles.sectionTitle, marginTop: 0, marginBottom: 0 }}>Mold Box</h2>
             <button
               type="button"
               onClick={onResetDimensions}
@@ -1129,7 +1129,7 @@ export default function ControlPanel({
       {step === 0 && hasModel && (
         <div style={styles.section}>
           <div style={styles.sectionHeaderRow}>
-            <div style={{ ...styles.sectionTitle, marginBottom: 0 }}>Printer Fit</div>
+            <h2 style={{ ...styles.sectionTitle, marginTop: 0, marginBottom: 0 }}>Printer Fit</h2>
             {scaleDiffersFromDefault && (
               <button
                 type="button"
@@ -1278,7 +1278,7 @@ export default function ControlPanel({
           currency unit — deliberately unitless in the UI. */}
       {step === 4 && hasModel && (
         <div style={styles.section}>
-          <div style={styles.sectionTitle}>Material & Cost</div>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Material & Cost</h2>
 
           {!hasMold ? (
             <div style={{
@@ -1419,7 +1419,7 @@ export default function ControlPanel({
           (embeds the model geometry, so localStorage wouldn't fit); Export
           writes a shareable .sirpam.json with everything inside. */}
       {step === 4 && <div id="sirpam-projects" style={styles.section}>
-          <div style={styles.sectionTitle}>Projects</div>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Projects</h2>
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
             <button
               type="button"
@@ -1523,7 +1523,7 @@ export default function ControlPanel({
           meaningful, so they stay nested behind hasMold. */}
       {false && hasModel && (
         <div style={styles.section}>
-          <div style={styles.sectionTitle}>View</div>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>View</h2>
           <div style={styles.toggleRow}>
             <span style={styles.label}>Wireframe</span>
             <ToggleSwitch active={state.wireframe} onClick={onToggleWireframe} label="Wireframe view" />
@@ -1546,7 +1546,7 @@ export default function ControlPanel({
       {/* Export Section */}
       {step === 4 && hasMold && (
         <div style={styles.section}>
-          <div style={styles.sectionTitle}>Export</div>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Export</h2>
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.sm }}>
             <button
               type="button"
@@ -1601,7 +1601,7 @@ export default function ControlPanel({
           it off actually records a decline (= we don't re-prompt). */}
       {step === 4 && telemetryConfigured && (
         <div style={styles.section}>
-          <div style={styles.sectionTitle}>Privacy</div>
+          <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Privacy</h2>
           <div style={styles.toggleRow}>
             <span style={styles.label}>Anonymous usage data</span>
             <ToggleSwitch

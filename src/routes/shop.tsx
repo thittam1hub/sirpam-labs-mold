@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/shop")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Mold & Print Services — Sirpam 3D Labs Mold" },
