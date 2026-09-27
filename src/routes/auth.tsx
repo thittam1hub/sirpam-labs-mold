@@ -41,6 +41,7 @@ function AuthPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [msgKind, setMsgKind] = useState<"error" | "info">("info");
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const goBack = () => {
     const target = sessionStorage.getItem(REDIRECT_KEY) ?? redirect;
