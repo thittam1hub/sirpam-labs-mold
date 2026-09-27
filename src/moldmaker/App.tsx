@@ -37,7 +37,7 @@ import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
 import { supabase } from '@/integrations/supabase/client';
-import { spendCredits, type CreditAction } from '@/lib/credits';
+import { spendCredits, getCreditStatus, describeCharge, type CreditAction } from '@/lib/credits';
 
 export type { Axis } from './types';
 
@@ -933,11 +933,21 @@ export default function App() {
     try {
       const { data: s } = await supabase.auth.getSession();
       if (!s.session) {
-        setState(prev => ({ ...prev, errorMessage: 'Please sign in to export your mold — you get 3 free STL exports every month plus 10 welcome credits.' }));
+        setState(prev => ({ ...prev, errorMessage: 'Please sign in to export your mold — you get 10 welcome credits plus 3 free credits every month.' }));
         window.setTimeout(() => window.location.assign('/auth'), 1800);
         return;
       }
-      const r = await spendCredits(`export_${format}` as CreditAction);
+      const action = `export_${format}` as CreditAction;
+      const status = await getCreditStatus();
+      if (status) {
+        const c = describeCharge(action, status);
+        if (!c.affordable) {
+          if (window.confirm(`${c.text.split('.')[0]}. You don't have enough credits. Open the Pricing page to buy more?`)) window.location.assign('/pricing');
+          return;
+        }
+        if (!window.confirm(`${c.text}\n\nContinue?`)) return;
+      }
+      const r = await spendCredits(action);
       if (!r.ok) {
         setState(prev => ({ ...prev, errorMessage: `This export needs ${r.needed} credit(s) and you have ${r.balance}. Get more on the Pricing page (/pricing).` }));
         return;
