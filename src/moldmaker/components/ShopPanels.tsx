@@ -4,7 +4,7 @@ import type { Axis, MoldMode } from '../types';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import type { CastingMaterialId } from '../utils/tier2';
 import {
-  PRINT_SHRINK, CAST_SHRINK, POUR_PRESETS, shrinkScale, scaledCopy, leakGuide, finishAdvisor, moldLife,
+  PRINT_SHRINK, CAST_SHRINK, POUR_PRESETS, shrinkScale, leakGuide, finishAdvisor, moldLife,
   type PourPreset, type Advice,
 } from '../utils/shopAdvice';
 import { embossModel, splitForBed, buildWaxTree, addModelBase, type Side } from '../mold/modelTools';
