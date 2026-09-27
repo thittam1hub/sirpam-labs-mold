@@ -481,6 +481,15 @@ export async function generateMold(
         if (link) { topResult = topResult.subtract(link); bottomResult = bottomResult.subtract(link); }
       }
     }
+
+    // Multi-cavity tray: one sprue per extra cavity, same depth/taper.
+    for (const c of useRunner ? [] : cavityCenters.slice(1)) {
+      const pos = lateralToWorld(axis, c.a, c.b, channels.spruePos[primaryAxisIndex(axis)]);
+      topResult = topResult.subtract(
+        Manifold.cylinder(channels.sprueHeight, sprueGateRadius, sprueTopRadius, 24)
+          .rotate(channels.rotation).translate(pos),
+      );
+    }
   }
 
   // Automatic air vents at the model's trapped-air high points.
@@ -493,16 +502,6 @@ export async function generateMold(
     for (const q of pts) {
       const v = axialCylinder(wasm, axis, q.a, q.b, q.p - 0.3, envTop, vr, vr * 1.3, 12);
       if (v) { topResult = topResult.subtract(v); bottomResult = bottomResult.subtract(v); }
-    }
-    autoVentCount = pts.length;
-
-    // Multi-cavity tray: one sprue per extra cavity, same depth/taper.
-    for (const c of useRunner ? [] : cavityCenters.slice(1)) {
-      const pos = lateralToWorld(axis, c.a, c.b, channels.spruePos[primaryAxisIndex(axis)]);
-      topResult = topResult.subtract(
-        Manifold.cylinder(channels.sprueHeight, sprueGateRadius, sprueTopRadius, 24)
-          .rotate(channels.rotation).translate(pos),
-      );
     }
   }
 
