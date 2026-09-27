@@ -35,9 +35,12 @@ const tick = () => new Promise(r => setTimeout(r, 30));
 
 /* ───────────── Fix & fit (Model step) ───────────── */
 
-export function ModelFixPanel({ geometry, onReplaceModel }: {
+export function ModelFixPanel({ geometry, onReplaceModel, scale, onSetScale }: {
   geometry: THREE.BufferGeometry | null;
   onReplaceModel: (g: THREE.BufferGeometry, note: string) => void;
+  /** Single source of truth for print scale (same value as Printer Fit). */
+  scale: number;
+  onSetScale: (s: number) => void;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -75,9 +78,16 @@ export function ModelFixPanel({ geometry, onReplaceModel }: {
   });
   const doFit = () => run('Applying…', async () => {
     const mm = parseFloat(size);
-    const g = transformModel(geometry, { ...rot, axis, sizeMm: Number.isFinite(mm) && mm > 0 ? mm : undefined });
+    const rotated = rot.rx || rot.ry || rot.rz;
+    const g = rotated ? transformModel(geometry, { ...rot, axis }) : geometry!;
+    if (!g.boundingBox) g.computeBoundingBox();
     const b = g.boundingBox!.getSize(new THREE.Vector3());
-    onReplaceModel(g, `Model is now ${b.x.toFixed(1)} × ${b.y.toFixed(1)} × ${b.z.toFixed(1)} mm`);
+    if (rotated) onReplaceModel(g, `Model turned — now ${b.x.toFixed(1)} × ${b.y.toFixed(1)} × ${b.z.toFixed(1)} mm`);
+    if (Number.isFinite(mm) && mm > 0 && b[axis] > 0) {
+      const sc = mm / b[axis];
+      onSetScale(sc);
+      setMsg(`Print scale set to ×${sc.toFixed(3)} (same setting as Printer Fit).`);
+    }
     setRot({ rx: 0, ry: 0, rz: 0 });
   });
 
@@ -116,7 +126,7 @@ export function ModelFixPanel({ geometry, onReplaceModel }: {
         ))}
       </div>
       <button style={s.btn} disabled={!!busy || (!size && !rot.rx && !rot.ry && !rot.rz)} onClick={doFit}>Apply size & rotation</button>
-      <div style={s.hint}>Example: type 60 with Height selected for a 60 mm tall figure. Each Turn click adds 90°.</div>
+      <div style={s.hint}>Example: type 60 with Height selected for a 60 mm tall figure. Size sets the one print scale shared with Printer Fit (now ×{scale.toFixed(3)}). Each Turn click adds 90°.</div>
 
       {busy && <div style={{ ...s.hint, color: colors.primary }}>{busy} large files can take up to a minute.</div>}
       {msg && <div style={{ ...s.hint, color: colors.textBody }}>{msg}</div>}

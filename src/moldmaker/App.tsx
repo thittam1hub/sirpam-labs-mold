@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
-import AdvancedMoldPanel, { DEFAULT_TIER2, tier2GeomKey, type Tier2Settings } from './components/AdvancedMoldPanel';
+import AdvancedMoldPanel, { MoldCoreSettings, DEFAULT_TIER2, tier2GeomKey, type Tier2Settings } from './components/AdvancedMoldPanel';
 import { buildCavityTray, orientForPrint, solidProps } from './utils/tier2';
 import OverhangPanel from './components/OverhangPanel';
 import type { MoldExtras } from './mold/moldFeatures';
@@ -1684,9 +1684,18 @@ export default function App() {
           stepExporting={stepExporting}
           onCancelStepExport={handleCancelStepExport}
           moldSlot={
+            <>
+            <MoldCoreSettings
+              settings={state.tier2}
+              onChange={patch => setState(prev => ({ ...prev, tier2: { ...prev.tier2, ...patch } }))}
+              moldMode={state.moldMode}
+              siliconeType={state.siliconeType}
+              formFit={state.formFit}
+            />
             <MoldPrepPanel
-              geometry={state.originalGeometry}
-              onReplaceModel={replaceModel}
+              castingMaterial={state.tier2.castingMaterial}
+              scale={state.scale}
+              onScaleChange={sc => setState(prev => ({ ...prev, scale: sc }))}
               onSetClearance={mm => setState(prev => ({ ...prev, clearanceMm: mm }))}
               onApplyPreset={p => setState(prev => ({
                 ...prev, moldMode: p.moldMode, sprueDiameterMm: p.sprueDiameterMm,
@@ -1694,6 +1703,7 @@ export default function App() {
                 tier2: { ...prev.tier2, castingMaterial: p.castingMaterial },
               }))}
             />
+            </>
           }
           finishSlot={
             <FinishAdvisorPanel
@@ -1711,7 +1721,7 @@ export default function App() {
             />
           }
           modelSlot={<>
-            <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} />
+            <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} scale={state.scale} onSetScale={sc => setState(prev => ({ ...prev, scale: sc }))} />
             <AiShapePanel onCommit={commitGeometry} />
           </>}
           reportSlot={<>
