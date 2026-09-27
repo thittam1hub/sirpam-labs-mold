@@ -1,4 +1,5 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
+import { buildGapFiller, buildFeet, engraveText, splitIntoParts, type Round7Extras } from './round7';
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape } from '../types';
 import {
@@ -312,7 +313,10 @@ export async function generateMold(
     cavityCut = cavitySolid;
   } else {
     const fullBox = createMoldBoxManifold(wasm, envelope);
-    moldCavity = fullBox.subtract(modelManifold);
+    const r7g: Round7Extras = extras;
+    const filler = r7g.gapFiller ? buildGapFiller(wasm, cleanGeometry, axis, boundingBox) : null;
+    if (filler) cavityCut = modelManifold.add(filler);
+    moldCavity = fullBox.subtract(cavityCut);
   }
 
   // Split the cavity into top and bottom halves along the parting plane
@@ -576,12 +580,46 @@ export async function generateMold(
     topResult = topResult.subtract(hollow.column);
     bottomResult = bottomResult.subtract(hollow.column);
   }
+  // Round 7: feet, engraved volume label + watermark (untilted splits only).
+  const r7: Round7Extras = extras;
+  if (cutAngle === 0 && (r7.moldFeet || r7.volumeLabel || r7.watermark)) {
+    const [la7, lb7] = lateralAxisIndices(axis);
+    const pi7 = primaryAxisIndex(axis);
+    const eMax = envelope.moldMin.clone().add(envelope.moldSize);
+    const a0 = envelope.moldMin.getComponent(la7), a1 = eMax.getComponent(la7);
+    const b0 = envelope.moldMin.getComponent(lb7), b1 = eMax.getComponent(lb7);
+    const m = Math.min(a1 - a0, b1 - b0) * 0.08;
+    const depth = Math.max(0.6, Math.min(1.2, wallThickness * 0.25));
+    if (r7.volumeLabel && !options.formFit) {
+      // Band along the lower edge of the top face, clear of the sprue.
+      topResult = engraveText(wasm, topResult, r7.volumeLabel, {
+        axis, side: 'top', face: eMax.getComponent(pi7), a0: a0 + m, a1: a1 - m,
+        b0: b0 + m, b1: b0 + m + (b1 - b0) * 0.18, depth,
+      });
+    }
+    if (r7.watermark && !options.formFit) {
+      bottomResult = engraveText(wasm, bottomResult, r7.watermark, {
+        axis, side: 'bottom', face: envelope.moldMin.getComponent(pi7), a0: a0 + m * 2.5, a1: a1 - m * 2.5,
+        b0: (b0 + b1) / 2 - (b1 - b0) * 0.12, b1: (b0 + b1) / 2 + (b1 - b0) * 0.12, depth,
+      });
+    }
+    if (r7.moldFeet && !r6.standFins && !options.formFit) {
+      const feet = buildFeet(wasm, { axis, envMin: envelope.moldMin, envMax: eMax });
+      if (feet) bottomResult = bottomResult.add(feet);
+    }
+  }
   let pieces: any[] = [topResult, bottomResult];
 
   // Pry pockets (Tier 2) on the primary parting line.
   if (extras.pryPockets && !curved) {
     pieces = applyPryPockets(wasm, pieces, {
       axis, envMin: envelope.moldMin, envSize: envelope.moldSize, splitPos, wallThickness,
+    });
+  }
+
+  if ((r7.pieceCount === 3 || r7.pieceCount === 4) && !curved && cutAngle === 0) {
+    pieces = splitIntoParts(pieces, {
+      axis, envMin: envelope.moldMin, envMax: envelope.moldMin.clone().add(envelope.moldSize), count: r7.pieceCount,
     });
   }
 

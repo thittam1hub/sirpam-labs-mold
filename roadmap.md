@@ -54,4 +54,12 @@
 
 ## Round 7 (Sep 27)
 - [x] Polish pass: all pages load with no errors; tour text fixed; styled photo button
-- [ ] Research picks awaiting user choice (casting volume label, mold feet, base filler, 3–4 part molds, printer overhang draft)
+- [x] Research picks awaiting user choice (casting volume label, mold feet, base filler, 3–4 part molds, printer overhang draft)
+
+## Round 8 (done)
+- [x] Casting volume engraved + in file names
+- [x] Mold feet
+- [x] Gap filler under the model
+- [x] 3 and 4 part molds
+- [x] Support-free print check (overhang angle)
+- [x] Watermark text
