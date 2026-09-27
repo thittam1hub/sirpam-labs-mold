@@ -151,7 +151,7 @@
 @layer components {
   .neu-page { font-family: "DM Sans", system-ui, sans-serif; }
   .neu-page h1, .neu-page h2, .neu-page h3, .neu-page header a:first-child { font-family: "Space Grotesk", system-ui, sans-serif; }
-  .neu-page header { border-color: transparent; box-shadow: var(--neu-raised-sm); }
+  .neu-page header { border-color: transparent; background-color: var(--background); box-shadow: var(--neu-raised-sm); }
   .neu-page .bg-card { border-color: transparent; box-shadow: var(--neu-raised); }
   .neu-page .bg-muted { box-shadow: var(--neu-inset); }
   .neu-page input:not([type=file]):not([type=checkbox]):not([type=range]), .neu-page select, .neu-page textarea {

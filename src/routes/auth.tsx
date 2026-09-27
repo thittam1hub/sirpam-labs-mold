@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { BrandLink } from "@/components/BrandLink";
 
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: false },
@@ -53,7 +54,8 @@ function AuthPage() {
   return (
     <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
-        <a href="/" className="text-sm text-muted-foreground">← Back to mold maker</a>
+        <BrandLink />
+        <a href="/" className="mt-4 block text-sm text-muted-foreground">← Back to homepage</a>
         <h1 className="mt-3 text-2xl font-bold">{mode === "in" ? "Sign in" : "Create account"}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Keep a gallery of the molds you've printed.</p>
         <button onClick={google} className="mt-5 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium">

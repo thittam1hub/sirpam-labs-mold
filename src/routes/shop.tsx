@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { createFileRoute } from "@tanstack/react-router";
+import { BrandLink } from "@/components/BrandLink";
 
 export const Route = createFileRoute("/shop")({
   staticData: { sitemap: true },
@@ -38,8 +39,8 @@ function ShopPage() {
   const [pick, setPick] = useState(MAKERS[0]!.name);
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="flex items-center gap-4 border-b border-border px-6 py-4">
-        <a href="/" className="font-bold">Sirpam 3D Labs Mold</a>
+      <header className="flex min-h-16 items-center gap-4 border-b border-border bg-background px-6 py-3">
+        <BrandLink />
         <span className="text-muted-foreground">/ Shop</span>
         <div className="flex-1" />
         <a href="/gallery" className="text-sm">Gallery</a>

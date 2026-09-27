@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ACTION_LABEL, getCreditHistory, getCreditStatus, type CreditStatus, type LedgerRow } from "@/lib/credits";
+import { BrandLink } from "@/components/BrandLink";
 
 export const Route = createFileRoute("/account")({
   staticData: { sitemap: false },
@@ -29,8 +30,8 @@ function AccountPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-5 text-sm">
-        <Link to="/" className="font-semibold">Sirpam 3D Labs Mold</Link>
+      <header className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 bg-background px-6 py-3 text-sm">
+        <BrandLink />
         <div className="flex-1" />
         <Link to="/studio">Mold Maker</Link>
         <Link to="/pricing">Pricing</Link>

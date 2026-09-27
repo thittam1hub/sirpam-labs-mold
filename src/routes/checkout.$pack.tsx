@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { CREDIT_PACKS, REGION_TIERS, guessRegion, type RegionTier } from "@/lib/credits";
+import { CREDIT_PACKS, guessRegion, type RegionTier } from "@/lib/credits";
 import { BUSINESS } from "@/lib/business";
 import { LegalFooter } from "@/components/LegalFooter";
+import { BrandLink } from "@/components/BrandLink";
 
 export const Route = createFileRoute("/checkout/$pack")({
   staticData: { sitemap: false },
@@ -45,18 +46,16 @@ function CheckoutPage() {
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-20 flex min-h-16 items-center bg-background px-6 py-3">
+        <BrandLink />
+      </header>
       <main className="mx-auto max-w-2xl px-6 py-12">
         <Link to="/pricing" className="text-sm text-muted-foreground">← Back to pricing</Link>
         <h1 className="mt-4 text-4xl font-bold">Checkout — {pack.name} pack</h1>
 
         <section className="mt-8 rounded-3xl bg-card p-6 shadow-sm">
           <div className="flex justify-between"><span>{pack.name} pack</span><b>{pack.credits} credits</b></div>
-          <div className="mt-2 flex justify-between text-sm text-muted-foreground">
-            <span>Region: {REGION_TIERS.find((r) => r.id === tier)!.name}</span>
-            <select value={tier} onChange={(e) => setTier(e.target.value as RegionTier)} className="rounded-lg bg-muted px-2 py-1">
-              {REGION_TIERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-          </div>
+          <p className="mt-2 text-sm text-muted-foreground">Local price selected automatically from your location. Your billing country sets the final currency and tax.</p>
           <div className="mt-4 flex justify-between border-t border-border pt-4 text-xl"><span>Total</span><b>{price}</b></div>
           <p className="mt-1 text-xs text-muted-foreground">Sales tax, if any, is added based on your billing country. Credits never expire.</p>
 
