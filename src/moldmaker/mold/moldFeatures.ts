@@ -29,7 +29,17 @@ export interface MoldExtras extends Round6Extras, Round7Extras {
   hollowCore?: { wallMm: number; opening: 'top' | 'bottom' };
   /** Multi-cavity tray: one central sprue feeding every cavity via runners. */
   runner?: boolean;
+  /** Round 8 — user sizes. Omitted = automatic (legacy). */
+  wallMm?: number;
+  ventDiameterMm?: number;
+  /** 0 = no vents. */
+  ventCount?: number;
+  lockStyle?: LockStyle;
+  lockDiameterMm?: number;
+  lockCount?: 2 | 4;
 }
+
+export type LockStyle = 'round' | 'cone' | 'square' | 'magnet';
 
 function box(wasm: any, min: THREE.Vector3, max: THREE.Vector3) {
   const s = new THREE.Vector3().subVectors(max, min);

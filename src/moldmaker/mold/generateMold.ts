@@ -217,7 +217,9 @@ export async function generateMold(
   // Wall thickness is scale-relative (still a ratio — see constants.ts for
   // why it stays ratio-based). Clearance is ABSOLUTE mm (roadmap #13).
   const maxExtent = Math.max(bboxSize.x, bboxSize.y, bboxSize.z);
-  const wallThickness = maxExtent * wallThicknessRatio;
+  const wallThickness = options.extras?.wallMm && options.extras.wallMm > 0
+    ? options.extras.wallMm
+    : maxExtent * wallThicknessRatio;
   const clearance = clearanceMm;
 
   // Mold outer envelope — shape-aware. AABB fields are still used by the
@@ -366,37 +368,45 @@ export async function generateMold(
     if (res) { [topResult, bottomResult] = res; sealed = true; }
   }
 
-  for (const pinPos of (sealed ? [] : pinPositions)) {
-    // Registration pins MUST span the parting plane: half inside the top
-    // mold's solid body (the `add` is a no-op there — there's already
-    // material) and half protruding into the bottom mold's region (where
-    // `add` extends the top mold by a small cylindrical nub). The bottom
-    // mold then subtracts a slightly larger clearance cylinder at the same
-    // centered position, creating a matching socket.
-    //
-    // Pre-2026-04 the cylinders were built non-centered, so pins extended
-    // entirely in the +parting-axis direction from splitPos. Both the `add`
-    // and the `subtract` were no-ops for axis='z' and axis='x' (everything
-    // happened inside the top mold's own body). Axis='y' accidentally worked
-    // because a separate rotation-direction bug flipped its cylinders into
-    // the bottom mold — fixing that bug exposed the fact that pins weren't
-    // doing anything on any axis. The `true` center flag below is the fix.
-    const pin = Manifold.cylinder(pinHeight, pinRadius, pinRadius, 16, true)
-      .rotate(getRotationForAxis(axis)) // NOTE: manifold-3d's .rotate() takes DEGREES
-      .translate(pinPos);
-
-    topResult = topResult.add(pin);
-    bottomResult = bottomResult.subtract(
-      Manifold.cylinder(
-        pinHeight + clearance * 2,
-        pinRadius + clearance,
-        pinRadius + clearance,
-        16,
-        true, // centered — must match the pin it clears for
-      )
-        .rotate(getRotationForAxis(axis))
-        .translate(pinPos),
-    );
+  // Round 8: user lock size/count/style. Omitted = legacy round pins.
+  const lockStyle = extras.lockStyle ?? 'round';
+  const lockR = extras.lockDiameterMm && extras.lockDiameterMm > 0
+    ? Math.min(extras.lockDiameterMm / 2, lockStyle === 'magnet' ? wallThickness * 0.45 + 2 : wallThickness * 0.4)
+    : pinRadius;
+  const lockPositions = extras.lockCount === 2
+    ? (envelope.shape === 'cylinder' ? [pinPositions[0], pinPositions[2]] : [pinPositions[0], pinPositions[3]]).filter(Boolean)
+    : pinPositions;
+  const rot = getRotationForAxis(axis);
+  for (const pinPos of (sealed ? [] : lockPositions)) {
+    if (lockStyle === 'magnet' && cutAngle === 0) {
+      // Matching pockets in both faces for disc magnets (glue them in).
+      const [la, lb] = lateralAxisIndices(axis);
+      const d = 3.2; // 3 mm magnet + glue gap
+      const pr = lockR + 0.1;
+      const up = axialCylinder(wasm, axis, pinPos[la]!, pinPos[lb]!, splitPos, splitPos + d, pr, pr, 32);
+      const dn = axialCylinder(wasm, axis, pinPos[la]!, pinPos[lb]!, splitPos - d, splitPos, pr, pr, 32);
+      if (up) topResult = topResult.subtract(up);
+      if (dn) bottomResult = bottomResult.subtract(dn);
+      continue;
+    }
+    // Registration pins MUST span the parting plane (centered): half inside
+    // the top body, half protruding into the bottom, which gets a matching
+    // socket enlarged by the fit clearance.
+    const h = pinHeight, c = clearance;
+    let pin, socket;
+    if (lockStyle === 'cone') {
+      // Narrow end points into the bottom half so the halves self-guide.
+      pin = Manifold.cylinder(h, lockR * 0.45, lockR, 24, true);
+      socket = Manifold.cylinder(h + c * 2, lockR * 0.45 + c, lockR + c, 24, true);
+    } else if (lockStyle === 'square') {
+      pin = Manifold.cube([lockR * 2, lockR * 2, h], true);
+      socket = Manifold.cube([lockR * 2 + c * 2, lockR * 2 + c * 2, h + c * 2], true);
+    } else {
+      pin = Manifold.cylinder(h, lockR, lockR, 16, true);
+      socket = Manifold.cylinder(h + c * 2, lockR + c, lockR + c, 16, true);
+    }
+    topResult = topResult.add(pin.rotate(rot).translate(pinPos));
+    bottomResult = bottomResult.subtract(socket.rotate(rot).translate(pinPos));
   }
 
   // Clamp wings + stand-fins (flat, untilted split only). Added before the
@@ -440,7 +450,9 @@ export async function generateMold(
   // user dragging the slider to 0 and producing a zero-radius cylinder.
   const sprueTopRadius = Math.max(sprueDiameterMm / 2, 1.0);
   const sprueGateRadius = sprueTopRadius / SPRUE_TOP_MULTIPLIER;
-  const ventRadius = sprueGateRadius * VENT_RADIUS_RATIO;
+  const ventRadius = extras.ventDiameterMm && extras.ventDiameterMm > 0
+    ? extras.ventDiameterMm / 2
+    : sprueGateRadius * VENT_RADIUS_RATIO;
 
   // Clearance margins: how much material must remain between each channel's
   // outer radius and the shell's outer wall. Without these, the sprue and
@@ -507,6 +519,7 @@ export async function generateMold(
     if (curved) bottomResult = bottomResult.subtract(sprue);
 
     // Vent holes at extremities and high points
+    if (extras.ventCount !== undefined) channels.ventPositions = channels.ventPositions.slice(0, Math.max(0, extras.ventCount));
     for (const ventPos of channels.ventPositions) {
       const vent = Manifold.cylinder(
         channels.sprueHeight,
