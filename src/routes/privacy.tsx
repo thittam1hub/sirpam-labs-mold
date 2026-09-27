@@ -26,7 +26,7 @@ function PrivacyPage() {
         <h2 className="mt-8 text-xl font-semibold">What stays on your device</h2>
         <p className="mt-2 text-muted-foreground">Your 3D models and mold designs are processed in your browser. Projects are saved on your own device unless you upload them.</p>
         <h2 className="mt-8 text-xl font-semibold">What we store</h2>
-        <p className="mt-2 text-muted-foreground">Your email address, credit balance and history, gallery photos and notes you add, and files you choose to upload for a quote request.</p>
+        <p className="mt-2 text-muted-foreground">Your email address, profile details, credit balance and history, plus gallery photos and notes you choose to add.</p>
         <h2 className="mt-8 text-xl font-semibold">Payments</h2>
         <p className="mt-2 text-muted-foreground">Payments are handled by our payment provider, which receives your payment details directly; we never see your card number.</p>
         <h2 className="mt-8 text-xl font-semibold">Your choices</h2>
