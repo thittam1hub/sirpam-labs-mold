@@ -36,6 +36,8 @@ import FillOverlay from './components/FillOverlay';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
+import { supabase } from '@/integrations/supabase/client';
+import { spendCredits, type CreditAction } from '@/lib/credits';
 
 export type { Axis } from './types';
 
@@ -927,6 +929,24 @@ export default function App() {
 
   const handleExport = useCallback(async (format: 'stl' | 'obj' | '3mf' | 'step') => {
     if (state.moldPieces.length === 0) return;
+    // Credits: designing is free; exporting needs sign-in and is charged.
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      if (!s.session) {
+        setState(prev => ({ ...prev, errorMessage: 'Please sign in to export your mold — you get 3 free STL exports every month plus 10 welcome credits.' }));
+        window.setTimeout(() => window.location.assign('/auth'), 1800);
+        return;
+      }
+      const r = await spendCredits(`export_${format}` as CreditAction);
+      if (!r.ok) {
+        setState(prev => ({ ...prev, errorMessage: `This export needs ${r.needed} credit(s) and you have ${r.balance}. Get more on the Pricing page (/pricing).` }));
+        return;
+      }
+    } catch (e) {
+      console.error('Credit check failed:', e);
+      setState(prev => ({ ...prev, errorMessage: 'Could not check your credits. Please try again.' }));
+      return;
+    }
     // STEP runs for ~60s in a worker — flip the busy flag so the panel can
     // disable the other formats and swap the STEP button for a Cancel button.
     // Other formats finish in <100ms; not worth a re-render storm for them.
