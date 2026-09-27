@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 
+import logo from '@/assets/sirpam-logo.svg.asset.json';
+
 type Fmt = 'stl' | 'obj' | '3mf' | 'step';
 
 interface Props {
@@ -50,7 +52,7 @@ export default function TopBar(p: Props) {
       background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 20, fontFamily: fonts.body, minWidth: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0, flexShrink: 0 }}>
-        <span aria-hidden style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', boxShadow: shadows.raisedSm, color: colors.primary }}>●</span>
+        <img src={logo.url} alt="Sirpam logo" width={30} height={30} style={{ width: 30, height: 30, borderRadius: '50%', boxShadow: shadows.raisedSm, objectFit: 'cover' }} />
         <span className="sirpam-hide-sm" style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
           Sirpam <span style={{ color: colors.primary }}>3D Labs</span> Mold
         </span>
