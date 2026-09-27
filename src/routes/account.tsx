@@ -166,6 +166,45 @@ function AccountPage() {
             <Link to="/pricing" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 font-semibold text-primary-foreground">Buy credits</Link>
 
             <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
+              <h2 className="text-xl font-semibold">Profile</h2>
+              <div className="mt-4 flex flex-wrap items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted shadow-sm">
+                  {avatarSigned ? (
+                    <img src={avatarSigned} alt="Your photo" className="h-20 w-20 object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-muted-foreground">
+                      {(displayName || email || "?").trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2 text-sm">
+                  <label className="inline-block cursor-pointer rounded-lg border border-input bg-background px-4 py-2 font-medium">
+                    {avatarSigned ? "Change photo" : "Upload photo"}
+                    <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={profBusy} />
+                  </label>
+                  {avatarSigned && (
+                    <button type="button" onClick={removeAvatar} disabled={profBusy} className="ml-2 text-muted-foreground">
+                      Remove photo
+                    </button>
+                  )}
+                  <p className="text-xs text-muted-foreground">JPG or PNG, up to 2 MB. Only you can see your profile.</p>
+                </div>
+              </div>
+
+              <form onSubmit={saveProfile} className="mt-6 max-w-sm space-y-3">
+                <label htmlFor="display-name" className="text-sm font-semibold">Display name</label>
+                <input id="display-name" type="text" maxLength={60} placeholder="How should we greet you?"
+                  value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                <button disabled={profBusy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+                  {profBusy ? "Saving…" : "Save profile"}
+                </button>
+              </form>
+              {profMsg && <p className="mt-3 text-sm text-muted-foreground">{profMsg}</p>}
+            </section>
+
+
+            <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
               <h2 className="text-xl font-semibold">History</h2>
               {rows.length === 0 ? (
                 <p className="mt-3 text-sm text-muted-foreground">No activity yet.</p>
