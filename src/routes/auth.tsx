@@ -55,6 +55,7 @@ function AuthPage() {
     const go = () => { if (!done) { done = true; goBack(); } };
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) go();
+      else setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) go();
