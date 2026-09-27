@@ -5,6 +5,16 @@ import { lazy, Suspense } from "react";
 // Lazy-load the whole app behind ClientOnly so SSR never evaluates it.
 const MoldMakerApp = lazy(() => import("../moldmaker/App"));
 
+const studioTools = {
+  "sirpam-model-tools": 1,
+  "sirpam-ai-shape": 1,
+  "sirpam-shop-prep": 3,
+  "sirpam-finish-advisor": 5,
+  "sirpam-plate-packer": 5,
+  "sirpam-projects": 5,
+} as const;
+type StudioTool = keyof typeof studioTools;
+
 export const Route = createFileRoute("/studio")({
   staticData: { sitemap: true },
   head: () => ({
@@ -26,12 +36,15 @@ export const Route = createFileRoute("/studio")({
     ],
     links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
-  validateSearch: (search: Record<string, unknown>): { step?: number; tool?: string } => {
+  validateSearch: (search: Record<string, unknown>): { step?: number; tool?: StudioTool } => {
     const step = Number(search["step"]);
-    const result: { step?: number; tool?: string } = {};
+    const result: { step?: number; tool?: StudioTool } = {};
     if (Number.isInteger(step) && step >= 1 && step <= 5) result.step = step;
     const tool = search["tool"];
-    if (typeof tool === "string" && /^[a-z0-9-]{1,40}$/i.test(tool)) result.tool = tool;
+    if (typeof tool === "string" && tool in studioTools) {
+      result.tool = tool as StudioTool;
+      if (!result.step) result.step = studioTools[result.tool];
+    }
     return result;
   },
   component: Studio,

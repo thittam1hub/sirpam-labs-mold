@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAppSession } from "@/components/AppSession";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 const gallerySorts = ["new", "best", "perCm3", "price"] as const;
 type GallerySort = (typeof gallerySorts)[number];
@@ -233,9 +234,9 @@ function GalleryPage() {
                       </div>
                     )}
              {items.length > visibleCount && (
-               <button type="button" onClick={() => setVisibleCount((value) => value + 24)} className="mx-auto mt-6 block rounded-lg border border-input bg-background px-4 py-2 text-sm font-semibold">
+               <Button type="button" variant="outline" onClick={() => setVisibleCount((value) => value + 24)} className="mx-auto mt-6 block">
                  Load more molds
-               </button>
+               </Button>
              )}
                     <div className="p-4">
                       <h2 className="font-semibold">{it.title}</h2>

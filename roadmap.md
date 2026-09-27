@@ -86,7 +86,7 @@
 - [x] Shared responsive navigation and one app-wide session source
 - [x] Account tabs with shareable Profile, Credits and Security links
 - [x] Gallery sorting and Studio step/tool state in the URL
-- [x] Remove quote requests, uploads, records and access policies
+- [x] Remove quote requests, upload access, records and access policies (empty legacy bucket retained because direct bucket deletion is blocked)
 - [x] Bound Gallery reads and sign only returned photo paths
-- [ ] Verify signed-in account, gallery and Studio links in the browser
-- [ ] Complete final build, responsive and security checks
+- [x] Verify signed-in account, gallery and Studio links in the browser
+- [x] Complete final build, responsive and security checks
