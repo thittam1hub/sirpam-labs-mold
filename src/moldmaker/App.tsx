@@ -549,6 +549,9 @@ export default function App() {
       : null;
     const genGeometry = tray ? tray.geometry : state.originalGeometry;
     const genBox = tray ? tray.bbox : state.boundingBox;
+    const castMl = t2.volumeLabel
+      ? Math.max(1, Math.round((solidProps(genGeometry).volume / 1000) * 1.05))
+      : 0;
     const extras: MoldExtras = {
       seal: t2.seal,
       pryPockets: t2.pryPockets,
@@ -567,6 +570,11 @@ export default function App() {
         clampBoltMm: t2.clampBoltMm || undefined,
         autoVents: t2.autoVents || undefined,
         standFins: t2.standFins || undefined,
+        volumeLabel: t2.volumeLabel && castMl ? `${castMl} ML` : undefined,
+        watermark: t2.watermark?.trim() || undefined,
+        moldFeet: t2.moldFeet || undefined,
+        gapFiller: t2.gapFiller || undefined,
+        pieceCount: t2.pieceCount && t2.pieceCount > 2 ? t2.pieceCount : undefined,
       } : {}),
     };
 
@@ -927,7 +935,11 @@ export default function App() {
         ? state.moldPieces.map(g => orientForPrint(g))
         : state.moldPieces;
       await exportFiles(
-        piecesOut, state.fileName, format, state.scale,
+        piecesOut,
+        state.generatedParams?.tier2?.volumeLabel && state.originalGeometry
+          ? state.fileName.replace(/(\.[^.]+)?$/, `_${Math.max(1, Math.round((solidProps(state.originalGeometry).volume / 1000) * 1.05)) * Math.max(1, state.generatedParams.tier2.cavityCount || 1)}ml$1`)
+          : state.fileName,
+        format, state.scale,
         // Silicone runs name their pieces (pour_box, mother_top, core…);
         // rigid runs pass an empty list and keep top/bottom naming.
         state.pieceLabels.length > 0 ? state.pieceLabels : undefined,

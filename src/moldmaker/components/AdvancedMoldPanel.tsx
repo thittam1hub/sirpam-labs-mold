@@ -23,6 +23,12 @@ export interface Tier2Settings {
   clampBoltMm?: 0 | 3 | 4 | 5;
   autoVents?: boolean;
   standFins?: boolean;
+  /** Round 7. Optional so older projects still load. */
+  volumeLabel?: boolean;
+  watermark?: string;
+  moldFeet?: boolean;
+  gapFiller?: boolean;
+  pieceCount?: 2 | 3 | 4;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -41,6 +47,11 @@ export const DEFAULT_TIER2: Tier2Settings = {
   clampBoltMm: 0,
   autoVents: false,
   standFins: false,
+  volumeLabel: false,
+  watermark: '',
+  moldFeet: false,
+  gapFiller: false,
+  pieceCount: 2,
 };
 
 interface Props {
@@ -159,6 +170,42 @@ export default function AdvancedMoldPanel(p: Props) {
                   Stand-fins
                 </label>
                 <div style={s.hint}>{t.curvedSplit ? 'Not available with the curved split.' : 'Four fins under the bottom half so a rounded (form-fit) mold stands level while you pour.'}</div>
+
+                <div style={s.sub}>Pieces</div>
+                <div style={s.row}>
+                  {([2, 3, 4] as const).map(n => (
+                    <button key={n} style={s.chip((t.pieceCount ?? 2) === n)} onClick={() => onChange({ pieceCount: n })}>{n} parts</button>
+                  ))}
+                </div>
+                <div style={s.hint}>{t.curvedSplit ? 'Not available with the curved split.' : '3 parts splits the bottom half down the middle, 4 parts splits both — for wide shapes or shapes that would get stuck.'}</div>
+
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.gapFiller} onChange={e => onChange({ gapFiller: e.target.checked })} />
+                  Fill gaps under the model
+                </label>
+                <div style={s.hint}>{p.formFit ? 'Box molds only (turn off Form fit).' : 'Fills the space under overhangs so the bottom half has nothing to snag on. The cast gets a flat skirt there that you trim off.'}</div>
+
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.moldFeet} onChange={e => onChange({ moldFeet: e.target.checked })} />
+                  Mold feet
+                </label>
+                <div style={s.hint}>{p.formFit ? 'Box molds only (turn off Form fit).' : 'Four short feet under the mold so small molds sit steady while you pour.'}</div>
+
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.volumeLabel} onChange={e => onChange({ volumeLabel: e.target.checked })} />
+                  Engrave casting volume
+                </label>
+                <div style={s.hint}>Engraves how much material to mix (e.g. "42 ML") on top of the mold and adds it to the file names.</div>
+
+                <div style={s.sub}>Watermark</div>
+                <input
+                  value={t.watermark ?? ''}
+                  maxLength={24}
+                  placeholder="Your name or brand (letters and numbers)"
+                  onChange={e => onChange({ watermark: e.target.value })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: radii.md, border: `1px solid ${colors.border}`, background: colors.inputBg ?? colors.sectionBg, color: colors.text, fontSize: fontSizes.sm }}
+                />
+                <div style={s.hint}>Engraved under the bottom half. Text only (A–Z, 0–9, . - &amp; @).</div>
               </>
             )}
           </>
@@ -332,5 +379,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount]);
 }

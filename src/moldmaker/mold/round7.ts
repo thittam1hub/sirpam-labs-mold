@@ -196,10 +196,7 @@ export function overhangCheck(geo: THREE.BufferGeometry, maxDeg: number): Overha
   const bb = geo.boundingBox!;
   let best: OverhangResult = { bestDown: DIRS[0]![0], overhangCm2: Infinity, supportFree: false };
   for (const [name, d] of DIRS) {
-    const bed = Math.min(bb.min.dot(d.clone().negate()) * -1, bb.max.dot(d) ) ; // not used directly
-    void bed;
-    // Bed plane: the extreme along d.
-    const bedLevel = Math.max(bb.min.dot(d), bb.max.dot(d), new THREE.Vector3(bb.min.x, bb.max.y, bb.min.z).dot(d));
+    const bedLevel = Math.max(bb.min.dot(d), bb.max.dot(d)); // bed plane = extreme along d
     let area = 0;
     for (let i = 0; i < n; i += 3) {
       get(i, A); get(i + 1, B); get(i + 2, C);

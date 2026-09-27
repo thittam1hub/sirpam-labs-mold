@@ -1,3 +1,4 @@
+import type { Round7Extras } from './round7';
 // @ts-nocheck — Manifold WASM objects are untyped here, same as generateMold.ts
 import * as THREE from 'three';
 import type { Axis } from '../types';
@@ -12,7 +13,7 @@ export type SealType = 'pins' | 'tongueGroove';
 
 import type { Round6Extras } from './proFeatures';
 
-export interface MoldExtras extends Round6Extras {
+export interface MoldExtras extends Round6Extras, Round7Extras {
   /** How the two halves register and seal. 'pins' = legacy keyed pins,
    *  'tongueGroove' = continuous perimeter tongue + groove (leak-tight). */
   seal?: SealType;
