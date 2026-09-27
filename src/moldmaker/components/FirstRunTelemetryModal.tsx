@@ -81,7 +81,7 @@ export default function FirstRunTelemetryModal({
           color: colors.textPrimary,
           minWidth: 440,
           maxWidth: 560,
-          boxShadow: '12px 12px 24px #b8b9be, -12px -12px 24px #ffffff',
+          boxShadow: 'var(--neu-raised)',
           border: 'none',
         }}
       >
@@ -161,7 +161,7 @@ export default function FirstRunTelemetryModal({
               background: colors.sectionBg,
               color: colors.textBody,
               border: 'none',
-              boxShadow: '3px 3px 6px #b8b9be, -3px -3px 6px #ffffff',
+              boxShadow: 'var(--neu-raised-sm)',
               borderRadius: radii.pill,
               padding: `${spacing.sm}px ${spacing.lg}px`,
               fontSize: fontSizes.sm,
@@ -180,7 +180,7 @@ export default function FirstRunTelemetryModal({
               background: colors.primary,
               color: '#fff',
               border: 'none',
-              boxShadow: '4px 4px 10px rgba(232,99,43,0.35), -4px -4px 8px #ffffff',
+              boxShadow: '4px 4px 10px rgba(232,99,43,0.35), -4px -4px 8px var(--neu-light)',
               borderRadius: radii.pill,
               padding: `${spacing.sm}px ${spacing.lg}px`,
               fontSize: fontSizes.sm,
