@@ -75,3 +75,9 @@
 - [x] Make sticky navigation fully opaque
 - [x] Replace the homepage image with a realistic 3D-printed mold photograph
 - [x] Hide internal regional tiers and present automatic local pricing
+
+## Page audit + auth (Sep 27)
+- [ ] Rebuild sign-in/sign-up: stay on same page, forgot/reset password, Google sign-in
+- [ ] Account settings: profile, change password, delete account
+- [ ] New pages: Contact, About, Help/Guides, Licenses, My quote requests
+- [ ] Wire new pages into footer, top menu, sitemap
