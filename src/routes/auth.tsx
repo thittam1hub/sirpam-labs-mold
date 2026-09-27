@@ -111,6 +111,14 @@ function AuthPage() {
 
   const inputCls = "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm";
 
+  if (checking) {
+    return (
+      <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <p className="text-sm text-muted-foreground">Checking your sign-in…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
