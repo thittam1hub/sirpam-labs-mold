@@ -53,9 +53,9 @@ export default function TopBar(p: Props) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0, flexShrink: 0 }}>
         <img src={logo.url} alt="Sirpam logo" width={30} height={30} style={{ width: 30, height: 30, borderRadius: '50%', boxShadow: shadows.raisedSm, objectFit: 'cover' }} />
-        <span className="sirpam-hide-sm" style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
+        <h1 className="sirpam-hide-sm" style={{ margin: 0, fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
           Sirpam <span style={{ color: colors.primary }}>3D Labs</span> Mold
-        </span>
+        </h1>
       </div>
       {p.fileName && (
         <span className="sirpam-hide-sm" style={{ fontSize: fontSizes.sm, color: colors.textDim, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

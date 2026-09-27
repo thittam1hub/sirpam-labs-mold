@@ -6,6 +6,7 @@ import { lazy, Suspense } from "react";
 const MoldMakerApp = lazy(() => import("../moldmaker/App"));
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Sirpam 3D Labs Mold — two-part & silicone mold generator" },
