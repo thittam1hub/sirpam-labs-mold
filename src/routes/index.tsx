@@ -90,11 +90,13 @@ function useSession() {
 
 function AccountLinks({ session }: { session: Session | null }) {
   if (!session) {
-    return <Link to="/auth" search={{ redirect: "/" }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
+    return <Link to="/auth" search={{ redirect: "/studio" }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
   }
   return (
     <div className="flex items-center gap-3">
-      <Link to="/gallery" className="text-sm">Gallery</Link>
+      <Link to="/account" className="rounded-lg border border-border px-4 py-2 text-sm font-semibold">
+        Account
+      </Link>
       <button
         type="button"
         className="text-sm text-muted-foreground"
