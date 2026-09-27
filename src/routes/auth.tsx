@@ -50,9 +50,15 @@ function AuthPage() {
 
   // Already signed in (including just returned from Google): go back to where you came from.
   useEffect(() => {
+    let done = false;
+    const go = () => { if (!done) { done = true; goBack(); } };
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) goBack();
+      if (data.session) go();
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) go();
+    });
+    return () => sub.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -92,6 +98,12 @@ function AuthPage() {
     if (r.error) {
       setMsgKind("error");
       setMsg(r.error.message ?? "Google sign-in failed");
+      return;
+    }
+    // In-page (popup) flow: session is already set, so return now.
+    if (!r.redirected) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) goBack();
     }
   };
 
