@@ -279,9 +279,7 @@ export default function AdvancedMoldPanel(p: Props) {
 
       {isRigid && (
         <>
-          <div style={s.sub}>Wall &amp; air vents</div>
-          <Slider label="Wall thickness" value={t.wallMm ?? 0} min={0} max={15} step={0.5}
-            unit={(t.wallMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ wallMm: v })} />
+          <div style={s.sub}>Air vents</div>
           <Slider label="Air vent size" value={t.ventDiameterMm ?? 0} min={0} max={5} step={0.5}
             unit={(t.ventDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ ventDiameterMm: v })} />
           <div style={s.sub}>Number of air vents</div>
@@ -290,7 +288,7 @@ export default function AdvancedMoldPanel(p: Props) {
               <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
             ))}
           </div>
-          <div style={s.hint}>Typical: 4–6 mm wall, 1.5–3 mm vents. 0 / Auto = worked out from your model size.</div>
+          <div style={s.hint}>Typical: 1.5–3 mm vents. Auto = worked out from your pour hole. Wall thickness is set in the Mold step.</div>
         </>
       )}
 
@@ -312,7 +310,7 @@ export default function AdvancedMoldPanel(p: Props) {
           <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center' }}>
             <input type="checkbox" checked={t.siliconeSides.enabled}
               onChange={e => onChange({ siliconeSides: { ...t.siliconeSides, enabled: e.target.checked } })} />
-            Set top / bottom / sides separately
+            Override Silicone margin (Mold step) per side
           </label>
           {t.siliconeSides.enabled && (
             <>
@@ -390,7 +388,7 @@ export default function AdvancedMoldPanel(p: Props) {
           {advice && (
             <div style={{ marginTop: spacing.sm }}>
               <div style={s.kv}><span>Part volume</span><span>{advice.partVolumeCm3.toFixed(1)} cm³</span></div>
-              <div style={s.kv}><span>Sprue diameter</span><span>{advice.sprueDiameterMm} mm</span></div>
+              <div style={s.kv}><span>Suggested pour hole</span><span>{advice.sprueDiameterMm} mm</span></div>
               <div style={s.kv}><span>Vents needed</span><span>{advice.ventCount}</span></div>
               <div style={s.kv}><span>Est. pour time</span><span>~{Math.max(1, Math.round(advice.fillSeconds))} s</span></div>
               <ul style={{ ...s.hint, paddingLeft: 16, margin: `${spacing.xs}px 0` }}>
@@ -425,7 +423,7 @@ export default function AdvancedMoldPanel(p: Props) {
         <div style={s.hint}>{mat.notes} Typical datasheet values — check your supplier’s sheet.</div>
       </div>
 
-      <div style={s.sub}>Export</div>
+      <div style={s.sub}>Print orientation</div>
       <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center' }}>
         <input type="checkbox" checked={t.orientForPrint} onChange={e => onChange({ orientForPrint: e.target.checked })} />
         Auto-orient pieces for printing
