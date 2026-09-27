@@ -10,7 +10,8 @@ function safeRedirect(value: unknown): string {
   if (typeof value === "string" && value.startsWith("/") && !value.startsWith("//") && !value.startsWith("/auth")) {
     return value;
   }
-  return "/";
+  // Default landing after sign-in: the app itself, not the marketing page.
+  return "/studio";
 }
 
 export const Route = createFileRoute("/auth")({
@@ -41,6 +42,7 @@ function AuthPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [msgKind, setMsgKind] = useState<"error" | "info">("info");
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const goBack = () => {
     const target = sessionStorage.getItem(REDIRECT_KEY) ?? redirect;
@@ -54,6 +56,7 @@ function AuthPage() {
     const go = () => { if (!done) { done = true; goBack(); } };
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) go();
+      else setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) go();
@@ -108,6 +111,14 @@ function AuthPage() {
   };
 
   const inputCls = "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm";
+
+  if (checking) {
+    return (
+      <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <p className="text-sm text-muted-foreground">Checking your sign-in…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">

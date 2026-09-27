@@ -90,11 +90,13 @@ function useSession() {
 
 function AccountLinks({ session }: { session: Session | null }) {
   if (!session) {
-    return <Link to="/auth" search={{ redirect: "/" }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
+    return <Link to="/auth" search={{ redirect: "/studio" }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Sign in</Link>;
   }
   return (
     <div className="flex items-center gap-3">
-      <Link to="/gallery" className="text-sm">Gallery</Link>
+      <Link to="/account" className="rounded-lg border border-border px-4 py-2 text-sm font-semibold">
+        Account
+      </Link>
       <button
         type="button"
         className="text-sm text-muted-foreground"
@@ -121,7 +123,7 @@ function LandingPage() {
           <Link to="/terms">Terms</Link>
           <Link to="/privacy">Privacy</Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex min-h-10 min-w-28 items-center justify-end gap-3">
           {ready && <AccountLinks session={session} />}
           <Link to="/studio" className="hidden rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground sm:block">
             Open the mold maker
@@ -222,7 +224,7 @@ function LandingPage() {
           <Link to="/studio">Mold Maker</Link>
           <Link to="/shop">Shop</Link>
           <Link to="/gallery">Gallery</Link>
-          <Link to="/auth" search={{ redirect: "/" }}>Sign in</Link>
+          <Link to="/auth" search={{ redirect: "/studio" }}>Sign in</Link>
         </div>
       </footer>
     </div>
