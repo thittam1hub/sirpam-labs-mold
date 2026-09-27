@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
+import { supabase } from '@/integrations/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 
 import logo from '@/assets/sirpam-logo.svg.asset.json';
 
@@ -30,8 +32,17 @@ const pill = (primary = false, disabled = false) => ({
 });
 
 export default function TopBar(p: Props) {
-  const [menu, setMenu] = useState<null | 'export' | 'more'>(null);
+  const [menu, setMenu] = useState<null | 'export' | 'more' | 'account'>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); setReady(true); });
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (!menu) return;
     const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setMenu(null); };
@@ -39,12 +50,22 @@ export default function TopBar(p: Props) {
     return () => window.removeEventListener('mousedown', close);
   }, [menu]);
 
+  const signOut = async () => {
+    setMenu(null);
+    await supabase.auth.signOut();
+    window.location.assign('/');
+  };
+
   const menuBox = {
     position: 'absolute' as const, top: 'calc(100% + 8px)', right: 0, zIndex: 40, minWidth: 200,
     background: colors.sectionBg, borderRadius: radii.lg, boxShadow: shadows.raised, padding: spacing.sm,
     display: 'flex', flexDirection: 'column' as const, gap: 4,
   };
   const item = { ...pill(), boxShadow: 'none', textAlign: 'left' as const, borderRadius: radii.md };
+  const linkItem = { ...item, textDecoration: 'none' as const, display: 'block' as const };
+
+  const email = session?.user?.email ?? '';
+  const accountLabel = email.length > 22 ? email.slice(0, 20) + '…' : email || 'Account';
 
   return (
     <header ref={ref} className="sirpam-topbar" style={{
@@ -71,6 +92,21 @@ export default function TopBar(p: Props) {
         <a href="/gallery" style={{ ...pill(), textDecoration: 'none' }}>Gallery</a>
         <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
       </div>
+      {ready && (session ? (
+        <div style={{ position: 'relative' }}>
+          <button type="button" style={pill()} onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
+            {accountLabel} ▾
+          </button>
+          {menu === 'account' && (
+            <div role="menu" style={menuBox}>
+              <a role="menuitem" href="/gallery" style={linkItem}>Gallery</a>
+              <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <a href="/auth" style={{ ...pill(), textDecoration: 'none' }} className="sirpam-hide-sm">Sign in</a>
+      ))}
       <div className="sirpam-show-sm" style={{ position: 'relative' }}>
         <button type="button" style={pill()} onClick={() => setMenu(menu === 'more' ? null : 'more')} aria-label="More actions">☰</button>
         {menu === 'more' && (
@@ -79,6 +115,16 @@ export default function TopBar(p: Props) {
             <button type="button" style={item} onClick={() => { setMenu(null); p.onSample(); }}>Try sample</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onProjects(); }}>Projects</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onHelp(); }}>Keyboard shortcuts</button>
+            <a href="/shop" style={linkItem}>Shop</a>
+            <a href="/gallery" style={linkItem}>Gallery</a>
+            {session ? (
+              <>
+                <a href="/gallery" style={linkItem}>{accountLabel}</a>
+                <button type="button" style={item} onClick={signOut}>Sign out</button>
+              </>
+            ) : (
+              <a href="/auth" style={linkItem}>Sign in</a>
+            )}
           </div>
         )}
       </div>
