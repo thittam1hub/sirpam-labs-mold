@@ -50,8 +50,8 @@ function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-lg">
+    <div className="neu-page flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
         <a href="/" className="text-sm text-muted-foreground">← Back to mold maker</a>
         <h1 className="mt-3 text-2xl font-bold">{mode === "in" ? "Sign in" : "Create account"}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Keep a gallery of the molds you've printed.</p>
