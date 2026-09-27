@@ -150,17 +150,26 @@ async function passesMoldCheck(g: THREE.BufferGeometry): Promise<boolean> {
   } catch { return false; }
 }
 
-async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport, rebuildCell?: number): Promise<THREE.BufferGeometry> {
+export type RepairProgress = (pct: number, label: string) => void;
+const tick = () => new Promise<void>(res => setTimeout(res, 0));
+
+async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairReport, rebuildCell?: number, onProgress?: RepairProgress): Promise<THREE.BufferGeometry> {
   const T = r.timings;
+  const step = async (pct: number, label: string) => { if (onProgress) { onProgress(pct, label); await tick(); } };
+  await step(5, 'Joining loose edges');
   let t0 = performance.now();
   const w = weld(geo, tol);
   r.weldedVerts = w.verts;
   let g = toGeometry(w.pos, cleanTopology(w.pos, w.tris, r));
-  T.cleanSec = (performance.now() - t0) / 1000; t0 = performance.now();
+  T.cleanSec = (performance.now() - t0) / 1000;
+  await step(35, 'Closing holes');
+  t0 = performance.now();
   const cap = capOpenBoundaries(g);
   r.holesClosed = cap.holesClosed;
   g = cap.geometry;
-  T.holesSec = (performance.now() - t0) / 1000; t0 = performance.now();
+  T.holesSec = (performance.now() - t0) / 1000;
+  await step(60, 'Checking the model is solid');
+  t0 = performance.now();
   // Same check the mold maker runs: passing means the mold will build.
   r.solidOk = await passesMoldCheck(g);
   T.checkSec = (performance.now() - t0) / 1000; t0 = performance.now();
@@ -171,11 +180,13 @@ async function finishRepair(geo: THREE.BufferGeometry, tol: number, r: RepairRep
     const maxDim = Math.max(...g.boundingBox!.getSize(new THREE.Vector3()).toArray());
     let cells = rebuildCell ? Math.min(240, Math.max(80, Math.round(maxDim / (rebuildCell * 2)))) : 170;
     for (let attempt = 0; attempt < 3 && !r.solidOk; attempt++, cells = Math.round(cells * 0.9) + 1) {
+      await step(70 + attempt * 9, `Rebuilding badly damaged surface (try ${attempt + 1} of 3)`);
       const rebuilt = await voxelRebuild(g, cells);
       if (rebuilt && await passesMoldCheck(rebuilt)) { g = rebuilt; r.solidOk = true; r.rebuilt = true; }
     }
     T.rebuildSec = (performance.now() - t0) / 1000;
   }
+  await step(100, 'Repair finished');
   r.outputTris = triCountOf(g);
   g.computeBoundingBox();
   g.computeVertexNormals();
@@ -320,9 +331,9 @@ export function collapseSlivers(geo: THREE.BufferGeometry, minEdge = 3e-5): THRE
 }
 
 /** Deep repair: weld, drop bad/duplicate/over-shared faces, fix winding, close holes. */
-export async function repairModel(geo: THREE.BufferGeometry): Promise<{ geometry: THREE.BufferGeometry; report: RepairReport }> {
+export async function repairModel(geo: THREE.BufferGeometry, onProgress?: RepairProgress): Promise<{ geometry: THREE.BufferGeometry; report: RepairReport }> {
   const r = emptyReport(geo);
-  const geometry = await finishRepair(geo, diag(geo) * 1e-6, r);
+  const geometry = await finishRepair(geo, diag(geo) * 1e-6, r, undefined, onProgress);
   return { geometry, report: r };
 }
 

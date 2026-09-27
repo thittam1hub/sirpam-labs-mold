@@ -502,6 +502,7 @@ export default function App() {
 
   const autoRepairTried = useRef(false);
   const retryAfterRepair = useRef(false);
+  const [repairProgress, setRepairProgress] = useState<{ pct: number; label: string } | null>(null);
   const pendingAutoRepairNote = useRef<string | null>(null);
   const handleGenerate = useCallback(async () => {
     if (!state.originalGeometry || !state.boundingBox) return;
@@ -677,7 +678,9 @@ export default function App() {
         autoRepairTried.current = true;
         setState(prev => ({ ...prev, infoMessage: 'Broken spots found — repairing the model automatically…' }));
         try {
-          const { geometry: fixed, report } = await repairModel(state.originalGeometry);
+          setRepairProgress({ pct: 0, label: 'Starting repair' });
+          const { geometry: fixed, report } = await repairModel(state.originalGeometry, (pct, label) => setRepairProgress({ pct, label }))
+            .finally(() => setRepairProgress(null));
           if (report.solidOk) {
             fixed.computeBoundingBox();
             undoGeo.current = state.originalGeometry;
@@ -1309,6 +1312,28 @@ export default function App() {
               banner if both happen to be visible (errors take precedence
               on read order). Amber, not red, so users can tell at a
               glance this was successful work, not a failure. */}
+          {repairProgress && (
+            <div
+              role="progressbar"
+              aria-label="Repairing model"
+              aria-valuenow={repairProgress.pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              style={{
+                position: 'absolute', left: '50%', bottom: 72, transform: 'translateX(-50%)', zIndex: 30,
+                width: 'min(420px, 90%)', background: colors.panelBg, borderRadius: radii.xl,
+                boxShadow: shadows.raised, padding: '12px 16px', fontSize: fontSizes.sm, color: colors.textPrimary,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <b>Repairing broken spots…</b><span>{Math.round(repairProgress.pct)}%</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 999, background: colors.sceneBg, overflow: 'hidden' }}>
+                <div style={{ width: `${repairProgress.pct}%`, height: '100%', background: colors.primary, transition: 'width .3s' }} />
+              </div>
+              <div style={{ marginTop: 6, color: colors.textMuted }}>{repairProgress.label}</div>
+            </div>
+          )}
           {state.infoMessage && (
             <div
               role="status"

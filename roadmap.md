@@ -63,3 +63,9 @@
 - [x] 3 and 4 part molds
 - [x] Support-free print check (overhang angle)
 - [x] Watermark text
+
+## Round 9 (done)
+- [x] Logo in top bar + site icon
+- [x] Shop: price per size + send-project form
+- [x] Auto-repair progress bar
+- [x] Gallery: STL name/size, best settings, rating
