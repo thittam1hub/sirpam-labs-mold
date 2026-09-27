@@ -1,4 +1,5 @@
 // @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
+import { useTheme } from '@/components/ThemeToggle';
 import { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
@@ -1237,7 +1238,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
-            <color attach="background" args={[colors.sceneBg]} />
+            <color attach="background" args={[sceneCols.sceneBg]} />
             <CameraRig axis={state.axis} />
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
@@ -1336,7 +1337,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             </group>
 
             <OrbitControls makeDefault />
-            <gridHelper args={[200, 20, colors.gridMajor, colors.gridMinor]} />
+            <gridHelper key={themeMode} args={[200, 20, sceneCols.gridMajor, sceneCols.gridMinor]} />
 
             <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
               <GizmoViewport />
@@ -1399,7 +1400,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <b>Repairing broken spots…</b><span>{Math.round(repairProgress.pct)}%</span>
               </div>
-              <div style={{ height: 8, borderRadius: 999, background: colors.sceneBg, overflow: 'hidden' }}>
+              <div style={{ height: 8, borderRadius: 999, background: sceneCols.sceneBg, overflow: 'hidden' }}>
                 <div style={{ width: `${repairProgress.pct}%`, height: '100%', background: colors.primary, transition: 'width .3s' }} />
               </div>
               <div style={{ marginTop: 6, color: colors.textMuted }}>{repairProgress.label}</div>
