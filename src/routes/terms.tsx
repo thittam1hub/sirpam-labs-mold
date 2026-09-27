@@ -1,0 +1,38 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/terms")({
+  staticData: { sitemap: true },
+  head: () => ({
+    meta: [
+      { title: "Terms of Service — Sirpam 3D Labs Mold" },
+      { name: "description", content: "The rules for using Sirpam 3D Labs Mold and buying credits." },
+      { property: "og:title", content: "Terms of Service — Sirpam 3D Labs Mold" },
+      { property: "og:description", content: "The rules for using Sirpam 3D Labs Mold and buying credits." },
+      { property: "og:type", content: "article" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: TermsPage,
+});
+
+function TermsPage() {
+  return (
+    <div className="neu-page min-h-screen bg-background text-foreground">
+      <main className="mx-auto max-w-3xl px-6 py-12">
+        <Link to="/" className="text-sm text-muted-foreground">← Sirpam 3D Labs Mold</Link>
+        <h1 className="mt-4 text-4xl font-bold">Terms of Service</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated September 2026</p>
+        <h2 className="mt-8 text-xl font-semibold">Using the service</h2>
+        <p className="mt-2 text-muted-foreground">Sirpam 3D Labs Mold lets you design 3D-printable molds in your browser. You are responsible for the models you upload and for having the right to use them.</p>
+        <h2 className="mt-8 text-xl font-semibold">Accounts</h2>
+        <p className="mt-2 text-muted-foreground">Exports and credits need an account. Keep your sign-in details private; you are responsible for activity on your account.</p>
+        <h2 className="mt-8 text-xl font-semibold">Credits</h2>
+        <p className="mt-2 text-muted-foreground">Credits are bought in packs, never expire, have no cash value and cannot be transferred. Each action's credit cost is shown on the Pricing page before you use it.</p>
+        <h2 className="mt-8 text-xl font-semibold">Your results</h2>
+        <p className="mt-2 text-muted-foreground">Molds are generated automatically. Check them before printing or casting; we are not liable for failed prints, casts or materials.</p>
+        <h2 className="mt-8 text-xl font-semibold">Changes</h2>
+        <p className="mt-2 text-muted-foreground">We may update these terms or prices; credits you already bought keep their value.</p>
+      </main>
+    </div>
+  );
+}

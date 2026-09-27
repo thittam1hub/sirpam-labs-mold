@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session } from '@supabase/supabase-js';
+import { getCreditStatus, CREDITS_EVENT, type CreditStatus } from '@/lib/credits';
 
 import logo from '@/assets/sirpam-logo.svg.asset.json';
 
@@ -37,11 +38,19 @@ export default function TopBar(p: Props) {
   const [ready, setReady] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  const [credits, setCredits] = useState<CreditStatus | null>(null);
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); setReady(true); });
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
     return () => data.subscription.unsubscribe();
   }, []);
+  useEffect(() => {
+    if (!session) { setCredits(null); return; }
+    const load = () => getCreditStatus().then(setCredits).catch(() => {});
+    load();
+    window.addEventListener(CREDITS_EVENT, load);
+    return () => window.removeEventListener(CREDITS_EVENT, load);
+  }, [session]);
 
   useEffect(() => {
     if (!menu) return;
@@ -93,12 +102,20 @@ export default function TopBar(p: Props) {
         <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
       </div>
       {ready && (session ? (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', display: 'flex', gap: spacing.sm }}>
+          {credits && (
+            <a href="/pricing" className="sirpam-hide-sm" title={`${credits.freeExportsLimit - credits.freeExportsUsed} free exports left this month`}
+              style={{ ...pill(), textDecoration: 'none', color: colors.primary }}>
+              {credits.balance} credits
+            </a>
+          )}
           <button type="button" style={pill()} onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
             {accountLabel} ▾
           </button>
           {menu === 'account' && (
             <div role="menu" style={menuBox}>
+              {credits && <div style={{ ...item, cursor: 'default' }}>{credits.balance} credits · {credits.freeExportsLimit - credits.freeExportsUsed} free exports left</div>}
+              <a role="menuitem" href="/pricing" style={linkItem}>Buy credits</a>
               <a role="menuitem" href="/gallery" style={linkItem}>Gallery</a>
               <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
             </div>

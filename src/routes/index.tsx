@@ -118,7 +118,10 @@ function LandingPage() {
         <nav className="hidden items-center gap-4 text-sm sm:flex">
           <Link to="/studio">Mold Maker</Link>
           <Link to="/shop">Shop</Link>
+          <Link to="/pricing">Pricing</Link>
           <Link to="/gallery">Gallery</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy</Link>
         </nav>
         <div className="flex items-center gap-3">
           {ready && <AccountLinks session={session} />}
