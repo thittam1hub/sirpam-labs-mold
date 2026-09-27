@@ -77,9 +77,9 @@ function PricingPage() {
                 <p className="mt-2 text-3xl font-bold">{pr.label}</p>
                 <p className="mt-4 font-semibold">{p.credits} credits</p>
                 <p className="text-sm text-muted-foreground">{pr.per} per credit · never expire</p>
-                <button disabled className="mt-6 w-full cursor-not-allowed rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground opacity-60">
-                  Checkout coming soon
-                </button>
+                <p className="mt-6 rounded-2xl bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
+                  Online checkout is not connected yet — contact us to buy this pack.
+                </p>
               </div>
             );
           })}

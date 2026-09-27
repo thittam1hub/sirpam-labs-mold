@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import type { Axis, MoldMode } from '../types';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { repairModel, reduceDetail, transformModel, describeRepair, type UpAxis } from '../mold/meshFix';
+import { chargeFor } from '@/lib/credits';
 import { CASTING_MATERIALS, solidProps, type CastingMaterialId } from '../utils/tier2';
 import { leakGuide } from '../utils/shopAdvice';
 import { MATERIALS } from '../utils/costEstimate';
@@ -61,6 +62,7 @@ export function ModelFixPanel({ geometry, onReplaceModel }: {
   };
 
   const doRepair = () => run('Repairing…', async () => {
+    if (!(await chargeFor('auto_repair', setMsg))) return;
     const { geometry: g, report } = await repairModel(geometry);
     const txt = `Repaired: ${describeRepair(report)}.`;
     onReplaceModel(g, txt);
@@ -182,8 +184,9 @@ export function MoldReportPanel(p: {
   const [err, setErr] = useState<string | null>(null);
   if (!p.geometry || p.pieces.length === 0) return null;
 
-  const open = () => {
+  const open = async () => {
     setErr(null);
+    if (!(await chargeFor('mold_report', setErr))) return;
     const win = window.open('', '_blank');
     if (!win) { setErr('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
     const model = p.geometry!;

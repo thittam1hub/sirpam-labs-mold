@@ -14,6 +14,7 @@ import { orientForPrint, solidProps } from '../utils/tier2';
 import { packPlates } from '../utils/shopAdvice';
 import { buildFromSpec } from '../mold/modelTools';
 import { generateShape } from '@/lib/shapeAi.functions';
+import { chargeFor } from '@/lib/credits';
 import { useServerFn } from '@tanstack/react-start';
 
 const s = {
@@ -351,6 +352,7 @@ export function AiShapePanel({ onCommit }: { onCommit: (g: THREE.BufferGeometry,
   const go = async () => {
     setBusy(true); setErr(null);
     try {
+      if (!(await chargeFor('ai_shape', setErr))) return;
       const r = await gen({ data: { prompt, image: image ?? undefined } });
       if (!r.ok) { setErr(r.error); return; }
       const g = await buildFromSpec(r.spec);

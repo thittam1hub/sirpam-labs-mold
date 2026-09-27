@@ -37,7 +37,7 @@ import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
 import { supabase } from '@/integrations/supabase/client';
-import { spendCredits, getCreditStatus, describeCharge, type CreditAction } from '@/lib/credits';
+import { spendCredits, getCreditStatus, describeCharge, chargeFor, type CreditAction } from '@/lib/credits';
 
 export type { Axis } from './types';
 
@@ -515,6 +515,19 @@ export default function App() {
 
     setState(prev => ({ ...prev, generating: true, errorMessage: null, infoMessage: null }));
 
+    // Free-tier watermark: signed-in users with no paid credits get "Sirpam"
+    // engraved under the bottom half (box molds only — round7 skips it for
+    // form-fit shells and relief/press/slip-cast styles). Never blocks
+    // generation if the credit check fails.
+    let freeWatermark: string | undefined;
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      if (s.session) {
+        const cs = await getCreditStatus();
+        if (cs && cs.balance === 0) freeWatermark = 'Sirpam';
+      }
+    } catch { /* credit check is best-effort */ }
+
     // Snapshot params at call time so the result we later commit is tagged
     // with the params actually used, even if the user changes them mid-flight.
     const activeSprueOverride = state.sprueOverride.enabled
@@ -575,7 +588,7 @@ export default function App() {
         autoVents: t2.autoVents || undefined,
         standFins: t2.standFins || undefined,
         volumeLabel: t2.volumeLabel && castMl ? `${castMl} ML` : undefined,
-        watermark: t2.watermark?.trim() || undefined,
+        watermark: t2.watermark?.trim() || freeWatermark || undefined,
         moldFeet: t2.moldFeet || undefined,
         gapFiller: t2.gapFiller || undefined,
         pieceCount: t2.pieceCount && t2.pieceCount > 2 ? t2.pieceCount : undefined,
@@ -680,6 +693,11 @@ export default function App() {
         autoRepairTried.current = true;
         setState(prev => ({ ...prev, infoMessage: 'Broken spots found — repairing the model automatically…' }));
         try {
+          // Auto-repair is a paid action (2 credits, monthly free credits
+          // first). If the user declines or can't pay, fall through to the
+          // normal error message.
+          const paid = await chargeFor('auto_repair', m => setState(prev => ({ ...prev, infoMessage: m })));
+          if (!paid) throw new Error('repair_declined');
           setRepairProgress({ pct: 0, label: 'Starting repair' });
           const { geometry: fixed, report } = await repairModel(state.originalGeometry, (pct, label) => setRepairProgress({ pct, label }))
             .finally(() => setRepairProgress(null));

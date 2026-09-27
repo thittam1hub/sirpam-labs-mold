@@ -84,6 +84,44 @@ export async function spendCredits(action: CreditAction): Promise<SpendResult> {
   return r;
 }
 
+/**
+ * Shared charge flow for paid tools (AI maker, repair, report): requires
+ * sign-in, confirms the cost, spends the credits. Returns true when the
+ * action may proceed. `onMessage` surfaces errors/notes to the user.
+ */
+export async function chargeFor(
+  action: CreditAction,
+  onMessage: (msg: string) => void,
+): Promise<boolean> {
+  try {
+    const { data: s } = await supabase.auth.getSession();
+    if (!s.session) {
+      onMessage(`Please sign in to use ${ACTION_LABEL[action]} — you get 10 welcome credits plus 3 free credits every month.`);
+      window.setTimeout(() => window.location.assign('/auth'), 1800);
+      return false;
+    }
+    const status = await getCreditStatus();
+    if (status) {
+      const c = describeCharge(action, status);
+      if (!c.affordable) {
+        if (window.confirm(`${c.text.split('.')[0]}. You don't have enough credits. Open the Pricing page to buy more?`)) window.location.assign('/pricing');
+        return false;
+      }
+      if (!window.confirm(`${c.text}\n\nContinue?`)) return false;
+    }
+    const r = await spendCredits(action);
+    if (!r.ok) {
+      onMessage(`${ACTION_LABEL[action]} needs ${r.needed} credit(s) and you have ${r.balance}. Get more on the Pricing page (/pricing).`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('Credit check failed:', e);
+    onMessage('Could not check your credits. Please try again.');
+    return false;
+  }
+}
+
 /** Describe what an action will use, for the confirm prompt. */
 export function describeCharge(action: CreditAction, s: CreditStatus): { text: string; affordable: boolean } {
   const cost = ACTION_COST[action];
