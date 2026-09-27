@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ACTION_LABEL, getCreditHistory, getCreditStatus, type CreditStatus, type LedgerRow } from "@/lib/credits";
 import { BrandLink } from "@/components/BrandLink";
+import { supabase } from "@/integrations/supabase/client";
+import { deleteMyAccount } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/account")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Your credits — Sirpam 3D Labs Mold" },
-      { name: "description", content: "See your credit balance, monthly free credits and full credit history." },
-      { property: "og:title", content: "Your credits — Sirpam 3D Labs Mold" },
+      { title: "Your account — Sirpam 3D Labs Mold" },
+      { name: "description", content: "See your credit balance, monthly free credits, history and account settings." },
+      { property: "og:title", content: "Your account — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Credit balance and history for your Sirpam account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
