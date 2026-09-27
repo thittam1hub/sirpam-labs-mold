@@ -39,6 +39,7 @@ export default function TopBar(p: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   const [credits, setCredits] = useState<CreditStatus | null>(null);
+  const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); setReady(true); });
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
@@ -50,6 +51,21 @@ export default function TopBar(p: Props) {
     load();
     window.addEventListener(CREDITS_EVENT, load);
     return () => window.removeEventListener(CREDITS_EVENT, load);
+  }, [session]);
+  useEffect(() => {
+    if (!session) { setProfile(null); return; }
+    let alive = true;
+    supabase.from("profiles").select("display_name, avatar_url").eq("id", session.user.id).maybeSingle()
+      .then(async ({ data }) => {
+        if (!alive || !data) return;
+        let url: string | null = null;
+        if (data.avatar_url) {
+          const s = await supabase.storage.from("avatars").createSignedUrl(data.avatar_url, 60 * 60);
+          url = s.data?.signedUrl ?? null;
+        }
+        if (alive) setProfile({ display_name: data.display_name ?? "", avatar_url: url });
+      });
+    return () => { alive = false; };
   }, [session]);
 
   useEffect(() => {
@@ -74,7 +90,8 @@ export default function TopBar(p: Props) {
   const linkItem = { ...item, textDecoration: 'none' as const, display: 'block' as const };
 
   const email = session?.user?.email ?? '';
-  const accountLabel = email.length > 22 ? email.slice(0, 20) + '…' : email || 'Account';
+  const shownName = profile?.display_name?.trim() || email;
+  const accountLabel = shownName.length > 22 ? shownName.slice(0, 20) + '…' : shownName || 'Account';
 
   return (
     <header ref={ref} className="sirpam-topbar" style={{
@@ -109,13 +126,18 @@ export default function TopBar(p: Props) {
               {credits.balance + credits.monthlyFreeLeft} credits
             </a>
           )}
-          <button type="button" style={pill()} onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
+          <button type="button" style={{ ...pill(), display: 'flex', alignItems: 'center', gap: 6 }}
+            onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
+            {profile?.avatar_url && (
+              <img src={profile.avatar_url} alt="" width={20} height={20}
+                style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
+            )}
             {accountLabel} ▾
           </button>
           {menu === 'account' && (
             <div role="menu" style={menuBox}>
               {credits && <div style={{ ...item, cursor: 'default' }}>{credits.balance} credits · {credits.monthlyFreeLeft} free this month</div>}
-              <a role="menuitem" href="/account" style={linkItem}>Credit history</a>
+              <a role="menuitem" href="/account" style={linkItem}>Profile &amp; credits</a>
               <a role="menuitem" href="/pricing" style={linkItem}>Buy credits</a>
               <a role="menuitem" href="/gallery" style={linkItem}>Gallery</a>
               <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
