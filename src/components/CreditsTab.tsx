@@ -7,6 +7,7 @@ import {
   type CreditStatus, type LedgerRow, type Purchase,
 } from "@/lib/credits";
 import { Button } from "@/components/ui/button";
+import { ReferralCard } from "@/components/ReferralCard";
 
 const FILTERS = [
   ["all", "All"], ["spent", "Spent"], ["added", "Added"], ["refunded", "Refunded"], ["expired", "Expired"],
@@ -117,6 +118,7 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
       <p className="mt-3 text-xs text-muted-foreground">
         Monthly free credits are used first, then promo and welcome credits, then purchased credits. Welcome credits last 90 days, purchased credits 24 months. You're only charged when an action succeeds.
       </p>
+      <ReferralCard onChanged={onChanged} />
 
       {purchases.length > 0 && (
         <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">

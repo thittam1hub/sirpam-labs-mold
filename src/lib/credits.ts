@@ -30,6 +30,7 @@ export const ACTION_LABEL: Record<string, string> = {
   export_stl: "STL export", export_obj: "OBJ export", export_3mf: "3MF export", export_step: "STEP (CAD) export",
   pro_features: "Pro mold features", ai_shape: "AI model maker", auto_repair: "Automatic repair", mold_report: "Mold report",
   welcome: "Welcome credits", purchase: "Credit pack purchase", promo: "Promo code", expired: "Credits expired",
+  referral_referee: "Referral bonus (you joined)", referral_referrer: "Referral bonus (friend joined)",
 };
 
 export const KIND_LABEL: Record<string, string> = {
@@ -184,6 +185,25 @@ export async function redeemPromo(code: string): Promise<{ ok: boolean; credits?
   if (error) throw error;
   notify();
   return data as unknown as { ok: boolean; credits?: number; error?: string };
+}
+
+/** Referral program — rules live in DB functions (get_referral_info / apply_referral). */
+export interface ReferralInfo {
+  code: string; pending: number; rewarded: number; earned: number; reward: number; monthlyCap: number;
+  referredStatus: string | null; canApply: boolean;
+}
+export const REFERRAL_STORAGE_KEY = "sirpam:ref";
+
+export async function getReferralInfo(): Promise<ReferralInfo> {
+  const { data, error } = await supabase.rpc("get_referral_info" as never);
+  if (error) throw error;
+  return data as unknown as ReferralInfo;
+}
+
+export async function applyReferral(code: string): Promise<{ ok: boolean; error?: string }> {
+  const { data, error } = await supabase.rpc("apply_referral" as never, { _code: code } as never);
+  if (error) throw error;
+  return data as unknown as { ok: boolean; error?: string };
 }
 
 /** Handle for a reserved charge: call succeed() when the action worked, fail() otherwise. */
