@@ -20,7 +20,7 @@
 - [x] 11 Test data cleanup (TESTONCE removed; only your account is admin; no test purchases)
 - [x] 13 Friendly error + missing-page screens (site-wide, all pages covered)
 - [ ] 9 Real AI generation + handoff test
-- [ ] 10 Review 20 database warnings
+- [x] 10 Reviewed 20 database warnings — all intentional and safe
 - [ ] 14–20, 23–25 quality, dark mode, mobile tour, tests, browser check, limits, rate limits, backups, share images, analytics, speed
 - [ ] 21, 22, 12 publish, guide pages, error tracking
 - [ ] 1–3, 7 payments + branded email — blocked on workspace move / domain
