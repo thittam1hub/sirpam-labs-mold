@@ -93,7 +93,7 @@ export interface FitResult {
  * Compute how the predicted mold fits inside the printer's build volume.
  *
  * Returns a FitResult with enough detail for the UI to say either
- * "✓ fits" or "✗ 12mm too tall on Z" without further math.
+ * "Fits" or "12mm too tall on Z" without further math.
  */
 export function computeFit(
   partBbox: PartBbox,
@@ -193,9 +193,9 @@ export function suggestScale(
  * (e.g., if we later add a warning at export time).
  *
  * Examples:
- *   "✓ Fits (240 × 180 × 120 mm)"
- *   "✗ 14mm too tall — Z overflows"
- *   "✗ Doesn't fit — 22mm on X, 14mm on Y"
+ *   "Fits (240 by 180 by 120 mm)"
+ *   "14mm too tall - Z overflows"
+ *   "Doesn't fit - 22mm on X, 14mm on Y"
  */
 export function formatFitStatus(fit: FitResult): string {
   if (fit.fits) {

@@ -4,6 +4,7 @@ import { CREDIT_PACKS, guessRegion, type RegionTier } from "@/lib/credits";
 import { BUSINESS } from "@/lib/business";
 import { LegalFooter } from "@/components/LegalFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/checkout/$pack")({
   staticData: { sitemap: false },
@@ -50,7 +51,7 @@ function CheckoutPage() {
     <div className="neu-page min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 py-12">
-        <Link to="/pricing" className="text-sm text-muted-foreground">← Back to pricing</Link>
+        <Link to="/pricing" className="inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft aria-hidden size={15} /> Back to pricing</Link>
         <h1 className="mt-4 text-4xl font-bold">Checkout — {pack.name} pack</h1>
 
         <section className="mt-8 rounded-3xl bg-card p-6 shadow-sm">

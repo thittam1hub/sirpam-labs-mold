@@ -11,6 +11,7 @@ import {
   meshVolumeCm3, estimatePieceCost, estimateSiliconeCost,
 } from '../utils/costEstimate';
 import type { ProjectMeta } from '../services/projectStorage';
+import { CircleCheck, TriangleAlert } from 'lucide-react';
 
 interface ControlPanelProps {
   state: AppState;
@@ -1199,9 +1200,9 @@ export default function ControlPanel({
                 gap: spacing.sm,
               }}
             >
-              <span aria-hidden="true" style={{ fontSize: fontSizes.md }}>
-                {fit.fits ? '✓' : '⚠'}
-              </span>
+              {fit.fits
+                ? <CircleCheck aria-hidden="true" size={18} />
+                : <TriangleAlert aria-hidden="true" size={18} />}
               <span>{formatFitStatus(fit)}</span>
             </div>
           )}
@@ -1667,7 +1668,7 @@ function Stepper({ step, onStep, hasModel, hasMold }: { step: number; onStep: (n
               width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: fontSizes.sm,
               background: active ? colors.primary : colors.sectionBg, color: active ? '#fff' : done ? colors.primary : colors.textMuted,
               boxShadow: active ? shadows.primary : done ? shadows.inset : shadows.raisedSm,
-            }}>{done && !active ? '✓' : i + 1}</span>
+            }}>{done && !active ? <CircleCheck aria-hidden="true" size={17} /> : i + 1}</span>
             <span style={{ fontSize: fontSizes.xs, fontWeight: 600, color: active ? colors.primary : colors.textMuted }}>{name}</span>
           </button>
         );

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { BrandLink } from "@/components/BrandLink";
 import showcase from "@/assets/real-mold-workbench.jpg";
+import { Droplet, Factory, FlaskConical, RotateCw, Scissors, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -31,32 +32,32 @@ const FEATURES = [
   {
     title: "Smart parting plane",
     body: "The app suggests the best place to split your model and previews the split line in 3D before you commit.",
-    icon: "✂️",
+    icon: Scissors,
   },
   {
     title: "Sprues, vents & pins",
     body: "Pour hole, air vents and registration pins are generated automatically — no CAD work needed.",
-    icon: "💧",
+    icon: Droplet,
   },
   {
     title: "Curved & multi-part molds",
     body: "Curved split lines for shapes that won't pull straight out, plus 3- or 4-piece molds for wide models.",
-    icon: "🔄",
+    icon: RotateCw,
   },
   {
     title: "Auto-repair broken STLs",
     body: "Holes and broken spots in your mesh are fixed automatically, so the mold still builds.",
-    icon: "🩹",
+    icon: Wrench,
   },
   {
     title: "Material & cost estimator",
     body: "See how much casting material to mix and what the print will cost before you print.",
-    icon: "⚗️",
+    icon: FlaskConical,
   },
   {
     title: "Print-farm planner",
     body: "Making many molds? Find out how many printer plates you need and what each mold costs.",
-    icon: "🏭",
+    icon: Factory,
   },
 ];
 
@@ -118,13 +119,16 @@ function LandingPage() {
             The details that make or break a cast — parting, venting, alignment, shrinkage — handled for you.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <article key={f.title} className="rounded-2xl border border-border bg-card p-5">
-                <div className="text-2xl" aria-hidden>{f.icon}</div>
-                <h3 className="mt-2 text-lg font-semibold">{f.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{f.body}</p>
-              </article>
-            ))}
+            {FEATURES.map((f) => {
+              const FeatureIcon = f.icon;
+              return (
+                <article key={f.title} className="rounded-2xl border border-border bg-card p-5">
+                  <FeatureIcon aria-hidden size={24} className="text-primary" />
+                  <h3 className="mt-2 text-lg font-semibold">{f.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{f.body}</p>
+                </article>
+              );
+            })}
           </div>
         </section>
 

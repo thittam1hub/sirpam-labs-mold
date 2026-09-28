@@ -381,13 +381,13 @@ export function getRegistrationPinPositionsForEnvelope(
  * the **positive** parting axis direction from `basePos` — so a sprue at
  * splitPos goes UP into the top mold and the subtract creates a hole.
  *
- *   axis='x' rotate Y +90°: (x,y,z) → (z, y, -x). Pre-rot z∈(0,h) → +X. ✓
- *   axis='y' rotate X -90°: (x,y,z) → (x, z, -y). Pre-rot z∈(0,h) → +Y. ✓
+ *   axis='x' rotate Y +90 degrees: (x,y,z) becomes (z, y, -x). Pre-rot z in (0,h) becomes +X.
+ *   axis='y' rotate X -90 degrees: (x,y,z) becomes (x, z, -y). Pre-rot z in (0,h) becomes +Y.
  *     (NOT +90° — that sends pre-rot +Z to -Y, which puts the sprue/vent
  *      cylinders BELOW splitPos in bottom-mold space. The subtract from
  *      topResult is then a no-op and the user gets no pour hole. Caught
  *      reproducing the Mr Coaster Y=58 rounded screenshot.)
- *   axis='z' identity:                                Pre-rot z∈(0,h) → +Z. ✓
+ *   axis='z' identity:                                Pre-rot z in (0,h) becomes +Z.
  */
 export function getRotationForAxis(axis: Axis): [number, number, number] {
   switch (axis) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditStatus, type CreditStatus, type RegionTier } from "@/lib/credits";
 import { SiteHeader } from "@/components/SiteHeader";
+import { Info } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
   staticData: { sitemap: true },
@@ -52,7 +53,7 @@ function PricingPage() {
         )}
 
         <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
-          <span aria-hidden>◎</span>
+          <Info aria-hidden size={16} />
           Local pricing has been applied automatically. Final currency and tax follow your billing country.
         </div>
 
