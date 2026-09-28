@@ -389,7 +389,7 @@ export async function generateMold(
 
   // Round 8: user lock size/count/style. Omitted = legacy round pins.
   const lockStyle = extras.lockStyle ?? 'round';
-  const lockR = extras.lockDiameterMm && extras.lockDiameterMm > 0
+  let lockR = extras.lockDiameterMm && extras.lockDiameterMm > 0
     ? Math.min(extras.lockDiameterMm / 2, lockStyle === 'magnet' ? wallThickness * 0.45 + 2 : wallThickness * 0.4)
     : pinRadius;
   let lockPositions = extras.lockCount === 2
@@ -401,9 +401,18 @@ export async function generateMold(
     const [la, lb] = lateralAxisIndices(axis);
     const c = boundingBox.getCenter(new THREE.Vector3());
     const want = extras.lockCount === 2 ? 2 : 4;
-    const fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
-      { a: c.getComponent(la), b: c.getComponent(lb) },
-      lockStyle === 'square' ? lockR * Math.SQRT2 : lockR, clearance, want);
+    // Thin form-fit walls: shrink the locks (down to 1 mm radius) before giving up.
+    let fitted: number[][] = [];
+    const baseR = lockR;
+    for (const f of [1, 0.75, 0.55]) {
+      const r = Math.max(1, baseR * f);
+      fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
+        { a: c.getComponent(la), b: c.getComponent(lb) },
+        lockStyle === 'square' ? r * Math.SQRT2 : r, clearance, want);
+      if (fitted.length >= want) { lockR = r; break; }
+      if (r === 1) { lockR = r; break; }
+    }
+    if (lockR < baseR && fitted.length) notices.push(`The form-fit wall is thin, so the locks were made smaller (${(lockR * 2).toFixed(1)} mm across) to fit inside it.`);
     lockPositions = fitted;
     if (fitted.length < want) {
       notices.push(fitted.length === 0
