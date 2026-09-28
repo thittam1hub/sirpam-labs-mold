@@ -38,7 +38,7 @@ import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
 import { supabase } from '@/integrations/supabase/client';
-import { getCreditStatus, describeCharge, reserveFor, holdCredits, captureHold, releaseHold, type Charge, type CreditAction } from '@/lib/credits';
+import { reserveFor, type Charge, type CreditAction } from '@/lib/credits';
 
 export type { Axis } from './types';
 
@@ -975,34 +975,10 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
 
   const handleExport = useCallback(async (format: 'stl' | 'obj' | '3mf' | 'step') => {
     if (state.moldPieces.length === 0) return;
-    // Credits: designing is free; exporting needs sign-in and is charged.
-    try {
-      const { data: s } = await supabase.auth.getSession();
-      if (!s.session) {
-        setState(prev => ({ ...prev, errorMessage: 'Please sign in to export your mold — you get 10 welcome credits plus 3 free credits every month.' }));
-        window.setTimeout(() => window.location.assign('/auth'), 1800);
-        return;
-      }
-      const action = `export_${format}` as CreditAction;
-      const status = await getCreditStatus();
-      if (status) {
-        const c = describeCharge(action, status);
-        if (!c.affordable) {
-          if (window.confirm(`${c.text.split('.')[0]}. You don't have enough credits. Open the Pricing page to buy more?`)) window.location.assign('/pricing');
-          return;
-        }
-        if (!window.confirm(`${c.text}\n\nContinue?`)) return;
-      }
-      const r = await spendCredits(action);
-      if (!r.ok) {
-        setState(prev => ({ ...prev, errorMessage: `This export needs ${r.needed} credit(s) and you have ${r.balance}. Get more on the Pricing page (/pricing).` }));
-        return;
-      }
-    } catch (e) {
-      console.error('Credit check failed:', e);
-      setState(prev => ({ ...prev, errorMessage: 'Could not check your credits. Please try again.' }));
-      return;
-    }
+    // Credits: designing is free; exporting needs sign-in. Credits are held
+    // up front and only charged when the file is actually delivered.
+    const charge = await reserveFor(`export_${format}` as CreditAction, m => setState(prev => ({ ...prev, errorMessage: m })));
+    if (!charge) return;
     // STEP runs for ~60s in a worker — flip the busy flag so the panel can
     // disable the other formats and swap the STEP button for a Cancel button.
     // Other formats finish in <100ms; not worth a re-render storm for them.
@@ -1029,11 +1005,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // want is "which format matters", which is the success count per format).
       // STEP success-count specifically answers task #27: "is the 66 MB OCP
       // bundle pulling its weight, or should we lazy-load / split it?"
+      await charge.succeed();
       telemetry.send(buildEvent('file_exported', { format }));
     } catch (err) {
       // 'Export cancelled' is the user's choice, not a failure — surface a
       // gentler note (and skip the console.error noise) so it doesn't look
       // like the app broke.
+      await charge.fail();
       const isCancel = err instanceof Error && err.message === 'Export cancelled';
       if (!isCancel) {
         // Keep the raw error in the console for bug reports — translateStepError

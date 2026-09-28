@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import type { Axis, MoldMode } from '../types';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { repairModel, reduceDetail, transformModel, describeRepair, type UpAxis } from '../mold/meshFix';
-import { chargeFor } from '@/lib/credits';
+import { reserveFor } from '@/lib/credits';
 import { CASTING_MATERIALS, solidProps, type CastingMaterialId } from '../utils/tier2';
 import { leakGuide } from '../utils/shopAdvice';
 import { MATERIALS } from '../utils/costEstimate';
@@ -65,8 +65,12 @@ export function ModelFixPanel({ geometry, onReplaceModel, scale, onSetScale }: {
   };
 
   const doRepair = () => run('Repairing…', async () => {
-    if (!(await chargeFor('auto_repair', setMsg))) return;
-    const { geometry: g, report } = await repairModel(geometry);
+    const charge = await reserveFor('auto_repair', setMsg);
+    if (!charge) return;
+    let res;
+    try { res = await repairModel(geometry); } catch (e) { await charge.fail(); throw e; }
+    const { geometry: g, report } = res;
+    if (report.solidOk) await charge.succeed(); else await charge.fail();
     const txt = `Repaired: ${describeRepair(report)}.`;
     onReplaceModel(g, txt);
     setMsg(!report.solidOk ? `${txt} Some damage is too deep to fix automatically.` : report.rebuilt ? `${txt} The file was badly damaged, so the surface was rebuilt — fine details may be softer. A cleaner source file gives a sharper mold.` : `${txt} Full detail kept — the model is now a clean solid.`);
@@ -196,9 +200,10 @@ export function MoldReportPanel(p: {
 
   const open = async () => {
     setErr(null);
-    if (!(await chargeFor('mold_report', setErr))) return;
+    const charge = await reserveFor('mold_report', setErr);
+    if (!charge) return;
     const win = window.open('', '_blank');
-    if (!win) { setErr('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
+    if (!win) { await charge.fail(); setErr('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
     const model = p.geometry!;
     model.computeBoundingBox();
     const ms = model.boundingBox!.getSize(new THREE.Vector3());

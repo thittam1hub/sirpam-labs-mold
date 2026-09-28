@@ -14,7 +14,7 @@ import { orientForPrint, solidProps } from '../utils/tier2';
 import { packPlates } from '../utils/shopAdvice';
 import { buildFromSpec } from '../mold/modelTools';
 import { generateShape } from '@/lib/shapeAi.functions';
-import { chargeFor } from '@/lib/credits';
+import { reserveFor, type Charge } from '@/lib/credits';
 import { useServerFn } from '@tanstack/react-start';
 
 const s = {
@@ -356,13 +356,17 @@ export function AiShapePanel({ onCommit }: { onCommit: (g: THREE.BufferGeometry,
   const [err, setErr] = useState<string | null>(null);
   const go = async () => {
     setBusy(true); setErr(null);
+    let charge: Charge | null = null;
     try {
-      if (!(await chargeFor('ai_shape', setErr))) return;
+      charge = await reserveFor('ai_shape', setErr);
+      if (!charge) return;
       const r = await gen({ data: { prompt, image: image ?? undefined } });
-      if (!r.ok) { setErr(r.error); return; }
+      if (!r.ok) { await charge.fail(); setErr(`${r.error} Your credits were returned.`); return; }
       const g = await buildFromSpec(r.spec);
+      await charge.succeed();
       onCommit(g, `${r.spec.name.replace(/[^\w-]+/g, '_').slice(0, 40) || 'ai_shape'}.stl`);
     } catch (e) {
+      await charge?.fail();
       setErr(e instanceof Error ? e.message : 'Could not make that shape.');
     } finally { setBusy(false); }
   };
