@@ -38,6 +38,7 @@ import StatusBar from './components/layout/StatusBar';
 import { buildFromSpec } from './mold/modelTools';
 import { takeAiHandoff } from '@/lib/aiHandoff';
 import { Link } from '@tanstack/react-router';
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import FillOverlay from './components/FillOverlay';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
@@ -326,6 +327,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
    * lives outside AppState.
    */
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
+  useEffect(() => { try { if (localStorage.getItem('sirpam.panel') === '0') setPanelOpen(false); } catch { /* ignore */ } }, []);
   const [step, setStepRaw] = useState(() => initialStep ? initialStep - 1 : 0);
   useEffect(() => {
     if (initialStep) return;
@@ -1237,6 +1240,10 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
         >
+          <button type="button" className="sirpam-hide-sm" onClick={() => setPanelOpen(o => { try { localStorage.setItem('sirpam.panel', o ? '0' : '1'); } catch { /* ignore */ } return !o; })} aria-label={panelOpen ? 'Hide settings panel' : 'Show settings panel'} title={panelOpen ? 'Hide settings' : 'Show settings'} aria-expanded={panelOpen}
+            style={{ position: 'absolute', top: spacing.md, right: spacing.md, zIndex: 7, border: 'none', borderRadius: radii.md, padding: 8, cursor: 'pointer', background: colors.sectionBg, color: colors.textBody, boxShadow: shadows.raisedSm, display: 'flex' }}>
+            {panelOpen ? <PanelRightClose size={18} aria-hidden="true" /> : <PanelRightOpen size={18} aria-hidden="true" />}
+          </button>
           <Canvas
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
@@ -1605,6 +1612,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
 
         {/* Control Panel — axis/offset changes no longer wipe the mold; the
             Generate button relabels to "Regenerate Mold" when params drift. */}
+        <div style={{ display: panelOpen ? 'contents' : 'none' }}>
         <ControlPanel
           state={state}
           step={step}
@@ -1805,6 +1813,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             />
           }
         />
+        </div>
       </div>
       <StatusBar
         size={state.boundingBox ? (() => { const v = state.boundingBox.getSize(new THREE.Vector3()); return { x: v.x, y: v.y, z: v.z }; })() : null}
