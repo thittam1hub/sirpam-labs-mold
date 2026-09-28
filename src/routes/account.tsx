@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ACTION_LABEL, getCreditHistory, getCreditStatus, type CreditStatus, type LedgerRow } from "@/lib/credits";
+import { getCreditHistory, getCreditStatus, type CreditStatus, type LedgerRow } from "@/lib/credits";
+import { CreditsTab } from "@/components/CreditsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { deleteMyAccount } from "@/lib/account.functions";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -35,7 +36,8 @@ function AccountPage() {
   const tab = Route.useSearch().tab ?? "profile";
   const [status, setStatus] = useState<CreditStatus | null | undefined>(undefined);
   const [rows, setRows] = useState<LedgerRow[]>([]);
-  const [historyLimit, setHistoryLimit] = useState(25);
+  const [reload, setReload] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [email, setEmail] = useState<string>("");
   const [newPw, setNewPw] = useState("");
   const [pwMsg, setPwMsg] = useState<string | null>(null);
@@ -58,6 +60,7 @@ function AccountPage() {
       const profilePromise = supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle();
       const creditPromise = getCreditStatus();
       const historyPromise = getCreditHistory();
+      void supabase.from("user_roles" as never).select("role").eq("role", "admin").maybeSingle().then(({ data }) => { if (active) setIsAdmin(!!data); });
       const [got, creditStatus, creditRows] = await Promise.all([profilePromise, creditPromise, historyPromise]);
       let prof = got.data as { display_name: string; avatar_url: string | null } | null;
       if (!prof && !got.error) {
@@ -77,7 +80,7 @@ function AccountPage() {
     };
     load().catch(() => { if (active) setStatus(null); });
     return () => { active = false; };
-  }, [ready, session]);
+  }, [ready, session, reload]);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +161,7 @@ function AccountPage() {
           {([['profile', 'Profile'], ['credits', 'Credits & history'], ['security', 'Security']] as const).map(([value, label]) => (
             <Link key={value} to="/account" search={{ tab: value }} className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold ${tab === value ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>{label}</Link>
           ))}
+          {isAdmin && <Link to="/admin" className="ml-auto whitespace-nowrap px-4 py-3 text-sm font-semibold text-muted-foreground">Admin</Link>}
         </nav>
         {status === undefined && <div className="mt-6 space-y-3"><Skeleton className="h-8 w-48" /><Skeleton className="h-40 w-full" /></div>}
         {status === null && (
@@ -165,17 +169,7 @@ function AccountPage() {
         )}
         {status && (
           <>
-            {tab === "credits" && <><section className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl bg-card p-6 shadow-sm">
-                <p className="text-sm text-muted-foreground">Your credits (never expire)</p>
-                <p className="mt-1 text-4xl font-bold text-primary">{status.balance}</p>
-              </div>
-              <div className="rounded-3xl bg-card p-6 shadow-sm">
-                <p className="text-sm text-muted-foreground">Free this month (used first, resets on the 1st)</p>
-                <p className="mt-1 text-4xl font-bold">{status.monthlyFreeLeft}<span className="text-lg text-muted-foreground"> / {status.monthlyFreeLimit}</span></p>
-              </div>
-            </section>
-            <Button asChild className="mt-4"><Link to="/pricing">Buy credits</Link></Button></>}
+            {tab === "credits" && <CreditsTab status={status} rows={rows} onChanged={() => setReload((n) => n + 1)} />}
 
             {tab === "profile" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-xl font-semibold">Profile</h2>
@@ -215,35 +209,6 @@ function AccountPage() {
               {profMsg && <p className="mt-3 text-sm text-muted-foreground">{profMsg}</p>}
             </section>}
 
-
-            {tab === "credits" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-xl font-semibold">History</h2>
-              {rows.length === 0 ? (
-                <p className="mt-3 text-sm text-muted-foreground">No activity yet.</p>
-              ) : (
-                <table className="mt-4 w-full text-sm">
-                  <tbody>
-                     {rows.slice(0, historyLimit).map((r) => (
-                      <tr key={r.id} className="border-t border-border">
-                        <td className="py-2 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-                        <td className="py-2">
-                          {ACTION_LABEL[r.reason] ?? r.reason}
-                          {r.reference?.startsWith("monthly_free") && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">free monthly</span>}
-                        </td>
-                        <td className={`py-2 text-right font-semibold ${r.delta > 0 ? "text-primary" : ""}`}>
-                          {r.delta > 0 ? `+${r.delta}` : r.delta}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-               {rows.length > historyLimit && (
-                 <Button type="button" variant="outline" className="mt-4" onClick={() => setHistoryLimit((value) => value + 25)}>
-                   Load more history
-                 </Button>
-               )}
-            </section>}
 
             {tab === "security" && <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-xl font-semibold">Security</h2>

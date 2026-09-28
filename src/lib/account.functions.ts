@@ -21,6 +21,9 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     await supabaseAdmin.from("credit_ledger").delete().eq("user_id", uid);
     await supabaseAdmin.from("credit_balances").delete().eq("user_id", uid);
     await supabaseAdmin.from("monthly_usage").delete().eq("user_id", uid);
+    await supabaseAdmin.from("credit_lots" as never).delete().eq("user_id", uid);
+    await supabaseAdmin.from("credit_holds" as never).delete().eq("user_id", uid);
+    await supabaseAdmin.from("promo_redemptions" as never).delete().eq("user_id", uid);
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(uid);
     if (error) throw new Error(error.message);
