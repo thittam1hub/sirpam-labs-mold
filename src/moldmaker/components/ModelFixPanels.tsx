@@ -204,6 +204,7 @@ export function MoldReportPanel(p: {
     if (!charge) return;
     const win = window.open('', '_blank');
     if (!win) { await charge.fail(); setErr('Your browser blocked the new tab. Allow pop-ups for this site and try again.'); return; }
+    try {
     const model = p.geometry!;
     model.computeBoundingBox();
     const ms = model.boundingBox!.getSize(new THREE.Vector3());
@@ -252,6 +253,11 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <p class="muted">Made with Sirpam 3D Labs Mold.</p></body></html>`;
     win.document.open(); win.document.write(html); win.document.close();
     await charge.succeed();
+    } catch (e) {
+      await charge.fail();
+      win.close();
+      setErr(`Could not build the report${e instanceof Error ? `: ${e.message}` : ''}. Your credits were returned.`);
+    }
   };
 
   return (

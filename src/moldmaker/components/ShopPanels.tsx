@@ -360,7 +360,7 @@ export function AiShapePanel({ onCommit }: { onCommit: (g: THREE.BufferGeometry,
     try {
       charge = await reserveFor('ai_shape', setErr);
       if (!charge) return;
-      const r = await gen({ data: { prompt, image: image ?? undefined } });
+      const r = await gen({ data: { prompt, image: image ?? undefined, holdId: charge.holdId } });
       if (!r.ok) { await charge.fail(); setErr(`${r.error} Your credits were returned.`); return; }
       const g = await buildFromSpec(r.spec);
       await charge.succeed();

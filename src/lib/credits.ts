@@ -207,7 +207,7 @@ export async function applyReferral(code: string): Promise<{ ok: boolean; error?
 }
 
 /** Handle for a reserved charge: call succeed() when the action worked, fail() otherwise. */
-export interface Charge { succeed: () => Promise<void>; fail: () => Promise<void> }
+export interface Charge { holdId: string; succeed: () => Promise<void>; fail: () => Promise<void> }
 
 /**
  * Shared charge flow for paid tools: requires sign-in, confirms the cost,
@@ -242,6 +242,7 @@ export async function reserveFor(
     const id = r.holdId;
     let settled = false;
     return {
+      holdId: id,
       succeed: async () => { if (!settled) { settled = true; await captureHold(id); } },
       fail: async () => { if (!settled) { settled = true; await releaseHold(id); } },
     };
