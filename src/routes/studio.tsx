@@ -9,7 +9,7 @@ const MoldMakerApp = lazy(loadApp);
 
 const studioTools = {
   "sirpam-model-tools": 1,
-  "sirpam-ai-shape": 1,
+  "sirpam-ai-shape": 1, // legacy deep link; AI now lives at /studio/ai
   "sirpam-shop-prep": 3,
   "sirpam-finish-advisor": 5,
   "sirpam-plate-packer": 5,

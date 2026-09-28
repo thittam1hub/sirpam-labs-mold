@@ -431,7 +431,6 @@ export default function ControlPanel({
 
   return (
     <aside className="sirpam-panel" style={styles.panel} aria-label="Controls">
-      <Stepper step={step} onStep={onStepChange} hasModel={hasModel} hasMold={hasMold} />
       <div style={{ display: "flex", flexDirection: "column", gap: spacing.lg, flex: 1, overflowY: "auto", padding: spacing.xl, paddingTop: spacing.md }}>
       {!hasModel && <div style={{ fontSize: fontSizes.sm, color: colors.textDim, lineHeight: 1.5 }}>Load a model to begin — use Open model or Try sample in the top bar, or drop a file on the viewer.</div>}
 

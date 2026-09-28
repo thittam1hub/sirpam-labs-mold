@@ -32,7 +32,12 @@ import {
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import GuidedTour from './components/GuidedTour';
 import TopBar from './components/layout/TopBar';
-import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel, AiShapePanel } from './components/ShopPanels';
+import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
+import WorkflowRail from './components/layout/WorkflowRail';
+import StatusBar from './components/layout/StatusBar';
+import { buildFromSpec } from './mold/modelTools';
+import { takeAiHandoff } from '@/lib/aiHandoff';
+import { Link } from '@tanstack/react-router';
 import FillOverlay from './components/FillOverlay';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
@@ -431,6 +436,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     // entire question this event answers.
     telemetry.send(buildEvent('model_loaded', { success: true }));
   }, [telemetry]);
+
+  // Model handed over from the AI Model Maker page.
+  useEffect(() => {
+    const h = takeAiHandoff();
+    if (!h) return;
+    buildFromSpec(h.spec).then(g => commitGeometry(g, h.name)).catch(() => { /* ignore */ });
+  }, [commitGeometry]);
 
   // Model-prep tools (shrink, emboss, base, split…) replace the master but keep
   // every setting. One level of undo.
