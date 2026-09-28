@@ -7,17 +7,17 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const path = process.env.CREDITS_LIVE_SESSION ?? "";
+const path = process.env['CREDITS_LIVE_SESSION'] ?? "";
 const run = !!path && existsSync(path);
 const env = Object.fromEntries(
-  (existsSync(".env") ? readFileSync(".env", "utf8") : "").split("\n").map(l => l.split("=")).filter(p => p.length >= 2).map(([k, ...v]) => [k.trim(), v.join("=").trim().replace(/^"|"$/g, "")]),
+  (existsSync(".env") ? readFileSync(".env", "utf8") : "").split("\n").map(l => l.split("=")).filter(p => p.length >= 2).map(([k, ...v]) => [(k ?? "").trim(), v.join("=").trim().replace(/^"|"$/g, "")]),
 );
 
 describe.skipIf(!run)("credit functions (live)", () => {
   let sb: SupabaseClient;
   beforeAll(async () => {
     const minted = JSON.parse(readFileSync(path, "utf8"));
-    sb = createClient(env.VITE_SUPABASE_URL!, env.VITE_SUPABASE_PUBLISHABLE_KEY!, { auth: { persistSession: false } });
+    sb = createClient(env['VITE_SUPABASE_URL']!, env['VITE_SUPABASE_PUBLISHABLE_KEY']!, { auth: { persistSession: false } });
     await sb.auth.setSession({ access_token: minted.session.access_token, refresh_token: minted.session.refresh_token });
   });
 
