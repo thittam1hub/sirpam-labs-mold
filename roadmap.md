@@ -1,7 +1,7 @@
 # Roadmap — credit system
 - [x] Phase 1: charge-on-success holds, server checks, credit types + expiry, single price list, legal pages
 - [x] Phase 2: low-balance warnings, history filters + CSV, usage summary, promo codes
-- [ ] Phase 2: referral credits — waiting on your decision
+- [x] Phase 2: referral credits
 - [x] Production-readiness: purchase records, receipts, admin refund path, expiry warnings, promo rate limit, packs in database
 - [x] Phase 3: Paddle (international) + Razorpay (India) checkout, verified crediting, refunds remove unused credits
 - [x] Phase 4: admin page (user lookup, adjust credits, promo codes, usage stats, purchase refunds)
@@ -38,4 +38,4 @@
 - [ ] Going live with payments — verification in the Payments tab + publish
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
 
-- [ ] Razorpay webhook setup: user adds webhook URLs + secrets in Razorpay dashboard
+- [x] Razorpay webhook setup
