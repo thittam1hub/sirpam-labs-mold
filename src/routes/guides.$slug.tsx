@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { LegalFooter } from "@/components/LegalFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getGuide, GUIDES } from "@/lib/guides";
+import { getGuide, GUIDES, type Guide } from "@/lib/guides";
 
 export const Route = createFileRoute("/guides/$slug")({
   loader: ({ params }) => {
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/guides/$slug")({
 });
 
 function GuidePage() {
-  const { guide } = Route.useLoaderData();
+  const guide: Guide = Route.useLoaderData().guide;
   const others = GUIDES.filter(g => g.slug !== guide.slug);
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
