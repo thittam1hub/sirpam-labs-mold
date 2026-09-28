@@ -11,7 +11,7 @@
 - [x] Silicone form-fit locks placed in the real wall (no floating pins)
 - [x] Parting flange for rigid and silicone hug molds
 - [x] Silicone hug molds: pour hole and vents at the model's high points
-- [ ] Hug mother mold + skin registration rim (skin molds)
-- [ ] Silicone parting-board keys piece
-- [ ] Printer-type lock/fit-gap presets and thin-wall warning
-- [ ] Bolt holes through the parting flange
+- [x] Hug mother mold + skin registration rim (skin molds)
+- [x] Silicone parting-board keys piece
+- [x] Printer-type lock/fit-gap presets and thin-wall warning
+- [x] Bolt holes through the parting flange

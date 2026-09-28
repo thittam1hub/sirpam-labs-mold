@@ -25,6 +25,7 @@ export function fitFormFitLocks(
   clearance: number,
   count: number,
   inset: number = lockR + clearance + 0.4,
+  startAngle: number = Math.PI / 4,
 ): number[][] {
   const pi = primaryAxisIndex(axis);
   const [la, lb] = lateralAxisIndices(axis);
@@ -61,7 +62,7 @@ export function fitFormFitLocks(
   for (const poly of polys) for (const [x, y] of poly) maxR = Math.max(maxR, Math.hypot(x - center.a, y - center.b));
   const step = Math.max(0.1, maxR / 600);
   const out: number[][] = [];
-  const start = Math.PI / 4;
+  const start = startAngle;
   for (let k = 0; k < count; k++) {
     const th = start + (k * 2 * Math.PI) / count;
     const dx = Math.cos(th), dy = Math.sin(th);
@@ -184,4 +185,77 @@ export function cavityHighPoints(positions: ArrayLike<number>, axis: Axis, count
     if (out.length >= count) break;
   }
   return out;
+}
+
+/**
+ * Through-holes for clamp bolts in a parting flange, placed between the
+ * locks (rotated 45 degrees from them). Returns cutters to subtract from
+ * both halves, and how many fitted.
+ */
+export function flangeBoltCutters(
+  wasm: any, shellWithFlange: any, axis: Axis, splitPos: number, center: { a: number; b: number },
+  boltMm: number, flangeThickness: number, count: number,
+): any[] {
+  const r = boltMm / 2 + 0.2;
+  const at = fitFormFitLocks(wasm, shellWithFlange, axis, splitPos, center, r, 0, count, r + 1.2, 0);
+  const pi = primaryAxisIndex(axis);
+  const { Mi } = permMats(axis);
+  return at.map(p => {
+    const [la, lb] = lateralAxisIndices(axis);
+    return wasm.Manifold.cylinder(flangeThickness + 4, r, r, 24, true)
+      .translate([p[la]!, p[lb]!, p[pi]!]).transform(Mi);
+  });
+}
+
+/**
+ * Skin registration rim: a thin ring sticking out of the silicone skin at
+ * the split, so the skin keys into a groove in the mother mold and cannot
+ * slip. Returns the ring solid (add it to the skin volume) or null.
+ */
+export function skinRim(wasm: any, skin: any, axis: Axis, splitPos: number, widthMm: number, heightMm: number): any | null {
+  try {
+    const { M, Mi } = permMats(axis);
+    const sec = skin.transform(M).slice(splitPos);
+    const ring = sec.offset(widthMm, 'Round').subtract(sec);
+    const solid = (typeof ring.extrude === 'function' ? ring.extrude(heightMm) : wasm.Manifold.extrude(ring, heightMm))
+      .translate([0, 0, splitPos - heightMm / 2]).transform(Mi);
+    return solid.isEmpty?.() ? null : solid;
+  } catch (e) {
+    console.warn('Skin rim failed', e);
+    return null;
+  }
+}
+
+/**
+ * Parting board for two-part silicone block molds: a flat plate that fills
+ * the cavity just below the split, with the model's outline cut out and
+ * hemispherical key bumps on top. The caster sets the master in it, pours
+ * the first half, and the bumps leave key sockets in that silicone.
+ */
+export function partingBoard(
+  wasm: any, cavity: any, master: any, axis: Axis, splitPos: number, center: { a: number; b: number },
+  thicknessMm: number, keyR: number, clearance: number,
+): { board: any; keys: number } | null {
+  try {
+    const { M, Mi } = permMats(axis);
+    const sec = cavity.transform(M).slice(splitPos).offset(-clearance, 'Round');
+    let board = (typeof sec.extrude === 'function' ? sec.extrude(thicknessMm) : wasm.Manifold.extrude(sec, thicknessMm))
+      .translate([0, 0, splitPos - thicknessMm]).transform(Mi);
+    board = board.subtract(master);
+    // Keys sit in the silicone zone: between the model and the cavity wall.
+    const ringSolid = board;
+    const at = fitFormFitLocks(wasm, ringSolid, axis, splitPos - thicknessMm / 2, center, keyR, 0, 4, keyR + 1);
+    const pi = primaryAxisIndex(axis);
+    const [la, lb] = lateralAxisIndices(axis);
+    for (const p of at) {
+      const pos = [0, 0, 0]; pos[pi] = splitPos; pos[la] = p[la]!; pos[lb] = p[lb]!;
+      const ball = wasm.Manifold.sphere(keyR, 24).translate(pos);
+      const half = ball.intersect(board.boundingBox ? wasm.Manifold.cube([1e4, 1e4, 1e4], true).translate(pos.map((v: number, i: number) => i === pi ? v + 5e3 : v)) : ball);
+      board = board.add(half);
+    }
+    return board.isEmpty?.() ? null : { board, keys: at.length };
+  } catch (e) {
+    console.warn('Parting board failed', e);
+    return null;
+  }
 }

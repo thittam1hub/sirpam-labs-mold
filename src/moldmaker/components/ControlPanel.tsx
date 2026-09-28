@@ -997,7 +997,7 @@ export default function ControlPanel({
               instead of an analytic box. Hidden for skin molds: the mother
               mold there already hugs the inflated model, so the toggle would
               be a no-op. */}
-          {!(state.moldMode === 'silicone' && state.siliconeType === 'skinCore') && (
+          {true && (
             <div style={{ marginBottom: spacing.md }}>
               <label
                 style={{
@@ -1012,7 +1012,7 @@ export default function ControlPanel({
                   checked={state.formFit}
                   onChange={e => onFormFitChange(e.target.checked)}
                 />
-                Form fit shell (hugs the model)
+                {state.moldMode === 'silicone' && state.siliconeType === 'skinCore' ? 'Form fit mother mold (hugs the skin)' : 'Form fit shell (hugs the model)'}
               </label>
               {state.formFit && (
                 <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
@@ -1101,6 +1101,17 @@ export default function ControlPanel({
               aria-label="Clearance between mold halves in millimetres"
               aria-valuetext={`${state.clearanceMm.toFixed(2)} millimetres`}
             />
+            <div style={{ display: 'flex', gap: spacing.xs, marginTop: spacing.xs, flexWrap: 'wrap' }}>
+              {([['Filament printer', 0.2], ['Resin printer', 0.1]] as const).map(([name, mm]) => (
+                <button key={name} type="button" onClick={() => onClearanceChange(mm)}
+                  aria-pressed={Math.abs(state.clearanceMm - mm) < 0.001}
+                  style={{ ...styles.label, cursor: 'pointer', padding: '4px 10px', borderRadius: 999,
+                    border: `1px solid ${Math.abs(state.clearanceMm - mm) < 0.001 ? colors.primary : colors.border}`,
+                    background: 'transparent', color: colors.text }}>
+                  {name} ({mm} mm)
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>

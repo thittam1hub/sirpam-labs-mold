@@ -39,6 +39,10 @@ export interface MoldExtras extends Round6Extras, Round7Extras {
   lockCount?: 2 | 4;
   /** Hug molds: flat parting flange width, mm. 0/omitted = none. */
   flangeMm?: number;
+  /** Clamp-bolt hole diameter through the flange, mm (4 holes). */
+  flangeBoltMm?: number;
+  /** Silicone two-part: add a printable parting board with key bumps. */
+  partingBoard?: boolean;
 }
 
 export type LockStyle = 'round' | 'cone' | 'square' | 'magnet';

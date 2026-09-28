@@ -638,6 +638,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         lockCount: t2.lockCount === 2 ? 2 : undefined,
       } : {}),
       flangeMm: params.formFit && t2.flangeMm && t2.flangeMm > 0 ? t2.flangeMm : undefined,
+      flangeBoltMm: params.formFit && t2.flangeMm && t2.flangeBoltMm && t2.flangeBoltMm > 0 ? t2.flangeBoltMm : undefined,
+      partingBoard: params.moldMode === 'silicone' && t2.partingBoard ? true : undefined,
     };
 
     try {

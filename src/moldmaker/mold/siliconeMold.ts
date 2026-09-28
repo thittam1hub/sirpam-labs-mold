@@ -24,7 +24,7 @@ import {
   lateralAxisIndices,
 } from './moldBox';
 import { envelopeAroundManifold, offsetOutward } from './moldOffset';
-import { buildPartingFlange, planHugLocks, cavityHighPoints } from './formFitLocks';
+import { buildPartingFlange, planHugLocks, cavityHighPoints, flangeBoltCutters, skinRim, partingBoard } from './formFitLocks';
 import {
   type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit,
   asymmetricCavityBox, lateralToWorld,
@@ -196,7 +196,8 @@ export async function generateSiliconeMold(
   const labels: string[] = [];
   let siliconeVolumeCm3 = 0;
   const notices: string[] = [];
-  const hug = !!options.formFit && options.type !== 'skinCore';
+  const hug = !!options.formFit;
+  let flangeT = 0;
 
   /** Drill the pour sprue and two vents down through the top face. */
   const addPourSystem = (solid: any, env: any, cavityBox: THREE.Box3) => {
@@ -264,6 +265,7 @@ export async function generateSiliconeMold(
     let pinPositions = getRegistrationPinPositionsForEnvelope(env, refBox, splitPos, cutAngle);
     let pinR = pinRadius;
     const pads: any[] = [];
+    let boltCuts: any[] = [];
     if (hug) {
       if (cutAngle !== 0) {
         pinPositions = [];
@@ -273,13 +275,17 @@ export async function generateSiliconeMold(
         const plan = planHugLocks(wasm, solid, axis, splitPos,
           { a: c.getComponent(latA), b: c.getComponent(latB) }, pinRadius, clearance, 4, pinHeight);
         pinPositions = plan.positions; pinR = plan.lockR; pads.push(...plan.pads); notices.push(...plan.notices);
+        if (flangeT > 0 && (extras.flangeBoltMm ?? 0) > 0) {
+          boltCuts = flangeBoltCutters(wasm, solid, axis, splitPos, { a: c.getComponent(latA), b: c.getComponent(latB) }, extras.flangeBoltMm!, flangeT, 4);
+          if (boltCuts.length < 4) notices.push(`Only ${boltCuts.length} of 4 bolt holes fit in the flange. Make the flange wider for more.`);
+        }
       }
     }
 
     let top = above;
     let bottom = below;
     let sealed = false;
-    if (extras.seal === 'tongueGroove' && cutAngle === 0 && !(options.formFit && options.type !== 'skinCore')) {
+    if (extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
       const res = applyTongueGroove(wasm, top, bottom, {
         axis, cavityBox: refBox, envMin: env.moldMin, envSize: env.moldSize,
         splitPos, wallThickness, clearance,
@@ -293,6 +299,7 @@ export async function generateSiliconeMold(
       top = top.add(up.subtract(hugCavity ?? master));
       bottom = bottom.add(dn.subtract(hugCavity ?? master));
     }
+    for (const k of boltCuts) { top = top.subtract(k); bottom = bottom.subtract(k); }
     const pinRadius_ = pinR;
     for (const pinPos of (sealed ? [] : pinPositions)) {
       top = top.add(
@@ -389,7 +396,7 @@ export async function generateSiliconeMold(
         if ((extras.flangeMm ?? 0) > 0) {
           const sp = cavityBox.min.getComponent(primary) + (cavityBox.max.getComponent(primary) - cavityBox.min.getComponent(primary)) * offset;
           const fl = cutAngle === 0 ? buildPartingFlange(wasm, outer, axis, sp, extras.flangeMm!, Math.max(6, wallThickness * 2)) : null;
-          if (fl) shell = shell.add(fl);
+          if (fl) { shell = shell.add(fl); flangeT = Math.max(6, wallThickness * 2); }
           else notices.push(cutAngle !== 0 ? 'The parting flange needs a flat, untilted split, so it was left off.' : 'The parting flange could not be built for this shape, so it was left off.');
         }
       }
@@ -397,6 +404,20 @@ export async function generateSiliconeMold(
       const [top, bottom] = splitAndKey(shell, outerEnv, cavityBox);
       pieces.push(top, bottom);
       labels.push('box_top', 'box_bottom');
+      if (extras.partingBoard) {
+        const sp = cavityBox.min.getComponent(primary) + (cavityBox.max.getComponent(primary) - cavityBox.min.getComponent(primary)) * offset;
+        const c = boundingBox.getCenter(new THREE.Vector3());
+        const pb = cutAngle === 0
+          ? partingBoard(wasm, cavitySolid, offsetOutward(wasm, master, clearance, boundingBox), axis, sp,
+              { a: c.getComponent(latA), b: c.getComponent(latB) }, 3, Math.max(2.5, Math.min(5, margin * 0.35)), clearance)
+          : null;
+        if (pb) {
+          pieces.push(pb.board); labels.push('parting_board');
+          if (pb.keys < 4) notices.push(pb.keys === 0
+            ? 'The parting board has no key bumps: the silicone around the model is too thin. Increase the silicone margin.'
+            : `Only ${pb.keys} of 4 key bumps fit on the parting board. Increase the silicone margin for more.`);
+        } else notices.push(cutAngle !== 0 ? 'The parting board needs a flat, untilted split, so it was left out.' : 'The parting board could not be built for this shape, so it was left out.');
+      }
     }
   } else {
     // ── Skin / glove mold with a rigid two-part mother mold ──
@@ -407,8 +428,28 @@ export async function generateSiliconeMold(
     siliconeVolumeCm3 = Math.max(0, volumeCm3(inflated) - volumeCm3(master));
 
     const shellBox = expandedBox(boundingBox, skin + wallThickness * 0.5);
-    const outerEnv = computeMoldEnvelope(shellBox, shape, axis, wallThickness);
-    let mother = createMoldBoxManifold(wasm, outerEnv).subtract(inflated);
+    let outerEnv = computeMoldEnvelope(shellBox, shape, axis, wallThickness);
+    let mother: any;
+    if (options.formFit) {
+      // Hug mother mold: follows the skin at an even wall, with a rim on the
+      // skin at the split that keys into a groove in the mother mold.
+      const sp = shellBox.min.getComponent(primary) + (shellBox.max.getComponent(primary) - shellBox.min.getComponent(primary)) * offset;
+      let skinVol = inflated;
+      const rim = cutAngle === 0 ? skinRim(wasm, inflated, axis, sp, Math.max(1.5, skin * 0.5), Math.max(2, skin * 0.6)) : null;
+      if (rim) skinVol = inflated.add(rim);
+      else notices.push(cutAngle !== 0 ? 'The skin registration rim needs a flat, untilted split, so it was left off.' : 'The skin registration rim could not be built for this shape, so it was left off.');
+      const outerSolid = offsetOutward(wasm, master, skin + wallThickness + (rim ? Math.max(1.5, skin * 0.5) : 0), boundingBox);
+      outerEnv = envelopeAroundManifold(outerSolid, axis, wallThickness);
+      mother = outerSolid.subtract(skinVol);
+      hugCavity = skinVol;
+      if ((extras.flangeMm ?? 0) > 0) {
+        const fl = cutAngle === 0 ? buildPartingFlange(wasm, outerSolid, axis, sp, extras.flangeMm!, Math.max(6, wallThickness * 2)) : null;
+        if (fl) { mother = mother.add(fl); flangeT = Math.max(6, wallThickness * 2); }
+        else notices.push('The parting flange needs a flat, untilted split, so it was left off.');
+      }
+    } else {
+      mother = createMoldBoxManifold(wasm, outerEnv).subtract(inflated);
+    }
     mother = addPourSystem(mother, outerEnv, shellBox);
 
     const [top, bottom] = splitAndKey(mother, outerEnv, shellBox);

@@ -40,3 +40,25 @@ describe('parting flange', () => {
     expect(flanged).toBeGreaterThan(plain + 15);
   }, 120000);
 });
+
+describe('round 2 hug features', () => {
+  it('rigid flange bolt holes all fit', async () => {
+    const g = sphere();
+    const r: any = await generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true, extras: { flangeMm: 12, flangeBoltMm: 4 } } as any);
+    expect((r.notices ?? []).join(' ')).not.toMatch(/bolt holes fit/);
+  }, 120000);
+  it('silicone skin hug mother mold with rim, flange and bolts', async () => {
+    const g = sphere();
+    const r = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', formFit: true, extras: { flangeMm: 10, flangeBoltMm: 3 } });
+    console.log('skin notes', r.notices, r.labels);
+    expect(r.labels).toContain('mother_top');
+    expect((r.notices ?? []).join(' ')).not.toMatch(/rim could not|No room/);
+  }, 120000);
+  it('silicone two-part parting board with 4 keys', async () => {
+    const g = sphere();
+    const r = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockTwoPart', extras: { partingBoard: true } });
+    console.log('board notes', r.notices, r.labels);
+    expect(r.labels).toContain('parting_board');
+    expect((r.notices ?? []).join(' ')).not.toMatch(/key bumps/);
+  }, 120000);
+});
