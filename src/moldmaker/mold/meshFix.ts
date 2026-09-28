@@ -200,21 +200,12 @@ const emptyReport = (g: THREE.BufferGeometry): RepairReport => ({
 });
 
 /**
- * Rebuild as a watertight solid: winding-number rasterisation into a grid
- * (robust to overlapping shells, holes and self-intersections), then Manifold
- * levelSet. `cells` = grid resolution along the longest side.
+ * 3-axis winding-number vote on a cell-centred grid. `p` = non-indexed
+ * triangle positions. Returns votes (0-3) per cell; >=2 means inside.
+ * Index = (i * ny + j) * nz + k.
  */
-export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Promise<THREE.BufferGeometry | null> {
-  const src = geo.index ? geo.toNonIndexed() : geo;
-  const p = src.attributes['position']!.array as ArrayLike<number>;
-  src.computeBoundingBox();
-  const bb = src.boundingBox!;
-  const size = bb.getSize(new THREE.Vector3());
-  const h = Math.max(size.x, size.y, size.z) / cells;
-  if (!(h > 0)) return null;
-  const ox = bb.min.x - 2 * h, oy = bb.min.y - 2 * h, oz = bb.min.z - 2 * h;
-  const nx = Math.ceil(size.x / h) + 4, ny = Math.ceil(size.y / h) + 4, nz = Math.ceil(size.z / h) + 4;
-  const N = [nx, ny, nz], O = [ox, oy, oz];
+export function windingVotes(p: ArrayLike<number>, O: number[], N: number[], h: number): Uint8Array {
+  const [nx, ny, nz] = N as [number, number, number];
   const votes = new Uint8Array(nx * ny * nz);
   // Cast columns along each axis and vote: directional leaks from holes or
   // flipped faces only fool one axis, so the 2-of-3 majority removes streaks.
@@ -256,6 +247,25 @@ export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Pr
       }
     }
   }
+  return votes;
+}
+
+/**
+ * Rebuild as a watertight solid: winding-number rasterisation into a grid
+ * (robust to overlapping shells, holes and self-intersections), then Manifold
+ * levelSet. `cells` = grid resolution along the longest side.
+ */
+export async function voxelRebuild(geo: THREE.BufferGeometry, cells: number): Promise<THREE.BufferGeometry | null> {
+  const src = geo.index ? geo.toNonIndexed() : geo;
+  const p = src.attributes['position']!.array as ArrayLike<number>;
+  src.computeBoundingBox();
+  const bb = src.boundingBox!;
+  const size = bb.getSize(new THREE.Vector3());
+  const h = Math.max(size.x, size.y, size.z) / cells;
+  if (!(h > 0)) return null;
+  const ox = bb.min.x - 2 * h, oy = bb.min.y - 2 * h, oz = bb.min.z - 2 * h;
+  const nx = Math.ceil(size.x / h) + 4, ny = Math.ceil(size.y / h) + 4, nz = Math.ceil(size.z / h) + 4;
+  const votes = windingVotes(p, [ox, oy, oz], [nx, ny, nz], h);
   const occ = new Float32Array(nx * ny * nz);
   for (let q = 0; q < occ.length; q++) occ[q] = votes[q]! >= 2 ? 1 : 0;
   // Light blur along each axis: gives a smooth field so the surface never

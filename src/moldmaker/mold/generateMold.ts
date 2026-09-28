@@ -28,7 +28,7 @@ import {
   computeChannelPositionsForEnvelope,
 } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold } from './moldBox';
-import { envelopeAroundManifold, offsetOutward } from './moldOffset';
+import { envelopeAroundManifold, offsetOutwardEx } from './moldOffset';
 import { primaryAxisIndex } from './moldBox';
 import {
   type MoldExtras,
@@ -163,6 +163,8 @@ export interface GenerateMoldResult {
    *  to surface a "we auto-repaired your mesh" toast, or ignore it entirely
    *  if the input was clean. See validateMesh.ts for what gets reported. */
   repairs: MeshRepairLog;
+  /** Fallbacks and switched-off features, in plain words. Absent = none. */
+  notices?: string[];
 }
 
 export async function generateMold(
@@ -307,9 +309,18 @@ export async function generateMold(
 
   let moldCavity;
   let cavityCut = modelManifold;
+  // Features that had to fall back or switch off; shown to the user.
+  const notices: string[] = [];
   if (options.formFit) {
-    const cavitySolid = offsetOutward(wasm, modelManifold, clearance, boundingBox);
-    const fullBox = offsetOutward(wasm, modelManifold, clearance + wallThickness, boundingBox);
+    const cav = offsetOutwardEx(wasm, modelManifold, clearance, boundingBox);
+    // Heavy meshes: keep the cavity at full detail (the grid offset is
+    // coarser than a typical 0.2 mm clearance) — only the outer wall uses it.
+    const cavitySolid = cav.method === 'exact' ? cav.solid : modelManifold;
+    const outer = offsetOutwardEx(wasm, modelManifold, clearance + wallThickness, boundingBox);
+    const fullBox = outer.solid;
+    if (outer.method === 'scaled' && modelManifold.numTri?.() > 20000) {
+      notices.push('This model is very detailed, so the form-fit wall was sized by stretching the model. Wall thickness may vary; check thin spots before printing.');
+    }
     envelope = envelopeAroundManifold(fullBox, axis, wallThickness);
     moldCavity = fullBox.subtract(cavitySolid);
     cavityCut = cavitySolid;
@@ -366,6 +377,13 @@ export async function generateMold(
       splitPos, wallThickness, clearance,
     });
     if (res) { [topResult, bottomResult] = res; sealed = true; }
+    else notices.push('Tongue & groove could not be built around this cavity (the wall is too thin at the split), so keyed pins were used instead.');
+  } else if (extras.seal === 'tongueGroove') {
+    notices.push(curved
+      ? 'Tongue & groove is not used with the curved split: the halves nest into each other and align themselves.'
+      : cutAngle !== 0
+        ? 'Tongue & groove needs a flat, untilted split, so keyed pins were used instead.'
+        : 'Tongue & groove needs a box shell, not a form-fit shell, so keyed pins were used instead.');
   }
 
   // Round 8: user lock size/count/style. Omitted = legacy round pins.
@@ -620,6 +638,10 @@ export async function generateMold(
       const feet = buildFeet(wasm, { axis, envMin: envelope.moldMin, envMax: eMax });
       if (feet) bottomResult = bottomResult.add(feet);
     }
+    if (options.formFit) {
+      const off = [r7.volumeLabel && 'volume label', r7.watermark && 'watermark', r7.moldFeet && !r6.standFins && 'mold feet'].filter(Boolean);
+      if (off.length) notices.push(`The ${off.join(', ')} ${off.length > 1 ? 'need' : 'needs'} a box shell, so ${off.length > 1 ? 'they were' : 'it was'} left off this form-fit mold.`);
+    }
   }
   let pieces: any[] = [topResult, bottomResult];
 
@@ -687,7 +709,7 @@ export async function generateMold(
   if (hollow) pieces.push(hollow.core);
   const pieceGeos = pieces.map(p => manifoldToGeometry(p));
 
-  return { pieces: pieceGeos, repairs };
+  return notices.length ? { pieces: pieceGeos, repairs, notices } : { pieces: pieceGeos, repairs };
 }
 
 /**
