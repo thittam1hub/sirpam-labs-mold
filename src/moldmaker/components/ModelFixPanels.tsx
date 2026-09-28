@@ -184,6 +184,7 @@ export function MoldReportPanel(p: {
   geometry: THREE.BufferGeometry | null;
   pieces: THREE.BufferGeometry[];
   labels: string[];
+  notices?: string[];
   fileName: string;
   moldMode: MoldMode;
   axis: Axis;
@@ -249,6 +250,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <tr><td>Material</td><td>${esc(cast.label)}</td></tr><tr><td>Silicone</td><td>${esc(cast.silicone)} · Shore ${esc(cast.shore)}</td></tr>
 <tr><td>Release agent</td><td>${esc(cast.release)}</td></tr><tr><td>Pour temperature</td><td>about ${cast.pourTempC} °C</td></tr>
 <tr><td>Demold after</td><td>${esc(cast.demold)}</td></tr><tr><td>Note</td><td>${esc(cast.notes)}</td></tr></table>
+${p.notices && p.notices.length ? `<h2>Build notes</h2><ul>${p.notices.map(n => `<li class="warn">${esc(n)}</li>`).join('')}</ul>` : ''}
 <h2>Pour tips</h2><ul>${tips.map(t => `<li class="${t.level === 'warn' ? 'warn' : ''}">${esc(t.text)}</li>`).join('')}</ul>
 <p class="muted">Made with Sirpam 3D Labs Mold.</p></body></html>`;
     win.document.open(); win.document.write(html); win.document.close();

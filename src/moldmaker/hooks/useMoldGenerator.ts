@@ -140,6 +140,7 @@ export function useMoldGenerator() {
        *  Always present. Callers can pass it to summarizeRepairs() to
        *  get a user-facing toast string, or ignore it. */
       repairs: MeshRepairLog;
+      notices?: string[];
     }> => {
       const worker = getWorker();
       const id = ++requestIdRef.current;
@@ -196,6 +197,7 @@ export function useMoldGenerator() {
           resolve({
             pieces: res.payload.pieces.map(deserializeGeometry),
             repairs: res.payload.repairs,
+            notices: res.payload.notices,
           });
         };
 

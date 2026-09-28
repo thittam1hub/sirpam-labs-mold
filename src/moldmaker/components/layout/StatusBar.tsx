@@ -5,11 +5,12 @@ type Props = {
   triangles: number;
   scale: number;
   hasMold: boolean;
+  notes?: string[];
   busy: string | null;
 };
 
 /** Bottom status bar: always-visible model facts and job state. */
-export default function StatusBar({ size, triangles, scale, hasMold, busy }: Props) {
+export default function StatusBar({ size, triangles, scale, hasMold, notes = [], busy }: Props) {
   const cell: React.CSSProperties = { whiteSpace: 'nowrap' };
   return (
     <footer className="sirpam-status" aria-label="Status" style={{
@@ -22,6 +23,7 @@ export default function StatusBar({ size, triangles, scale, hasMold, busy }: Pro
         <span style={cell}>{triangles.toLocaleString()} triangles</span>
         {scale !== 1 && <span style={cell}>Scale {Math.round(scale * 100)}%</span>}
         <span style={cell}>{hasMold ? 'Mold ready' : 'No mold yet'}</span>
+        {notes.length > 0 && <span style={{ ...cell, color: colors.primary, fontWeight: 600 }} title={notes.join('\n')}>{notes.length} {notes.length === 1 ? 'note' : 'notes'} (see mold report)</span>}
       </> : <span style={cell}>No model loaded</span>}
       <span style={{ flex: 1 }} />
       <span role="status" aria-live="polite" style={{ ...cell, color: busy ? colors.primary : colors.textDim, fontWeight: busy ? 600 : 400 }}>
