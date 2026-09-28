@@ -251,6 +251,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <h2>Pour tips</h2><ul>${tips.map(t => `<li class="${t.level === 'warn' ? 'warn' : ''}">${esc(t.text)}</li>`).join('')}</ul>
 <p class="muted">Made with Sirpam 3D Labs Mold.</p></body></html>`;
     win.document.open(); win.document.write(html); win.document.close();
+    await charge.succeed();
   };
 
   return (
