@@ -1240,7 +1240,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
-            <color key={themeMode} attach="background" args={[sceneCols.sceneBg]} />
+            <color key={`background-${themeMode}`} attach="background" args={[sceneCols.sceneBg]} />
             <CameraRig axis={state.axis} />
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
@@ -1339,7 +1339,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             </group>
 
             <OrbitControls makeDefault />
-            <gridHelper key={themeMode} args={[200, 20, sceneCols.gridMajor, sceneCols.gridMinor]} />
+            <gridHelper key={`grid-${themeMode}`} args={[200, 20, sceneCols.gridMajor, sceneCols.gridMinor]} />
 
             <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
               <GizmoViewport />
