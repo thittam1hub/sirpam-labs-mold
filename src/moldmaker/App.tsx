@@ -91,7 +91,7 @@ function CameraRig({ axis, fitSize }: { axis: Axis; fitSize?: number }) {
     pos[primary] = dist * 0.78;
     pos[(primary + 1) % 3] = dist * 0.45;
     pos[(primary + 2) % 3] = dist * 0.45;
-    camera.position.set(pos[0], pos[1], pos[2]);
+    camera.position.set(pos[0], pos[1], pos[2]); console.log("[rig]", axis, fitSize, dist);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
 
