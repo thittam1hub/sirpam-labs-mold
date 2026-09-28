@@ -12,7 +12,7 @@ const sphere = () => {
 describe('hug molds', () => {
   it('rigid form-fit with a flange gets 4 real locks and no pad notice', async () => {
     const g = sphere();
-    const r: any = await generateMold(g, g.boundingBox!, 'z', 0.5, 0, { formFit: true, extras: { flangeMm: 10 } } as any);
+    const r: any = await generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true, extras: { flangeMm: 10 } } as any);
     expect(r.pieces.length).toBe(2);
     const notes = (r.notices ?? []).join(' ');
     expect(notes).not.toMatch(/pads|No room/);
