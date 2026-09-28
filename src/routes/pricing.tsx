@@ -32,8 +32,8 @@ function PricingPage() {
   }, []);
 
   const price = (p: CreditPack) =>
-    tier === "value" && india ? { label: `₹${p.inr.toLocaleString("en-IN")}`, per: `₹${(p.inr / p.credits).toFixed(1)}` }
-      : { label: `$${p.usd[tier]}`, per: `$${(p.usd[tier] / p.credits).toFixed(2)}` };
+    india ? { label: `₹${p.inr.toLocaleString("en-IN")}`, per: `₹${(p.inr / p.credits).toFixed(1)}` }
+      : { label: `$${p.usd.standard}`, per: `$${(p.usd.standard / p.credits).toFixed(2)}` };
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
