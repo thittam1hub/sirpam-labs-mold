@@ -38,7 +38,7 @@ import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
 import { getPresetById } from './utils/printerPresets';
 import { supabase } from '@/integrations/supabase/client';
-import { spendCredits, getCreditStatus, describeCharge, chargeFor, type CreditAction } from '@/lib/credits';
+import { getCreditStatus, describeCharge, reserveFor, holdCredits, captureHold, releaseHold, type Charge, type CreditAction } from '@/lib/credits';
 
 export type { Axis } from './types';
 
@@ -718,16 +718,17 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       if (!autoRepairTried.current && /non-manifold|not manifold|watertight/i.test(msg) && !tray) {
         autoRepairTried.current = true;
         setState(prev => ({ ...prev, infoMessage: 'Broken spots found — repairing the model automatically…' }));
+        // Auto-repair is a paid action: credits are held first and only
+        // charged if the repair produces a clean solid.
+        let charge: Charge | null = null;
         try {
-          // Auto-repair is a paid action (2 credits, monthly free credits
-          // first). If the user declines or can't pay, fall through to the
-          // normal error message.
-          const paid = await chargeFor('auto_repair', m => setState(prev => ({ ...prev, infoMessage: m })));
-          if (!paid) throw new Error('repair_declined');
+          charge = await reserveFor('auto_repair', m => setState(prev => ({ ...prev, infoMessage: m })));
+          if (!charge) throw new Error('repair_declined');
           setRepairProgress({ pct: 0, label: 'Starting repair' });
           const { geometry: fixed, report } = await repairModel(state.originalGeometry, (pct, label) => setRepairProgress({ pct, label }))
             .finally(() => setRepairProgress(null));
           if (report.solidOk) {
+            await charge.succeed();
             fixed.computeBoundingBox();
             undoGeo.current = state.originalGeometry;
             setCanUndo(true);
@@ -736,7 +737,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             retryAfterRepair.current = true;
             return;
           }
-        } catch (e) { console.error('Auto-repair failed:', e); }
+          await charge.fail();
+        } catch (e) { await charge?.fail(); console.error('Auto-repair failed:', e); }
       }
       autoRepairTried.current = false;
       setState(prev => ({
