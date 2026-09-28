@@ -99,7 +99,7 @@ function CameraRig({ axis, fitSize }: { axis: Axis; fitSize?: number }) {
       controls.target.set(0, 0, 0);
       controls.update();
     }
-  }, [axis, camera, controls]);
+  }, [axis, fitSize, camera, controls]);
   return null;
 }
 
