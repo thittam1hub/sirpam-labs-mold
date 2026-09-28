@@ -27,3 +27,16 @@ describe('hug molds', () => {
     for (const p of r.pieces) expect(p.attributes.position.count).toBeGreaterThan(0);
   }, 120000);
 });
+
+describe('parting flange', () => {
+  it('widens the hug shell at the split', async () => {
+    const w = async (flangeMm?: number) => {
+      const g = sphere();
+      const r: any = await generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true, extras: flangeMm ? { flangeMm } : {} } as any);
+      r.pieces[0].computeBoundingBox();
+      return r.pieces[0].boundingBox.max.x - r.pieces[0].boundingBox.min.x;
+    };
+    const plain = await w(), flanged = await w(10);
+    expect(flanged).toBeGreaterThan(plain + 15);
+  }, 120000);
+});
