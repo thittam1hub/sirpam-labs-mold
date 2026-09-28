@@ -3,7 +3,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Link } from '@tanstack/react-router';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 import { supabase } from '@/integrations/supabase/client';
-import { getCreditStatus, CREDITS_EVENT, type CreditStatus } from '@/lib/credits';
+import { getCreditStatus, CREDITS_EVENT, LOW_BALANCE, type CreditStatus } from '@/lib/credits';
 import { useAppSession } from '@/components/AppSession';
 import { ChevronDown, Menu } from 'lucide-react';
 
@@ -121,6 +121,12 @@ export default function TopBar(p: Props) {
             <Link to="/account" search={{ tab: 'credits' }} className="sirpam-hide-sm" title={`${credits.balance} credits + ${credits.monthlyFreeLeft} free this month`}
               style={{ ...pill(), textDecoration: 'none', color: colors.primary }}>
               {credits.balance + credits.monthlyFreeLeft} credits
+            </Link>
+          )}
+          {credits && credits.balance + credits.monthlyFreeLeft <= LOW_BALANCE && (
+            <Link to="/pricing" className="sirpam-hide-sm" title="You're running low on credits"
+              style={{ ...pill(), textDecoration: 'none', background: colors.primary, color: '#fff' }}>
+              Low — buy credits
             </Link>
           )}
           <button type="button" style={{ ...pill(), display: 'flex', alignItems: 'center', gap: 6 }}

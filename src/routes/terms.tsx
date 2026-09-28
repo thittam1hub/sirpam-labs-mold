@@ -29,7 +29,7 @@ function TermsPage() {
         <h2 className="mt-8 text-xl font-semibold">Accounts</h2>
         <p className="mt-2 text-muted-foreground">Exports and credits need an account. Keep your sign-in details private; you are responsible for activity on your account.</p>
         <h2 className="mt-8 text-xl font-semibold">Credits</h2>
-        <p className="mt-2 text-muted-foreground">Credits are bought in packs, never expire, have no cash value and cannot be transferred. Each action's credit cost is shown on the Pricing page before you use it.</p>
+        <p className="mt-2 text-muted-foreground">Purchased credits are valid for 24 months from purchase. Welcome credits are valid for 90 days, promo credits for the period shown with the code, and the 3 monthly free credits reset on the 1st of each month. Free monthly credits are used first, then promo and welcome credits, then purchased credits. Credits are only charged when an action succeeds; if it fails, they are returned automatically. Credits have no cash value and cannot be transferred. Each action's credit cost is shown on the Pricing page before you use it.</p>
         <h2 className="mt-8 text-xl font-semibold">Your results</h2>
         <p className="mt-2 text-muted-foreground">Molds are generated automatically. Check them before printing or casting; we are not liable for failed prints, casts or materials.</p>
         <h2 className="mt-8 text-xl font-semibold">Changes</h2>

@@ -18,4 +18,5 @@
 - Round-6 rigid features (curved split, clamp wings, auto vents, stand-fins, relief/press/slip-cast styles) live in src/moldmaker/mold/proFeatures.ts as optional extras fields (why: same byte-identical-when-off rule as Tier 2).
 - Round-7 features (engraved volume label/watermark via built-in 5x7 pixel font, mold feet, gap filler, 3/4-part split, overhang check) live in src/moldmaker/mold/round7.ts as optional extras (why: same byte-identical-when-off rule; pixel font avoids loading fonts in the worker).
 - Account tabs, Gallery sorting, and Studio step/tool state use validated URL queries (why: working views remain safely shareable).
-- Credits: costs and balances live only in DB functions spend_credits/get_credit_status (security definer, auth.uid()-scoped); only grant_credits (service_role, idempotent by reference) adds credits, for the future payment webhook (why: browser can't change prices or mint credits).
+
+- Credits: balances are expiring lots (credit_lots) spent via hold_credits -> capture_hold/release_hold (security definer, auth.uid()-scoped; stale holds auto-release after 30 min); only grant_credits (service_role, idempotent by reference) adds purchased credits; admin RPCs check has_role (why: charge-on-success, browser can't change prices or mint credits).
