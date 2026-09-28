@@ -25,13 +25,13 @@ export const Route = createFileRoute("/studio")({
       {
         name: "description",
         content:
-          "Load an STL or OBJ, pick a parting plane, export print-ready mold halves with auto-generated sprues, vents, and registration pins. Runs in your browser — no signup, no cloud upload.",
+          "Load an STL or OBJ, pick a parting plane, export print-ready mold halves with auto-generated sprues, vents, and registration pins. Mold design runs in your browser.",
       },
       { property: "og:title", content: "Mold Maker Studio — Sirpam 3D Labs Mold" },
       {
         property: "og:description",
         content:
-          "Turn 3D models into print-ready mold halves with auto-generated sprues, vents, and registration pins. Runs in your browser, offline.",
+          "Turn 3D models into print-ready mold halves with auto-generated sprues, vents, and registration pins. Designed in your browser.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
