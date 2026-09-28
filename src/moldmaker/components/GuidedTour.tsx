@@ -4,7 +4,7 @@ import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 const KEY = 'sirpam.tourSeen.v1';
 
 const STEPS: Array<{ title: string; body: string }> = [
-  { title: 'Welcome to Sirpam 3D Labs Mold', body: 'This quick tour shows how to turn any 3D model into a printable mold. Everything happens in five steps on the right, with Back and Next at the bottom. You can reopen this tour anytime with the Tour button.' },
+  { title: 'Welcome to Sirpam 3D Labs Mold', body: 'This quick tour shows how to turn any 3D model into a printable mold. Everything happens in five steps on the left rail (keys 1-5), with settings on the right and Back and Next at the bottom. You can reopen this tour anytime with the Tour button.' },
   { title: '1. Model', body: 'Use Open model or Try sample in the top bar, or drop an STL / OBJ onto the viewer. Printer fit lives in this step too. Drag to rotate, scroll to zoom, right-drag to pan.' },
   { title: '2. Split', body: 'Pick the axis and height where the mold opens. Press Suggest Best Split to let the app find the cleanest one, and turn on Split Line to see it on the model.' },
   { title: '3. Mold', body: 'Rigid makes a printed two-part mold. Silicone gives a pour box, two-part block or skin + mother mold. Form fit makes the shell hug the model to save material.' },
