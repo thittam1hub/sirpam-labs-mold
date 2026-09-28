@@ -29,7 +29,7 @@ import {
 } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold } from './moldBox';
 import { envelopeAroundManifold, offsetOutwardEx } from './moldOffset';
-import { buildPartingFlange, planHugLocks } from './formFitLocks';
+import { buildPartingFlange, planHugLocks, flangeBoltCutters } from './formFitLocks';
 import { primaryAxisIndex } from './moldBox';
 import {
   type MoldExtras,
@@ -312,6 +312,7 @@ export async function generateMold(
   let cavityCut = modelManifold;
   // Features that had to fall back or switch off; shown to the user.
   const notices: string[] = [];
+  let flangeBuilt = false;
   if (options.formFit) {
     const cav = offsetOutwardEx(wasm, modelManifold, clearance, boundingBox);
     // Heavy meshes: keep the cavity at full detail (the grid offset is
@@ -325,12 +326,13 @@ export async function generateMold(
     envelope = envelopeAroundManifold(fullBox, axis, wallThickness);
     moldCavity = fullBox.subtract(cavitySolid);
     cavityCut = cavitySolid;
+    if (wallThickness < 2.4) notices.push(`The form-fit wall is ${wallThickness.toFixed(1)} mm. Below about 2.4 mm, filament-printed hug molds can crack or leak; consider a thicker wall.`);
     const flangeMm = extras.flangeMm ?? 0;
     if (flangeMm > 0) {
       const flange = cutAngle === 0 && !r6.curvedSplit
         ? buildPartingFlange(wasm, fullBox, axis, splitPos, flangeMm, Math.max(6, wallThickness * 2))
         : null;
-      if (flange) moldCavity = moldCavity.add(flange);
+      if (flange) { moldCavity = moldCavity.add(flange); flangeBuilt = true; }
       else notices.push(cutAngle !== 0 || r6.curvedSplit
         ? 'The parting flange needs a flat, untilted split, so it was left off.'
         : 'The parting flange could not be built for this shape, so it was left off.');
@@ -424,6 +426,12 @@ export async function generateMold(
     }
     notices.push(...plan.notices);
     lockPositions = plan.positions;
+    if (flangeBuilt && (extras.flangeBoltMm ?? 0) > 0) {
+      const cut = flangeBoltCutters(wasm, moldCavity, axis, splitPos,
+        { a: c.getComponent(la), b: c.getComponent(lb) }, extras.flangeBoltMm!, Math.max(6, wallThickness * 2), 4);
+      for (const k of cut) { topResult = topResult.subtract(k); bottomResult = bottomResult.subtract(k); }
+      if (cut.length < 4) notices.push(`Only ${cut.length} of 4 bolt holes fit in the flange. Make the flange wider for more.`);
+    }
   } else if (options.formFit && !sealed) {
     lockPositions = [];
     notices.push('Locks on a form-fit shell need a flat, untilted split, so this mold has none. Set the tilt to 0 or use a box shell.');
