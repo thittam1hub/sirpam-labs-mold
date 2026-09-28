@@ -81,6 +81,7 @@ function PricingPage() {
         <section className="mt-12 rounded-3xl bg-card p-6 shadow-sm">
           <h2 className="text-2xl font-semibold">What uses credits</h2>
           <table className="mt-4 w-full text-sm">
+            <thead><tr className="text-left text-xs text-muted-foreground"><th scope="col" className="py-2 font-medium">Action</th><th scope="col" className="py-2 text-right font-medium">Cost</th></tr></thead>
             <tbody>
               {CREDIT_COSTS.map((c) => (
                 <tr key={c.action} className="border-t border-border">
