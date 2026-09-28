@@ -20,3 +20,4 @@
 - Account tabs, Gallery sorting, and Studio step/tool state use validated URL queries (why: working views remain safely shareable).
 
 - Credits: balances are expiring lots (credit_lots) spent via hold_credits -> capture_hold/release_hold (security definer, auth.uid()-scoped; stale holds auto-release after 30 min); only grant_credits (service_role, idempotent by reference) adds purchased credits; admin RPCs check has_role (why: charge-on-success, browser can't change prices or mint credits).
+- Studio layout: left WorkflowRail (steps), centre 3D view, right ControlPanel inspector (collapsible), bottom StatusBar; AI Model Maker is its own route /studio/ai (studio_.ai.tsx, non-nested) handing models to the Studio via sessionStorage spec in src/lib/aiHandoff.ts (why: CAD/slicer convention — task left, settings right; AI gets full-page room).
