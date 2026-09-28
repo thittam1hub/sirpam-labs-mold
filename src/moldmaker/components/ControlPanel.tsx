@@ -1101,6 +1101,17 @@ export default function ControlPanel({
               aria-label="Clearance between mold halves in millimetres"
               aria-valuetext={`${state.clearanceMm.toFixed(2)} millimetres`}
             />
+            <div style={{ display: 'flex', gap: spacing.xs, marginTop: spacing.xs, flexWrap: 'wrap' }}>
+              {([['Filament printer', 0.2], ['Resin printer', 0.1]] as const).map(([name, mm]) => (
+                <button key={name} type="button" onClick={() => onClearanceChange(mm)}
+                  aria-pressed={Math.abs(state.clearanceMm - mm) < 0.001}
+                  style={{ ...styles.label, cursor: 'pointer', padding: '4px 10px', borderRadius: 999,
+                    border: `1px solid ${Math.abs(state.clearanceMm - mm) < 0.001 ? colors.primary : colors.border}`,
+                    background: 'transparent', color: colors.text }}>
+                  {name} ({mm} mm)
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
