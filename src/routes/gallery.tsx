@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useAppSession } from "@/components/AppSession";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 
 const gallerySorts = ["new", "best", "perCm3", "price"] as const;
 type GallerySort = (typeof gallerySorts)[number];
@@ -164,7 +165,9 @@ function GalleryPage() {
               <div className="flex items-center gap-1 text-sm md:col-span-2" role="radiogroup" aria-label="How well it worked">
                 <span className="mr-2 text-muted-foreground">How well it worked:</span>
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <button type="button" key={n} aria-label={`${n} of 5`} onClick={() => setRating(n)} className={`text-xl ${n <= rating ? "text-primary" : "text-muted-foreground"}`}>★</button>
+                  <button type="button" key={n} aria-label={`${n} of 5`} aria-pressed={n <= rating} onClick={() => setRating(n)} className={n <= rating ? "text-primary" : "text-muted-foreground"}>
+                    <Star aria-hidden size={20} fill={n <= rating ? "currentColor" : "none"} />
+                  </button>
                 ))}
               </div>
               <input id="photos" type="file" accept="image/*" multiple onChange={(e) => setFiles(e.target.files)} className="text-sm" />
@@ -250,7 +253,13 @@ function GalleryPage() {
                         </p>
                       )}
                       {(it.stl_name || it.stl_size) && <p className="mt-1 text-xs">STL: {it.stl_name ?? "—"}{it.stl_size && <> · {it.stl_size}</>}</p>}
-                      {it.rating && <p className="text-sm text-primary" aria-label={`${it.rating} of 5`}>{"★".repeat(it.rating)}<span className="text-muted-foreground">{"★".repeat(5 - it.rating)}</span></p>}
+                      {it.rating && (
+                        <div className="flex text-primary" role="img" aria-label={`${it.rating} of 5`}>
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <Star key={n} aria-hidden size={16} fill={n <= Number(it.rating) ? "currentColor" : "none"} className={n <= Number(it.rating) ? undefined : "text-muted-foreground"} />
+                          ))}
+                        </div>
+                      )}
                       {it.best_settings && <p className="mt-2 rounded-lg bg-muted p-2 text-xs"><b>Best settings:</b> {it.best_settings}</p>}
                       {it.notes && <p className="mt-2 whitespace-pre-wrap text-sm">{it.notes}</p>}
                       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">

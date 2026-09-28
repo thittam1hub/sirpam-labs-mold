@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
+import { ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/shop")({
   staticData: { sitemap: true },
@@ -46,8 +47,8 @@ function ShopPage() {
         <section className="mt-6 rounded-2xl border border-border bg-card p-5">
           <h2 className="text-lg font-semibold">How to send your project</h2>
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">
-            <li><b>Online services (below)</b> don't open <code>.sirpam.json</code> files. In the mold maker, go to the <b>Finish</b> step and choose <b>Export → STL</b> (or STEP for casting shops). Upload the STL files from the ZIP on their site.</li>
-            <li><b>A person or local shop</b> who also uses Sirpam: open <b>Projects → Export .sirpam.json</b> and email or share that file. They open it with <b>Projects → Import</b> and get your model and all your settings.</li>
+            <li><b>Online services (below)</b> don't open <code>.sirpam.json</code> files. In the mold maker, go to the <b>Finish</b> step and choose <b>Export, then STL</b> (or STEP for casting shops). Upload the STL files from the ZIP on their site.</li>
+            <li><b>A person or local shop</b> who also uses Sirpam: open <b>Projects, then Export .sirpam.json</b> and email or share that file. They open it with <b>Projects, then Import</b> and get your model and all your settings.</li>
             <li>For casting services, add a note with the casting material, how many copies you need, and a photo of the finished look you want.</li>
           </ol>
         </section>
@@ -73,8 +74,8 @@ function ShopPage() {
                   ))}
                 </div>
               )}
-              <a href={m.url} target="_blank" rel="noreferrer" className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                Get a quote ↗
+              <a href={m.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                Get a quote <ExternalLink aria-hidden size={15} />
               </a>
             </article>
           ))}

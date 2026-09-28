@@ -5,6 +5,7 @@ import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 import { supabase } from '@/integrations/supabase/client';
 import { getCreditStatus, CREDITS_EVENT, type CreditStatus } from '@/lib/credits';
 import { useAppSession } from '@/components/AppSession';
+import { ChevronDown, Menu } from 'lucide-react';
 
 import logo from '@/assets/sirpam-logo.svg.asset.json';
 
@@ -128,7 +129,7 @@ export default function TopBar(p: Props) {
               <img src={profile.avatar_url} alt="" width={20} height={20}
                 style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
             )}
-            {accountLabel} ▾
+            {accountLabel} <ChevronDown aria-hidden="true" size={14} />
           </button>
           {menu === 'account' && (
             <div role="menu" style={menuBox}>
@@ -144,7 +145,9 @@ export default function TopBar(p: Props) {
         <Link to="/auth" search={{ redirect: '/studio' }} style={{ ...pill(), textDecoration: "none" }} className="sirpam-hide-sm">Sign in</Link>
       ))}
       <div className="sirpam-show-sm" style={{ position: 'relative' }}>
-        <button type="button" style={pill()} onClick={() => setMenu(menu === 'more' ? null : 'more')} aria-label="More actions">☰</button>
+        <button type="button" style={{ ...pill(), display: 'grid', placeItems: 'center' }} onClick={() => setMenu(menu === 'more' ? null : 'more')} aria-label="More actions">
+          <Menu aria-hidden="true" size={18} />
+        </button>
         {menu === 'more' && (
           <div style={menuBox}>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onOpen(); }}>Open model</button>
@@ -171,7 +174,7 @@ export default function TopBar(p: Props) {
       <div style={{ position: 'relative' }}>
         <button type="button" style={pill(false, !p.hasMold)} disabled={!p.hasMold}
           onClick={() => setMenu(menu === 'export' ? null : 'export')} aria-haspopup="menu">
-          Export ▾
+          Export <ChevronDown aria-hidden="true" size={14} style={{ display: 'inline', verticalAlign: 'middle' }} />
         </button>
         {menu === 'export' && (
           <div role="menu" style={menuBox}>
