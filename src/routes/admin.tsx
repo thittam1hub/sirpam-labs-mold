@@ -141,6 +141,24 @@ function AdminPage() {
                       ))}
                     </tbody></table>
                   </div>
+                  {purchases.length > 0 && (
+                    <div className="mt-5">
+                      <h3 className="font-semibold">Purchases</h3>
+                      <table className="mt-2 w-full text-sm"><tbody>
+                        {purchases.map((p) => (
+                          <tr key={p.id} className="border-t border-border">
+                            <td className="py-1.5 pr-2 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                            <td className="py-1.5 pr-2">{p.pack_name} · {p.credits} credits · {p.currency === "INR" ? `₹${Number(p.price).toLocaleString("en-IN")}` : `$${p.price}`}</td>
+                            <td className="py-1.5 pr-2 text-xs text-muted-foreground">{p.provider}{p.payment_ref ? ` · ${p.payment_ref}` : ""}</td>
+                            <td className="py-1.5 pr-2 text-xs">{p.status}</td>
+                            <td className="py-1.5 text-right">
+                              {p.status === "paid" && <Button size="sm" variant="outline" disabled={busy} onClick={() => refund(p)}>Refund</Button>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody></table>
+                    </div>
+                  )}
                 </div>
               )}
             </section>
