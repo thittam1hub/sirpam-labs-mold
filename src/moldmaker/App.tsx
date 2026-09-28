@@ -63,7 +63,7 @@ type MoldMakerAppProps = { initialStep?: number; initialTool?: string };
  * undo whatever they'd orbited into. Also re-targets OrbitControls at the
  * origin to keep pan state sane.
  */
-function CameraRig({ axis }: { axis: Axis }) {
+function CameraRig({ axis, fitSize }: { axis: Axis; fitSize?: number }) {
   const camera = useThree(s => s.camera);
   const controls = useThree(s => s.controls) as {
     target?: THREE.Vector3;
@@ -72,11 +72,17 @@ function CameraRig({ axis }: { axis: Axis }) {
   // Only reorient on axis change, not on every render. Otherwise any state
   // update would snap the camera back to its canonical angle.
   const prevAxis = useRef<Axis | null>(null);
+  const prevFit = useRef<number | undefined>(undefined);
   useEffect(() => {
-    if (prevAxis.current === axis) return;
+    const newModel = fitSize && fitSize !== prevFit.current;
+    if (prevAxis.current === axis && !newModel) return;
     prevAxis.current = axis;
+    prevFit.current = fitSize;
 
-    const dist = camera.position.length() || 120;
+    // A newly loaded model is framed so all of it fits in view (fov 50 →
+    // ~2.4× the largest side); otherwise keep the user's zoom distance.
+    const dist = newModel ? Math.max(40, fitSize * 2.4) : (camera.position.length() || 120);
+
     // Bias along +axis so the sprue-exit face of the top half is visible;
     // smaller tilts on the two lateral axes keep depth cues intact so the
     // view doesn't collapse to an orthographic-looking silhouette.
