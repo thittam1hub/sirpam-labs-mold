@@ -56,29 +56,110 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_holds: {
+        Row: {
+          action: string
+          allocations: Json
+          cost: number
+          created_at: string
+          free_month: string | null
+          from_free: number
+          id: string
+          settled_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          allocations?: Json
+          cost: number
+          created_at?: string
+          free_month?: string | null
+          from_free?: number
+          id?: string
+          settled_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          allocations?: Json
+          cost?: number
+          created_at?: string
+          free_month?: string | null
+          from_free?: number
+          id?: string
+          settled_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_ledger: {
         Row: {
           created_at: string
           delta: number
+          expires_at: string | null
           id: string
+          kind: string | null
           reason: string
           reference: string | null
+          status: string
           user_id: string
         }
         Insert: {
           created_at?: string
           delta: number
+          expires_at?: string | null
           id?: string
+          kind?: string | null
           reason: string
           reference?: string | null
+          status?: string
           user_id: string
         }
         Update: {
           created_at?: string
           delta?: number
+          expires_at?: string | null
           id?: string
+          kind?: string | null
           reason?: string
           reference?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_lots: {
+        Row: {
+          amount: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          kind: string
+          reference: string | null
+          remaining: number
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind: string
+          reference?: string | null
+          remaining: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          reference?: string | null
+          remaining?: number
           user_id?: string
         }
         Relationships: []
@@ -182,26 +263,142 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          credit_valid_days: number
+          credits: number
+          expires_at: string | null
+          max_redemptions: number | null
+          redeemed_count: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          credit_valid_days?: number
+          credits: number
+          expires_at?: string | null
+          max_redemptions?: number | null
+          redeemed_count?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          credit_valid_days?: number
+          credits?: number
+          expires_at?: string | null
+          max_redemptions?: number | null
+          redeemed_count?: number
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      _action_cost: { Args: { _action: string }; Returns: number }
+      _expire_lots: { Args: { _uid: string }; Returns: undefined }
+      _refresh_balance: { Args: { _uid: string }; Returns: number }
+      _release_hold: { Args: { _id: string; _uid: string }; Returns: boolean }
+      _release_stale: { Args: { _uid: string }; Returns: undefined }
+      _require_admin: { Args: never; Returns: undefined }
+      admin_adjust_credits: {
+        Args: { _amount: number; _reason: string; _user: string }
+        Returns: Json
+      }
+      admin_create_promo: {
+        Args: {
+          _code: string
+          _credits: number
+          _expires: string
+          _max: number
+          _valid_days: number
+        }
+        Returns: undefined
+      }
+      admin_find_user: { Args: { _email: string }; Returns: Json }
+      admin_overview: { Args: never; Returns: Json }
+      admin_set_promo_active: {
+        Args: { _active: boolean; _code: string }
+        Returns: undefined
+      }
+      capture_hold: { Args: { _id: string }; Returns: boolean }
       ensure_credit_account: { Args: never; Returns: undefined }
       get_credit_status: { Args: never; Returns: Json }
       grant_credits: {
         Args: {
           _amount: number
+          _kind?: string
           _reason: string
           _reference: string
           _user: string
+          _valid_days?: number
         }
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      hold_credits: { Args: { _action: string }; Returns: Json }
+      redeem_promo: { Args: { _code: string }; Returns: Json }
+      release_hold: { Args: { _id: string }; Returns: boolean }
       spend_credits: { Args: { _action: string }; Returns: Json }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -328,6 +525,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
