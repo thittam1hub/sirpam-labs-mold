@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { CREDIT_PACKS, guessRegion, getCreditPacks, type CreditPack, type RegionTier } from "@/lib/credits";
+import { CREDIT_PACKS, guessRegion, getCreditPacks, type CreditPack } from "@/lib/credits";
 import { BUSINESS } from "@/lib/business";
 import { LegalFooter } from "@/components/LegalFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -49,11 +49,10 @@ function CheckoutPage() {
   const fallback = CREDIT_PACKS.find((p) => p.id === id);
   const [pack, setPack] = useState<CreditPack | undefined>(
     fallback ? { ...fallback, usd: { ...fallback.usd } } : undefined);
-  const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
   const [agree, setAgree] = useState(false);
   useEffect(() => {
-    const g = guessRegion(); setTier(g.tier); setIndia(g.india);
+    const g = guessRegion(); setIndia(g.india);
     getCreditPacks().then((ps) => { const live = ps.find((p) => p.id === id); if (live) setPack(live); }).catch(() => {});
   }, [id]);
 
@@ -101,8 +100,7 @@ function CheckoutPage() {
   }
 
   const inr = india;
-  const price = inr ? `₹${pack.inr.toLocaleString("en-IN")}` : `$${pack.usd[tier]}`;
-  const mail = `mailto:${BUSINESS.email}?subject=${encodeURIComponent(`Buy ${pack.name} pack (${pack.credits} credits)`)}&body=${encodeURIComponent(`Hi, I'd like to buy the ${pack.name} pack for ${price}. My account email: `)}`;
+  const price = inr ? `₹${pack.inr.toLocaleString("en-IN")}` : `$${pack.usd.standard}`;
 
   return (
     <div className="neu-page min-h-screen bg-background text-foreground">
@@ -113,7 +111,7 @@ function CheckoutPage() {
 
         <section className="mt-8 rounded-3xl bg-card p-6 shadow-sm">
           <div className="flex justify-between"><span>{pack.name} pack</span><b>{pack.credits} credits</b></div>
-          <p className="mt-2 text-sm text-muted-foreground">Local price selected automatically from your location. Your billing country sets the final currency and tax.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Price shown in rupees for India and US dollars elsewhere. Checkout may show your local currency and any sales tax.</p>
           <div className="mt-4 flex justify-between border-t border-border pt-4 text-xl"><span>Total</span><b>{price}</b></div>
           <p className="mt-1 text-xs text-muted-foreground">Sales tax, if any, is added based on your billing country. Credits are valid for 24 months.</p>
 
