@@ -24,18 +24,21 @@ export function fitFormFitLocks(
   lockR: number,
   clearance: number,
   count: number,
+  inset: number = lockR + clearance + 0.4,
 ): number[][] {
   const pi = primaryAxisIndex(axis);
   const [la, lb] = lateralAxisIndices(axis);
   // Cyclic permutation (a proper rotation): new = (p[la], p[lb], p[pi]).
-  const M = new Array(12).fill(0);
-  M[la * 3 + 0] = 1; // column la, row 0
-  M[lb * 3 + 1] = 1; // column lb, row 1
-  M[pi * 3 + 2] = 1; // column pi, row 2
+  // Column-major 4x4 (Manifold's transform takes a full Mat4).
+  const M = new Array(16).fill(0);
+  M[la * 4 + 0] = 1; // column la, row 0
+  M[lb * 4 + 1] = 1; // column lb, row 1
+  M[pi * 4 + 2] = 1; // column pi, row 2
+  M[15] = 1;
   let polys: number[][][] = [];
   try {
     const section = shell.transform(M).slice(splitPos);
-    const safe = section.offset(-(lockR + clearance + 0.8), 'Round');
+    const safe = section.offset(-inset, 'Round');
     polys = safe.toPolygons().map((poly: any) => Array.from(poly, (pt: any) => [pt[0] ?? pt.x, pt[1] ?? pt.y]));
   } catch (e) {
     console.warn('Form-fit lock slice failed', e);
