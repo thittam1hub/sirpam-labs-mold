@@ -21,7 +21,9 @@
 - [x] 13 Friendly error + missing-page screens (site-wide, all pages covered)
 - [x] 9 AI generation + handoff tested (works; new models now framed to fit the view)
 - [x] 10 Reviewed 20 database warnings — all intentional and safe
-- [ ] 14–20, 23–25 quality, dark mode, mobile tour, tests, browser check, limits, rate limits, backups, share images, analytics, speed
+- [x] 14 Dark mode checked on Studio + AI page (desktop and phone)
+- [x] 15 Phone tour moved under the top bar, compact
+- [ ] 16–20, 23–25 credit tests, browser check, limits, rate limits, backups, share images, analytics, speed
 - [ ] 21, 22, 12 publish, guide pages, error tracking
 - [ ] 1–3, 7 payments + branded email — blocked on workspace move / domain
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
