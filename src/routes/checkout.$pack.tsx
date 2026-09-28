@@ -8,8 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { createRazorpayOrder, verifyRazorpayPayment, PACK_PRICE_IDS } from "@/lib/payments.functions";
-import { initializePaddle, getPaddlePriceId, getPaddleEnvironment, loadRazorpay } from "@/lib/paddle";
+import { createRazorpayOrder, verifyRazorpayPayment, getPurchaseStatus, PACK_PRICE_IDS } from "@/lib/payments.functions";
+import { initializePaddle, getPaddlePriceId, getPaddleEnvironment, loadRazorpay, onPaddleCompleted } from "@/lib/paddle";
 
 export const Route = createFileRoute("/checkout/$pack")({
   staticData: { sitemap: false },
@@ -61,6 +61,23 @@ function CheckoutPage() {
   const verifyPay = useServerFn(verifyRazorpayPayment);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const purchaseStatus = useServerFn(getPurchaseStatus);
+  const success = "/account?tab=credits";
+
+  useEffect(() => {
+    onPaddleCompleted(async (txn) => {
+      try { window.Paddle?.Checkout?.close(); } catch { /* already closed */ }
+      setConfirming(true); setErr(null);
+      for (let i = 0; i < 30; i++) {
+        try { const r = await purchaseStatus({ data: { ref: txn } }); if (r.found) { window.location.assign(success); return; } } catch { /* keep waiting */ }
+        await new Promise((res) => setTimeout(res, 2000));
+      }
+      setConfirming(false);
+      setErr("Payment received. Your credits are still being added — check your Credits tab in a minute, or contact us if they don't appear.");
+    });
+    return () => onPaddleCompleted(null);
+  }, [purchaseStatus]);
 
   if (!pack) return null;
 
@@ -69,7 +86,6 @@ function CheckoutPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate({ to: "/auth", search: { redirect: `/checkout/${id}` } as never }); return; }
-      const success = `${window.location.origin}/account?tab=credits&checkout=success`;
       if (india) {
         const o = await createOrder({ data: { packId: id as "starter" } });
         if (!o.ok) { setErr(o.error); return; }
@@ -78,8 +94,11 @@ function CheckoutPage() {
           key: o.keyId, order_id: o.orderId, amount: o.amount, currency: "INR",
           name: BUSINESS.product, description: `${o.packName} pack`, prefill: { email: user.email },
           handler: async (r: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+            setConfirming(true);
             const v = await verifyPay({ data: { orderId: r.razorpay_order_id, paymentId: r.razorpay_payment_id, signature: r.razorpay_signature } });
-            if (v.ok) window.location.assign(success); else setErr(v.error ?? "Payment could not be verified.");
+            if (v.ok) { window.location.assign(success); return; }
+            setConfirming(false);
+            setErr(`${v.error ?? "Payment could not be verified."} If money left your account, your credits will be added automatically within a few minutes.`);
           },
         });
         rz.on("payment.failed", () => setErr("The payment didn't go through. You weren't charged."));
@@ -91,7 +110,7 @@ function CheckoutPage() {
           items: [{ priceId, quantity: 1 }],
           customer: user.email ? { email: user.email } : undefined,
           customData: { userId: user.id, packId: id },
-          settings: { displayMode: "overlay", successUrl: success, allowLogout: false, variant: "one-page" },
+          settings: { displayMode: "overlay", allowLogout: false, variant: "one-page" },
         });
       }
     } catch (e) {
@@ -115,14 +134,24 @@ function CheckoutPage() {
           <div className="mt-4 flex justify-between border-t border-border pt-4 text-xl"><span>Total</span><b>{price}</b></div>
           <p className="mt-1 text-xs text-muted-foreground">Sales tax, if any, is added based on your billing country. Credits are valid for 24 months.</p>
 
+          <fieldset className="mt-6 text-sm">
+            <legend className="font-medium">Where are you paying from?</legend>
+            <div className="mt-2 inline-flex rounded-2xl border border-border p-1">
+              {[{ v: true, l: "India (₹, UPI)" }, { v: false, l: "Elsewhere ($)" }].map((o) => (
+                <button key={String(o.v)} type="button" aria-pressed={india === o.v} onClick={() => setIndia(o.v)}
+                  className={`rounded-xl px-3 py-1.5 ${india === o.v ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{o.l}</button>
+              ))}
+            </div>
+          </fieldset>
+
           <label className="mt-6 flex items-start gap-2 text-sm">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1" />
             <span>I agree to the <Link to="/terms" className="text-primary">Terms</Link> and <Link to="/refunds" className="text-primary">Refund policy</Link>.</span>
           </label>
 
-          <button type="button" disabled={!agree || busy} onClick={pay}
+          <button type="button" disabled={!agree || busy || confirming} onClick={pay}
             className="mt-6 w-full rounded-2xl bg-primary px-4 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
-            {busy ? "Opening checkout…" : `Pay ${price}`}
+            {confirming ? "Confirming your payment…" : busy ? "Opening checkout…" : `Pay ${price}`}
           </button>
           {!agree && <p className="mt-1 text-xs text-muted-foreground">Tick the box above to continue.</p>}
           {err && <p role="alert" className="mt-2 text-sm text-destructive">{err}</p>}
@@ -132,7 +161,7 @@ function CheckoutPage() {
           </p>
           {getPaddleEnvironment() === "sandbox" && (
             <p className="mt-3 rounded-xl border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
-              Preview is in test mode: no real money is charged. Use card 4242 4242 4242 4242.
+              Preview is in test mode: no real money is charged. Dollars: card 4242 4242 4242 4242, any future date, CVC 123. Rupees: use Razorpay test card 4111 1111 1111 1111 or UPI ID success@razorpay.
             </p>
           )}
         </section>
