@@ -10,6 +10,10 @@ export function getPaddleEnvironment(): "sandbox" | "live" {
   return clientToken?.startsWith("test_") ? "sandbox" : "live";
 }
 
+let paddleCompleted: ((transactionId: string) => void) | null = null;
+/** Registers the handler called when a Paddle checkout completes. */
+export function onPaddleCompleted(fn: ((transactionId: string) => void) | null) { paddleCompleted = fn; }
+
 let ready: Promise<void> | null = null;
 export function initializePaddle(): Promise<void> {
   if (ready) return ready;
@@ -19,7 +23,12 @@ export function initializePaddle(): Promise<void> {
     s.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
     s.onload = () => {
       window.Paddle.Environment.set(getPaddleEnvironment() === "sandbox" ? "sandbox" : "production");
-      window.Paddle.Initialize({ token: clientToken });
+      window.Paddle.Initialize({
+        token: clientToken,
+        eventCallback: (e: { name?: string; data?: { transaction_id?: string } }) => {
+          if (e?.name === "checkout.completed" && e.data?.transaction_id) paddleCompleted?.(e.data.transaction_id);
+        },
+      });
       resolve();
     };
     s.onerror = () => { ready = null; reject(new Error("Couldn't load checkout")); };

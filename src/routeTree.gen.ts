@@ -30,6 +30,7 @@ import { Route as CheckoutPackRouteImport } from './routes/checkout.$pack'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as StudioAiRouteImport } from './routes/studio_.ai'
+import { Route as ApiPublicPaymentsRazorpayRouteImport } from './routes/api/public/payments/razorpay'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -137,6 +138,12 @@ const StudioAiRoute = StudioAiRouteImport.update({
   path: '/studio/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsRazorpayRoute =
+  ApiPublicPaymentsRazorpayRouteImport.update({
+    id: '/api/public/payments/razorpay',
+    path: '/api/public/payments/razorpay',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
   '/guides/': typeof GuidesIndexRoute
+  '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -190,6 +198,7 @@ export interface FileRoutesByTo {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
   '/guides': typeof GuidesIndexRoute
+  '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -215,6 +224,7 @@ export interface FileRoutesById {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio_/ai': typeof StudioAiRoute
   '/guides/': typeof GuidesIndexRoute
+  '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio/ai'
     | '/guides/'
+    | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio/ai'
     | '/guides'
+    | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -289,6 +301,7 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio_/ai'
     | '/guides/'
+    | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -314,6 +327,7 @@ export interface RootRouteChildren {
   GuidesSlugRoute: typeof GuidesSlugRoute
   StudioAiRoute: typeof StudioAiRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
+  ApiPublicPaymentsRazorpayRoute: typeof ApiPublicPaymentsRazorpayRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -466,6 +480,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/razorpay': {
+      id: '/api/public/payments/razorpay'
+      path: '/api/public/payments/razorpay'
+      fullPath: '/api/public/payments/razorpay'
+      preLoaderRoute: typeof ApiPublicPaymentsRazorpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -498,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesSlugRoute: GuidesSlugRoute,
   StudioAiRoute: StudioAiRoute,
   GuidesIndexRoute: GuidesIndexRoute,
+  ApiPublicPaymentsRazorpayRoute: ApiPublicPaymentsRazorpayRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
