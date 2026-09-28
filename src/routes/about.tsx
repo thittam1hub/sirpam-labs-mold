@@ -25,11 +25,11 @@ function AboutPage() {
         <h1 className="text-3xl font-bold">About Sirpam 3D Labs</h1>
         <p className="mt-4 text-muted-foreground">
           Sirpam 3D Labs is a small brand from India building tools for makers who cast at home —
-          resin, wax, concrete, chocolate and more. Our mold maker runs entirely in your browser:
+          resin, wax, concrete, chocolate and more. Our mold maker runs in your browser:
           upload a 3D model, and it builds a two-part mold you can print on any FDM or resin printer.
         </p>
         <p className="mt-4 text-muted-foreground">
-          Everything happens on your device — your models are never uploaded to a server. Credits are
+          The mold engine runs on your device, so your models stay on your computer. Only the optional AI helper sends your description or photo to our AI service. Credits are
           only spent when you export finished files or use the AI helper.
         </p>
         <h2 className="mt-8 text-xl font-semibold">Open source roots</h2>
