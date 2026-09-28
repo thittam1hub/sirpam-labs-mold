@@ -10,7 +10,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const path = process.env['CREDITS_LIVE_SESSION'] ?? "";
 const run = !!path && existsSync(path);
 const env = Object.fromEntries(
-  (existsSync(".env") ? readFileSync(".env", "utf8") : "").split("\n").map(l => l.split("=")).filter(p => p.length >= 2).map(([k, ...v]) => [k.trim(), v.join("=").trim().replace(/^"|"$/g, "")]),
+  (existsSync(".env") ? readFileSync(".env", "utf8") : "").split("\n").map(l => l.split("=")).filter(p => p.length >= 2).map(([k, ...v]) => [(k ?? "").trim(), v.join("=").trim().replace(/^"|"$/g, "")]),
 );
 
 describe.skipIf(!run)("credit functions (live)", () => {

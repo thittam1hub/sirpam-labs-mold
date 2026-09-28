@@ -24,7 +24,8 @@
 - [x] 14 Dark mode checked on Studio + AI page (desktop and phone)
 - [x] 15 Phone tour moved under the top bar, compact
 - [x] 16 Credit tests (10 passing: price prompt, expiry, CSV, hold/release, no self-granting)
-- [ ] 17–20, 23–25 browser check, limits, rate limits, backups, share images, analytics, speed
+- [x] 17 Browser check: Chrome + Safari build molds; no-3D browsers get a clear message
+- [ ] 18–20, 23–25 limits, rate limits, backups, share images, analytics, speed
 - [ ] 21, 22, 12 publish, guide pages, error tracking
 - [ ] 1–3, 7 payments + branded email — blocked on workspace move / domain
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
