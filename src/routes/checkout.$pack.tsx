@@ -17,7 +17,7 @@ export const Route = createFileRoute("/checkout/$pack")({
     const pack = CREDIT_PACKS.find((p) => p.id === loaderData?.id);
     if (!pack) return { meta: [{ title: "Pack not found" }, { name: "robots", content: "noindex" }] };
     const t = `Buy ${pack.name} pack — ${pack.credits} credits | ${BUSINESS.product}`;
-    const d = `Checkout for the ${pack.name} credit pack: ${pack.credits} mold credits that never expire.`;
+    const d = `Checkout for the ${pack.name} credit pack: ${pack.credits} mold credits, valid for 24 months.`;
     return {
       meta: [
         { title: t }, { name: "description", content: d },
@@ -58,7 +58,7 @@ function CheckoutPage() {
           <div className="flex justify-between"><span>{pack.name} pack</span><b>{pack.credits} credits</b></div>
           <p className="mt-2 text-sm text-muted-foreground">Local price selected automatically from your location. Your billing country sets the final currency and tax.</p>
           <div className="mt-4 flex justify-between border-t border-border pt-4 text-xl"><span>Total</span><b>{price}</b></div>
-          <p className="mt-1 text-xs text-muted-foreground">Sales tax, if any, is added based on your billing country. Credits never expire.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Sales tax, if any, is added based on your billing country. Credits are valid for 24 months.</p>
 
           <label className="mt-6 flex items-start gap-2 text-sm">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1" />
