@@ -124,7 +124,7 @@ export function MoldPrepPanel({ castingMaterial, scale, onScaleChange, onSetClea
         Add shrink compensation to print scale
       </button>
       <button type="button" style={s.btn} onClick={() => onSetClearance(pr.clearanceMm)}>Use suggested clearance</button>
-      <div style={s.hint}>Print scale is one setting shared with Printer Fit and Model → Scale. Typical values — print a test piece to dial in your printer.</div>
+      <div style={s.hint}>Print scale is one setting shared with Printer Fit and Model, then Scale. Typical values — print a test piece to dial in your printer.</div>
     </div>
   );
 }
@@ -179,7 +179,7 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
       </div>
 
       {tool === 'emboss' && (<>
-        <div style={s.hint}>Raise or engrave a name or logo onto the model — great for chocolate, soap and candle molds. Use Pro → cavity count to repeat it across a tray.</div>
+        <div style={s.hint}>Raise or engrave a name or logo onto the model — great for chocolate, soap and candle molds. Use Pro, then cavity count to repeat it across a tray.</div>
         <input style={{ ...s.input, marginTop: spacing.sm }} value={text} onChange={e => { setText(e.target.value); setSvg(null); }} aria-label="Emboss text" placeholder="Text" />
         <label style={{ ...s.hint, display: 'block' }}>…or an SVG logo:
           <input type="file" accept=".svg,image/svg+xml" aria-label="SVG logo" onChange={async e => {

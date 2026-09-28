@@ -256,7 +256,7 @@ function GalleryPage() {
                       {it.rating && (
                         <div className="flex text-primary" role="img" aria-label={`${it.rating} of 5`}>
                           {[1, 2, 3, 4, 5].map((n) => (
-                            <Star key={n} aria-hidden size={16} fill={n <= it.rating! ? "currentColor" : "none"} className={n <= it.rating! ? undefined : "text-muted-foreground"} />
+                            <Star key={n} aria-hidden size={16} fill={n <= Number(it.rating) ? "currentColor" : "none"} className={n <= Number(it.rating) ? undefined : "text-muted-foreground"} />
                           ))}
                         </div>
                       )}
