@@ -118,6 +118,45 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
         Monthly free credits are used first, then promo and welcome credits, then purchased credits. Welcome credits last 90 days, purchased credits 24 months. You're only charged when an action succeeds.
       </p>
 
+      {purchases.length > 0 && (
+        <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold">Purchases</h2>
+          <table className="mt-4 w-full text-sm">
+            <tbody>
+              {purchases.map((p) => (
+                <tr key={p.id} className="border-t border-border">
+                  <td className="py-2 pr-2 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                  <td className="py-2 pr-2">{p.pack_name} pack · {p.credits} credits</td>
+                  <td className="py-2 pr-2">{p.currency === "INR" ? `₹${Number(p.price).toLocaleString("en-IN")}` : `$${p.price}`}</td>
+                  <td className="py-2 pr-2 text-xs text-muted-foreground">{p.status === "refunded" ? "Refunded" : "Paid"}</td>
+                  <td className="py-2 text-right">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setReceipt(p)}>Receipt</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {receipt && (
+        <div role="dialog" aria-modal="true" aria-label="Purchase receipt"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setReceipt(null)}>
+          <div className="w-full max-w-md rounded-3xl bg-card p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold">Receipt</h3>
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Item</dt><dd>{receipt.pack_name} pack — {receipt.credits} credits</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Price</dt><dd>{receipt.currency === "INR" ? `₹${Number(receipt.price).toLocaleString("en-IN")}` : `$${receipt.price}`} {receipt.currency}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Date</dt><dd>{new Date(receipt.created_at).toLocaleString()}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Status</dt><dd>{receipt.status === "refunded" ? `Refunded ${receipt.refunded_at ? new Date(receipt.refunded_at).toLocaleDateString() : ""}` : "Paid"}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Reference</dt><dd className="font-mono text-xs">{receipt.id.slice(0, 8)}</dd></div>
+            </dl>
+            <p className="mt-4 text-xs text-muted-foreground">Sirpam 3D Labs, India · sirpam3dlabs@gmail.com. Credits are valid 24 months from purchase.</p>
+            <Button type="button" variant="outline" className="mt-4 w-full" onClick={() => setReceipt(null)}>Close</Button>
+          </div>
+        </div>
+      )}
+
       <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">History</h2>
