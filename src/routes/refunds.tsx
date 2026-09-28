@@ -26,8 +26,12 @@ function RefundsPage() {
         <p className="mt-2 text-sm text-muted-foreground">Last updated September 2026</p>
         <h2 className="mt-8 text-xl font-semibold">Unused credits</h2>
         <p className="mt-2 text-muted-foreground">You can ask for a full refund of a credit pack within 14 days of purchase if none of its credits were used.</p>
-        <h2 className="mt-8 text-xl font-semibold">Failed exports</h2>
-        <p className="mt-2 text-muted-foreground">If an export was charged but did not produce a file, contact us and we will return those credits.</p>
+        <h2 className="mt-8 text-xl font-semibold">Failed actions</h2>
+        <p className="mt-2 text-muted-foreground">Credits are held when an action starts and only charged if it succeeds. If an export, repair, AI model or report fails, the credits go back to your balance automatically, within 30 minutes at most. If something still looks wrong, contact us and we will check it.</p>
+        <h2 className="mt-8 text-xl font-semibold">Expiry</h2>
+        <p className="mt-2 text-muted-foreground">Purchased credits last 24 months, welcome credits 90 days, and promo credits for the period shown with the code. Expired credits can't be refunded.</p>
+        <h2 className="mt-8 text-xl font-semibold">Refunds and chargebacks</h2>
+        <p className="mt-2 text-muted-foreground">When a purchase is refunded or charged back, the unused credits from that purchase are removed from your account.</p>
         <h2 className="mt-8 text-xl font-semibold">How to ask</h2>
         <p className="mt-2 text-muted-foreground">Email us from the address on your account with the date of purchase. Refunds go back to the original payment method.</p>
         <LegalFooter />
