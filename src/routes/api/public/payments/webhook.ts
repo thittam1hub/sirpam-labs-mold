@@ -31,10 +31,11 @@ async function handleAdjustment(data: any, env: PaddleEnv) {
   if (data.action !== "refund" && data.action !== "chargeback") return;
   if (data.status && data.status !== "approved") return;
   const sb = await admin();
-  await sb.rpc("reverse_purchase" as never, {
+  const { error } = await sb.rpc("reverse_purchase", {
     _provider: env === "live" ? "paddle" : "paddle_test", _payment_ref: data.transactionId,
     _reason: data.action === "chargeback" ? "chargeback" : "refund",
-  } as never);
+  });
+  if (error) throw error;
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
