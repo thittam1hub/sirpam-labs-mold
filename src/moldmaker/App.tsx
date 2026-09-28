@@ -330,6 +330,14 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
   const themeMode = useTheme();
   const sceneCols = sceneColors[themeMode];
   const [state, setState] = useState<AppState>(initialState);
+  // Browsers without WebGL can't draw the 3D view; tell the user instead of a blank area.
+  const [noWebgl, setNoWebgl] = useState(false);
+  useEffect(() => {
+    try {
+      const c = document.createElement('canvas');
+      if (!(c.getContext('webgl2') || c.getContext('webgl'))) setNoWebgl(true);
+    } catch { setNoWebgl(true); }
+  }, []);
   /**
    * Cheat-sheet overlay visibility. Pure UI ephemeral state — doesn't need
    * to survive anything, doesn't need to flow through ControlPanel, so it
@@ -1264,7 +1272,15 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             style={{ position: 'absolute', bottom: spacing.lg, right: spacing.lg, zIndex: 7, border: 'none', borderRadius: radii.md, padding: 8, cursor: 'pointer', background: colors.sectionBg, color: colors.textBody, boxShadow: shadows.raisedSm, display: 'flex' }}>
             {panelOpen ? <PanelRightClose size={18} aria-hidden="true" /> : <PanelRightOpen size={18} aria-hidden="true" />}
           </button>
+          {noWebgl && (
+            <div role="alert" style={{ position: 'absolute', inset: 0, zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing.lg, pointerEvents: 'none' }}>
+              <div style={{ maxWidth: 420, background: colors.sectionBg, borderRadius: radii.lg, boxShadow: shadows.raised, padding: spacing.lg, color: colors.textBody, fontSize: fontSizes.sm, lineHeight: 1.5 }}>
+                <strong>3D view unavailable in this browser.</strong> Your browser has 3D graphics (WebGL) turned off or unsupported. You can still set up and export molds, but you won't see them. Try the latest Chrome, Edge, Safari or Firefox with hardware acceleration switched on.
+              </div>
+            </div>
+          )}
           <Canvas
+            onCreated={() => setNoWebgl(false)}
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
