@@ -206,6 +206,21 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_referral_emails: {
+        Row: {
+          created_at: string
+          email_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email_hash: string
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string
+        }
+        Relationships: []
+      }
       gallery_items: {
         Row: {
           best_settings: string | null
@@ -526,6 +541,7 @@ export type Database = {
       }
       apply_referral: { Args: { _code: string }; Returns: Json }
       capture_hold: { Args: { _id: string }; Returns: boolean }
+      delete_my_account_data: { Args: never; Returns: undefined }
       ensure_credit_account: { Args: never; Returns: undefined }
       get_credit_status: { Args: never; Returns: Json }
       get_referral_info: { Args: never; Returns: Json }
