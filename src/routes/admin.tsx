@@ -59,8 +59,19 @@ function AdminPage() {
   };
   const find = (e: React.FormEvent) => { e.preventDefault(); void run(async () => {
     const u = await rpc<FoundUser | null>("admin_find_user", { _email: email });
-    setUser(u); if (!u) setMsg("No user with that email.");
+    setUser(u); if (!u) { setMsg("No user with that email."); setPurchases([]); return; }
+    setPurchases(await rpc<AdminPurchase[]>("admin_list_purchases", { _email: email }));
   }); };
+  const refund = (p: AdminPurchase) => void run(async () => {
+    const why = window.prompt(`Refund ${p.pack_name} pack (${p.credits} credits)? Remaining credits from this purchase are removed. Reason:`);
+    if (!why || why.trim().length < 3) return;
+    const r = await rpc<{ removed: number; balance: number }>("admin_refund_purchase", { _purchase: p.id, _reason: why.trim() });
+    setMsg(`Refunded — removed ${r.removed} remaining credits. New balance: ${r.balance}.`);
+    if (user) {
+      setPurchases(await rpc<AdminPurchase[]>("admin_list_purchases", { _email: user.email }));
+      setUser(await rpc<FoundUser>("admin_find_user", { _email: user.email }));
+    }
+  });
   const adjust = (e: React.FormEvent) => { e.preventDefault(); if (!user) return; void run(async () => {
     const n = parseInt(amount, 10);
     if (!Number.isFinite(n) || n === 0) throw new Error("Enter a non-zero whole number.");
