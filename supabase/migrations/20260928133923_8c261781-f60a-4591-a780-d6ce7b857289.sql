@@ -1,0 +1,1 @@
+DELETE FROM public.promo_redemptions WHERE code='TESTONCE'; DELETE FROM public.promo_codes WHERE code='TESTONCE';
