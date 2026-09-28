@@ -12,13 +12,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Browser-based mold maker: upload an STL or OBJ, get a suggested parting plane, auto sprues, vents and pins, and export print-ready two-part mold halves. Your models never leave your computer.",
+          "Browser-based mold maker: upload an STL or OBJ, get a suggested parting plane, auto sprues, vents and pins, and export print-ready two-part mold halves — designed right in your browser.",
       },
       { property: "og:title", content: "Sirpam 3D Labs Mold — turn any 3D model into a print-ready mold" },
       {
         property: "og:description",
         content:
-          "Upload an STL, get a print-ready two-part mold with auto sprues, vents and pins. Runs entirely in your browser.",
+          "Upload an STL, get a print-ready two-part mold with auto sprues, vents and pins — designed in your browser.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -85,7 +85,7 @@ function LandingPage() {
         {/* Hero */}
         <section className="mx-auto max-w-6xl px-6 pt-14 pb-10 text-center">
           <p className="mx-auto mb-4 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold tracking-wide uppercase">
-            Runs in your browser · your models never leave your computer
+            Mold design runs in your browser · your models stay on your computer
           </p>
           <h1 className="mx-auto max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
             Turn any 3D model into a <span className="text-primary">print-ready mold</span>

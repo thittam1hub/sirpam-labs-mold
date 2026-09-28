@@ -48,7 +48,7 @@ export function StudioLoader() {
       </div>
       <div className="mt-4 text-center">
         <p className="font-medium">{stage}…</p>
-        <p className="text-sm text-muted-foreground">Everything runs in your browser — your models stay private.</p>
+        <p className="text-sm text-muted-foreground">The mold engine runs in your browser — your model stays on your computer.</p>
       </div>
     </div>
   );

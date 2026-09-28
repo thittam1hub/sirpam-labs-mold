@@ -145,7 +145,7 @@ export default function AiMakerPage({ initialPrompt }: { initialPrompt?: string 
             <Sparkles size={16} aria-hidden="true" /> {busy ? 'Designing… (up to a minute)' : `Generate model · ${cost} credits`}
           </button>
           <div style={{ fontSize: fontSizes.xs, color: colors.textDim, lineHeight: 1.5 }}>
-            Credits are only taken if a model is made. Works best for round objects, flat shapes and simple toys. Check sizes before printing.
+            Credits are only taken if a model is made. Your description and photo are sent to our secure AI service to generate the model — see our <Link to="/privacy" style={{ color: colors.primary }}>Privacy page</Link>. Works best for round objects, flat shapes and simple toys. Check sizes before printing.
           </div>
           {err && <div role="alert" style={{ fontSize: fontSizes.sm, color: colors.primary, fontWeight: 600 }}>{err}</div>}
         </section>
