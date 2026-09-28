@@ -15,7 +15,7 @@ export const Route = createFileRoute("/checkout/$pack")({
   },
   head: ({ loaderData }) => {
     const pack = CREDIT_PACKS.find((p) => p.id === loaderData?.id);
-    if (!pack) return { meta: [{ title: "Pack not found" }, { name: "robots", content: "noindex" }] };
+    if (!pack) return { meta: [{ title: "Pack not found" }, { name: "robots", content: "noindex, nofollow" }] };
     const t = `Buy ${pack.name} pack — ${pack.credits} credits | ${BUSINESS.product}`;
     const d = `Checkout for the ${pack.name} credit pack: ${pack.credits} mold credits, valid for 24 months.`;
     return {
@@ -23,10 +23,16 @@ export const Route = createFileRoute("/checkout/$pack")({
         { title: t }, { name: "description", content: d },
         { property: "og:title", content: t }, { property: "og:description", content: d },
         { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-        { name: "robots", content: "noindex" },
+        { name: "robots", content: "noindex, nofollow" },
       ],
     };
   },
+  errorComponent: () => (
+    <div className="neu-page min-h-screen p-12">
+      <p>We couldn't load this checkout page.</p>
+      <Link to="/pricing" className="text-primary">Back to Pricing</Link>
+    </div>
+  ),
   notFoundComponent: () => (
     <div className="neu-page min-h-screen p-12">Pack not found. <Link to="/pricing" className="text-primary">See packs</Link></div>
   ),
@@ -73,10 +79,11 @@ function CheckoutPage() {
           <button disabled className="mt-6 w-full cursor-not-allowed rounded-2xl bg-muted px-4 py-3 font-semibold text-muted-foreground">
             Pay {price} — card payment coming soon
           </button>
-          <a href={agree ? mail : undefined} aria-disabled={!agree}
-            className={`mt-3 block rounded-2xl px-4 py-3 text-center font-semibold ${agree ? "bg-primary text-primary-foreground" : "pointer-events-none bg-muted text-muted-foreground"}`}>
+          <button type="button" disabled={!agree} onClick={() => window.location.assign(mail)}
+            className="mt-3 block w-full rounded-2xl bg-primary px-4 py-3 text-center font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
             Request this pack by email
-          </a>
+          </button>
+          {!agree && <p className="mt-1 text-xs text-muted-foreground">Tick the box above to continue.</p>}
           <p className="mt-3 text-xs text-muted-foreground">Online card payment isn't switched on yet. Email us and we'll add the credits to your account once paid.</p>
         </section>
         <LegalFooter />

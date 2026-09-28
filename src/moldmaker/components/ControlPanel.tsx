@@ -1706,7 +1706,7 @@ function ToggleSwitch({ active, onClick, label }: { active: boolean; onClick: ()
         style={{
           display: 'block',
           width: 18, height: 18, borderRadius: 9,
-          background: '#fff', position: 'absolute',
+          background: 'var(--card, #fff)', position: 'absolute',
           top: 3, left: active ? 23 : 3,
           transition: 'left 0.2s',
           boxShadow: '1px 1px 3px rgba(0,0,0,0.25)',

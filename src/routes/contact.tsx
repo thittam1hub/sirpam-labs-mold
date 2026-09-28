@@ -56,9 +56,9 @@ function ContactPage() {
           </div>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-card p-6 shadow-sm">
-            <input required placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
-            <input required type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
-            <textarea required rows={5} placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} className={inputCls} />
+            <input required aria-label="Your name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+            <input required type="email" aria-label="Your email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+            <textarea required rows={5} aria-label="Your message" placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} className={inputCls} />
             <Button disabled={busy}>
               {busy ? "Sending…" : "Send message"}
             </Button>

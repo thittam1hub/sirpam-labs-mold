@@ -16,14 +16,9 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       }
     }
 
-    // Rows with ON DELETE CASCADE go with the auth user; clean the rest explicitly.
-    await supabaseAdmin.from("gallery_items").delete().eq("user_id", uid);
-    await supabaseAdmin.from("credit_ledger").delete().eq("user_id", uid);
-    await supabaseAdmin.from("credit_balances").delete().eq("user_id", uid);
-    await supabaseAdmin.from("monthly_usage").delete().eq("user_id", uid);
-    await supabaseAdmin.from("credit_lots" as never).delete().eq("user_id", uid);
-    await supabaseAdmin.from("credit_holds" as never).delete().eq("user_id", uid);
-    await supabaseAdmin.from("promo_redemptions" as never).delete().eq("user_id", uid);
+    // All app rows are removed in one database transaction (as the user), then the auth account.
+    const { error: dataErr } = await context.supabase.rpc("delete_my_account_data" as never);
+    if (dataErr) throw new Error(dataErr.message);
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(uid);
     if (error) throw new Error(error.message);

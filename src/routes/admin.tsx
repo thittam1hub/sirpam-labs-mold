@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAppSession } from "@/components/AppSession";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ACTION_LABEL, KIND_LABEL, STATUS_LABEL, ledgerLabel } from "@/lib/credits";
 
@@ -62,9 +63,10 @@ function AdminPage() {
     setUser(u); if (!u) { setMsg("No user with that email."); setPurchases([]); return; }
     setPurchases(await rpc<AdminPurchase[]>("admin_list_purchases", { _email: email }));
   }); };
-  const refund = (p: AdminPurchase) => void run(async () => {
-    const why = window.prompt(`Refund ${p.pack_name} pack (${p.credits} credits)? Remaining credits from this purchase are removed. Reason:`);
-    if (!why || why.trim().length < 3) return;
+  const [refundOf, setRefundOf] = useState<AdminPurchase | null>(null);
+  const [refundWhy, setRefundWhy] = useState("");
+  const refund = (p: AdminPurchase, why: string) => void run(async () => {
+    if (why.trim().length < 3) return;
     const r = await rpc<{ removed: number; balance: number }>("admin_refund_purchase", { _purchase: p.id, _reason: why.trim() });
     setMsg(`Refunded — removed ${r.removed} remaining credits. New balance: ${r.balance}.`);
     if (user) {
@@ -130,7 +132,7 @@ function AdminPage() {
                   </form>
                   <p className="mt-1 text-xs text-muted-foreground">Added credits are bonus credits valid for 365 days. For refunds of failed actions, the system returns credits automatically.</p>
                   <div className="mt-4 max-h-80 overflow-auto">
-                    <table className="w-full text-sm"><tbody>
+                    <table className="w-full text-sm"><thead className="sr-only"><tr><th scope="col">Date</th><th scope="col">Activity</th><th scope="col">Status</th><th scope="col">Credits</th></tr></thead><tbody>
                       {user.history.map((r) => (
                         <tr key={r.id} className="border-t border-border">
                           <td className="py-1.5 pr-2 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
@@ -144,7 +146,7 @@ function AdminPage() {
                   {purchases.length > 0 && (
                     <div className="mt-5">
                       <h3 className="font-semibold">Purchases</h3>
-                      <table className="mt-2 w-full text-sm"><tbody>
+                      <table className="mt-2 w-full text-sm"><thead className="sr-only"><tr><th scope="col">Date</th><th scope="col">Pack</th><th scope="col">Payment</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody>
                         {purchases.map((p) => (
                           <tr key={p.id} className="border-t border-border">
                             <td className="py-1.5 pr-2 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
@@ -152,7 +154,7 @@ function AdminPage() {
                             <td className="py-1.5 pr-2 text-xs text-muted-foreground">{p.provider}{p.payment_ref ? ` · ${p.payment_ref}` : ""}</td>
                             <td className="py-1.5 pr-2 text-xs">{p.status}</td>
                             <td className="py-1.5 text-right">
-                              {p.status === "paid" && <Button size="sm" variant="outline" disabled={busy} onClick={() => refund(p)}>Refund</Button>}
+                              {p.status === "paid" && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRefundOf(p); setRefundWhy(""); }}>Refund</Button>}
                             </td>
                           </tr>
                         ))}
@@ -174,7 +176,7 @@ function AdminPage() {
               </form>
               <p className="mt-1 text-xs text-muted-foreground">Credits from a code last
                 <input type="number" min={1} max={730} value={promo.days} onChange={(e) => setPromo({ ...promo, days: e.target.value })} className="mx-1 w-16 rounded border border-input bg-background px-1" aria-label="Days valid" /> days.</p>
-              <table className="mt-4 w-full text-sm"><tbody>
+              <table className="mt-4 w-full text-sm"><thead className="sr-only"><tr><th scope="col">Code</th><th scope="col">Credits</th><th scope="col">Used</th><th scope="col">Ends</th><th scope="col">Action</th></tr></thead><tbody>
                 {overview.promos.map((p) => (
                   <tr key={p.code} className="border-t border-border">
                     <td className="py-2 font-semibold">{p.code}</td>
@@ -188,6 +190,19 @@ function AdminPage() {
             </section>
           </>
         )}
+        <Dialog open={!!refundOf} onOpenChange={(o) => { if (!o) setRefundOf(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Refund {refundOf?.pack_name} pack ({refundOf?.credits} credits)?</DialogTitle>
+              <DialogDescription>Remaining credits from this purchase are removed. The reason is shown in the user's history.</DialogDescription>
+            </DialogHeader>
+            <input autoFocus minLength={3} maxLength={200} value={refundWhy} onChange={(e) => setRefundWhy(e.target.value)} aria-label="Refund reason" placeholder="Reason" className={input} />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRefundOf(null)}>Cancel</Button>
+              <Button disabled={busy || refundWhy.trim().length < 3} onClick={() => { if (refundOf) refund(refundOf, refundWhy); setRefundOf(null); }}>Refund</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
