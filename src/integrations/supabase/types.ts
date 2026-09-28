@@ -427,6 +427,48 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          referee_id: string
+          referrer_id: string
+          rewarded_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          referee_id: string
+          referrer_id: string
+          rewarded_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          referee_id?: string
+          referrer_id?: string
+          rewarded_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -456,6 +498,7 @@ export type Database = {
       _release_hold: { Args: { _id: string; _uid: string }; Returns: boolean }
       _release_stale: { Args: { _uid: string }; Returns: undefined }
       _require_admin: { Args: never; Returns: undefined }
+      _reward_referral: { Args: { _uid: string }; Returns: undefined }
       admin_adjust_credits: {
         Args: { _amount: number; _reason: string; _user: string }
         Returns: Json
@@ -481,9 +524,11 @@ export type Database = {
         Args: { _active: boolean; _code: string }
         Returns: undefined
       }
+      apply_referral: { Args: { _code: string }; Returns: Json }
       capture_hold: { Args: { _id: string }; Returns: boolean }
       ensure_credit_account: { Args: never; Returns: undefined }
       get_credit_status: { Args: never; Returns: Json }
+      get_referral_info: { Args: never; Returns: Json }
       grant_credits: {
         Args: {
           _amount: number
