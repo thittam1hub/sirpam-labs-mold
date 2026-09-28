@@ -1262,7 +1262,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
             <color key={`background-${themeMode}`} attach="background" args={[sceneCols.sceneBg]} />
-            <CameraRig axis={state.axis} />
+            <CameraRig axis={state.axis} fitSize={modelFitSize} />
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
             <directionalLight position={[-5, -5, -5]} intensity={0.3} />
