@@ -636,8 +636,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         lockStyle: t2.lockStyle && t2.lockStyle !== 'round' ? t2.lockStyle : undefined,
         lockDiameterMm: t2.lockDiameterMm && t2.lockDiameterMm > 0 ? t2.lockDiameterMm : undefined,
         lockCount: t2.lockCount === 2 ? 2 : undefined,
-        flangeMm: formFit && t2.flangeMm && t2.flangeMm > 0 ? t2.flangeMm : undefined,
       } : {}),
+      flangeMm: params.formFit && t2.flangeMm && t2.flangeMm > 0 ? t2.flangeMm : undefined,
     };
 
     try {
