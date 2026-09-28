@@ -31,6 +31,7 @@
 - [ ] 23 Share images — needs the published web address (do at publish)
 - [x] 24 Visitor stats: built-in hosting stats, no cookies, no banner needed
 - [ ] 25 Page speed — measure on the published site
-- [ ] 21, 22, 12 publish, guide pages, error tracking
+- [x] 22 Guide pages: /guides + silicone molds, 3D printed molds, STL to mold
+- [ ] 21 publish + Search Console; crash tracking after publish
 - [ ] 1–3, 7 payments + branded email — blocked on workspace move / domain
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
