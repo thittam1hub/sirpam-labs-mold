@@ -12,7 +12,7 @@ export function LegalFooter() {
         <a className="text-primary" href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a>
       </p>
       <p className="mt-2">
-        <Link to="/about">About</Link> · <Link to="/help">Help</Link> · <Link to="/contact">Contact</Link> · <Link to="/pricing">Pricing</Link>
+        <Link to="/about">About</Link> · <Link to="/help">Help</Link> · <Link to="/guides">Guides</Link> · <Link to="/contact">Contact</Link> · <Link to="/pricing">Pricing</Link>
       </p>
       <p className="mt-1">
         <Link to="/terms">Terms</Link> · <Link to="/refunds">Refund policy</Link> · <Link to="/privacy">Privacy</Link> · <Link to="/licenses">Licenses</Link>

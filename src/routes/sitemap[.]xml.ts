@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRouterInstance } from "@tanstack/react-start";
+import { GUIDES } from "@/lib/guides";
 import { sitemapStaticPaths, sitemapXML, type SitemapEntry } from "@/lib/sitemap";
 
 const BASE_URL = "https://sculpt-joy-forge.lovable.app";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         }
         const router = await getRouterInstance();
         const entries: SitemapEntry[] = sitemapStaticPaths(router).map((path) => ({ path }));
-        // Add queries for dynamic pages selected for SEO, using sitemapPathForLocation.
+        for (const g of GUIDES) entries.push({ path: `/guides/${g.slug}` });
         if (entries.length === 0) {
           return new Response(
             'No pages are included in this sitemap. Check route decisions and ancestor exclusions. Setting "exclude-subtree" on the root excludes the entire site.',
