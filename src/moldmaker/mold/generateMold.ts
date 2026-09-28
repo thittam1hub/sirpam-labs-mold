@@ -401,16 +401,16 @@ export async function generateMold(
     const [la, lb] = lateralAxisIndices(axis);
     const c = boundingBox.getCenter(new THREE.Vector3());
     const want = extras.lockCount === 2 ? 2 : 4;
-    // Thin form-fit walls: shrink the locks (down to 1 mm radius) before giving up.
+    // Thin form-fit walls: shrink the locks (down to 1.5 mm across) before giving up.
     let fitted: number[][] = [];
     const baseR = lockR;
     for (const f of [1, 0.75, 0.55]) {
-      const r = Math.max(1, baseR * f);
+      const r = Math.max(0.75, baseR * f);
       fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
         { a: c.getComponent(la), b: c.getComponent(lb) },
         lockStyle === 'square' ? r * Math.SQRT2 : r, clearance, want);
       if (fitted.length >= want) { lockR = r; break; }
-      if (r === 1) { lockR = r; break; }
+      if (r === 0.75) { lockR = r; break; }
     }
     if (lockR < baseR && fitted.length) notices.push(`The form-fit wall is thin, so the locks were made smaller (${(lockR * 2).toFixed(1)} mm across) to fit inside it.`);
     lockPositions = fitted;

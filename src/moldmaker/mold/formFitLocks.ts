@@ -37,7 +37,7 @@ export function fitFormFitLocks(
   let polys: number[][][] = [];
   try {
     const section = shell.transform(M).slice(splitPos);
-    const safe = section.offset(-(lockR + clearance + 0.8), 'Round');
+    const safe = section.offset(-(lockR + clearance + 0.4), 'Round');
     polys = safe.toPolygons().map((poly: any) => Array.from(poly, (pt: any) => [pt[0] ?? pt.x, pt[1] ?? pt.y]));
   } catch (e) {
     console.warn('Form-fit lock slice failed', e);
