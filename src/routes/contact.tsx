@@ -25,6 +25,7 @@ function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [ageOk, setAgeOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -32,7 +33,7 @@ function ContactPage() {
     e.preventDefault();
     setBusy(true);
     setErrorMessage(null);
-    const { error } = await supabase.from("contact_messages").insert({ name, email, message });
+    const { error } = await supabase.from("contact_messages").insert({ name, email, message, age_confirmed: ageOk });
     if (error) setErrorMessage("Your message could not be sent. Please email us instead.");
     else setSent(true);
     setBusy(false);
