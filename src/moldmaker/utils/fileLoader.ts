@@ -54,11 +54,28 @@ export function parseModel(
  * by the drag-drop handler in App.tsx so both entry points produce the
  * same normalized `{ geometry, fileName }` shape.
  */
+/** Largest model file the browser can safely open (files are parsed in memory). */
+export const MAX_FILE_MB = 200;
+/** Above this, the mold build gets slow; the user is pointed at Reduce detail. */
+export const MAX_TRIANGLES = 2_000_000;
+
 export async function parseFile(
   file: File,
 ): Promise<{ geometry: THREE.BufferGeometry; fileName: string }> {
+  const mb = file.size / (1024 * 1024);
+  if (file.size === 0) throw new Error(`${file.name} is empty — check the file was exported fully.`);
+  if (mb > MAX_FILE_MB) {
+    throw new Error(`${file.name} is ${mb.toFixed(0)} MB — the limit is ${MAX_FILE_MB} MB. Reduce the detail in your modelling or slicer tool (or export as binary STL, which is about 5× smaller) and try again.`);
+  }
   const arrayBuffer = await file.arrayBuffer();
-  return parseModel(arrayBuffer, file.name);
+  const out = parseModel(arrayBuffer, file.name);
+  const pos = out.geometry.getAttribute('position');
+  if (!pos || pos.count < 3) throw new Error(`${file.name} has no 3D shape in it — check you exported the model, not an empty scene.`);
+  const tris = out.geometry.index ? out.geometry.index.count / 3 : pos.count / 3;
+  if (tris > MAX_TRIANGLES) {
+    throw new Error(`${file.name} has ${(tris / 1e6).toFixed(1)} million triangles — the limit is ${MAX_TRIANGLES / 1e6} million. Reduce the detail in your modelling tool first; molds rarely need more than 500,000.`);
+  }
+  return out;
 }
 
 export async function loadFile(): Promise<{ geometry: THREE.BufferGeometry; fileName: string } | null> {
