@@ -76,6 +76,12 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
           <Button asChild size="sm"><Link to="/pricing">Buy credits</Link></Button>
         </div>
       )}
+      {expiryDays !== null && expiryDays <= EXPIRY_WARN_DAYS && expiryDays >= 0 && (
+        <div role="status" className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm">
+          <b>{status.nextExpiryAmount} credits expire {expiryDays === 0 ? "today" : `in ${expiryDays} day${expiryDays === 1 ? "" : "s"}`}</b>
+          {" "}({new Date(status.nextExpiryAt!).toLocaleDateString()}). Use them before then — expired credits can't be restored.
+        </div>
+      )}
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-3xl bg-card p-6 shadow-sm">
           <p className="text-sm text-muted-foreground">Your credits</p>
