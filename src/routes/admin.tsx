@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAppSession } from "@/components/AppSession";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ACTION_LABEL, KIND_LABEL, STATUS_LABEL, ledgerLabel } from "@/lib/credits";
 
@@ -62,9 +63,10 @@ function AdminPage() {
     setUser(u); if (!u) { setMsg("No user with that email."); setPurchases([]); return; }
     setPurchases(await rpc<AdminPurchase[]>("admin_list_purchases", { _email: email }));
   }); };
-  const refund = (p: AdminPurchase) => void run(async () => {
-    const why = window.prompt(`Refund ${p.pack_name} pack (${p.credits} credits)? Remaining credits from this purchase are removed. Reason:`);
-    if (!why || why.trim().length < 3) return;
+  const [refundOf, setRefundOf] = useState<AdminPurchase | null>(null);
+  const [refundWhy, setRefundWhy] = useState("");
+  const refund = (p: AdminPurchase, why: string) => void run(async () => {
+    if (why.trim().length < 3) return;
     const r = await rpc<{ removed: number; balance: number }>("admin_refund_purchase", { _purchase: p.id, _reason: why.trim() });
     setMsg(`Refunded — removed ${r.removed} remaining credits. New balance: ${r.balance}.`);
     if (user) {
@@ -152,7 +154,7 @@ function AdminPage() {
                             <td className="py-1.5 pr-2 text-xs text-muted-foreground">{p.provider}{p.payment_ref ? ` · ${p.payment_ref}` : ""}</td>
                             <td className="py-1.5 pr-2 text-xs">{p.status}</td>
                             <td className="py-1.5 text-right">
-                              {p.status === "paid" && <Button size="sm" variant="outline" disabled={busy} onClick={() => refund(p)}>Refund</Button>}
+                              {p.status === "paid" && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRefundOf(p); setRefundWhy(""); }}>Refund</Button>}
                             </td>
                           </tr>
                         ))}
@@ -188,6 +190,19 @@ function AdminPage() {
             </section>
           </>
         )}
+        <Dialog open={!!refundOf} onOpenChange={(o) => { if (!o) setRefundOf(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Refund {refundOf?.pack_name} pack ({refundOf?.credits} credits)?</DialogTitle>
+              <DialogDescription>Remaining credits from this purchase are removed. The reason is shown in the user's history.</DialogDescription>
+            </DialogHeader>
+            <input autoFocus minLength={3} maxLength={200} value={refundWhy} onChange={(e) => setRefundWhy(e.target.value)} aria-label="Refund reason" placeholder="Reason" className={input} />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRefundOf(null)}>Cancel</Button>
+              <Button disabled={busy || refundWhy.trim().length < 3} onClick={() => { if (refundOf) refund(refundOf, refundWhy); setRefundOf(null); }}>Refund</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

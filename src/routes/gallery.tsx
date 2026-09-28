@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAppSession } from "@/components/AppSession";
@@ -268,7 +269,7 @@ function GalleryPage() {
                       {it.notes && <p className="mt-2 whitespace-pre-wrap text-sm">{it.notes}</p>}
                       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                         <span>{new Date(it.created_at).toLocaleDateString()}</span>
-                        <button onClick={() => remove(it)} className="text-destructive">Delete</button>
+                        <button onClick={() => setToDelete(it)} className="text-destructive">Delete</button>
                       </div>
                     </div>
                   </article>
@@ -277,6 +278,18 @@ function GalleryPage() {
             )}
           </>
         )}
+        <AlertDialog open={!!toDelete} onOpenChange={(o) => { if (!o) setToDelete(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete "{toDelete?.title}"?</AlertDialogTitle>
+              <AlertDialogDescription>This removes the entry and its photos. It can't be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => { if (toDelete) void remove(toDelete); setToDelete(null); }}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
