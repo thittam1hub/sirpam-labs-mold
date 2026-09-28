@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import {
-  ACTION_LABEL, KIND_LABEL, LOW_BALANCE, STATUS_LABEL, ledgerLabel, ledgerToCsv, redeemPromo,
-  type CreditStatus, type LedgerRow,
+  ACTION_LABEL, EXPIRY_WARN_DAYS, KIND_LABEL, LOW_BALANCE, STATUS_LABEL, daysUntilExpiry,
+  getPurchases, ledgerLabel, ledgerToCsv, redeemPromo,
+  type CreditStatus, type LedgerRow, type Purchase,
 } from "@/lib/credits";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,11 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
   const [code, setCode] = useState("");
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [promoBusy, setPromoBusy] = useState(false);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [receipt, setReceipt] = useState<Purchase | null>(null);
+
+  useEffect(() => { getPurchases().then(setPurchases).catch(() => {}); }, [rows]);
+  const expiryDays = daysUntilExpiry(status);
 
   const months = useMemo(() => Array.from(new Set(rows.map((r) => r.created_at.slice(0, 7)))), [rows]);
   const filtered = useMemo(() => rows.filter((r) => {
