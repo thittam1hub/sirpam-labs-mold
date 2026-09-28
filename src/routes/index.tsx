@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Free browser-based mold maker: upload an STL or OBJ, get a suggested parting plane, auto sprues, vents and pins, and export print-ready two-part mold halves. Nothing leaves your computer.",
+          "Browser-based mold maker: upload an STL or OBJ, get a suggested parting plane, auto sprues, vents and pins, and export print-ready two-part mold halves. Your models never leave your computer.",
       },
       { property: "og:title", content: "Sirpam 3D Labs Mold — turn any 3D model into a print-ready mold" },
       {
@@ -69,7 +69,7 @@ const STEPS = [
 ];
 
 const FAQ = [
-  { q: "Is it free?", a: "Yes — the mold maker runs entirely in your browser and costs nothing. The optional AI model maker uses a small amount of AI credits." },
+  { q: "Is it free?", a: "Designing is free — upload a model, plan the split and preview the mold at no cost. New accounts get 10 welcome credits and 3 free exports every month; after that, exporting and pro tools use credit packs." },
   { q: "Does my model leave my computer?", a: "No. All the geometry work happens in your browser. Your model is only uploaded anywhere if you sign in and save it to your own private gallery, or send it to a print service yourself." },
   { q: "Which printers and materials work?", a: "Any FDM or resin printer works for the mold halves. The built-in presets cover casting chocolate, candle wax, soap, concrete, resin and more, each with the right shrinkage and clearance." },
   { q: "What file types can I open and export?", a: "Open STL, OBJ, 3MF and STEP files. Export mold halves as STL, OBJ, 3MF or STEP." },
