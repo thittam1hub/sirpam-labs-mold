@@ -83,14 +83,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Two-part & silicone mold generator for 3D printing — free, in-browser.",
+          "Two-part & silicone mold generator for 3D printing — runs in your browser.",
       },
       { name: "author", content: "Sirpam 3D Labs" },
       { property: "og:title", content: "Sirpam 3D Labs Mold" },
       {
         property: "og:description",
         content:
-          "Two-part & silicone mold generator for 3D printing — free, in-browser.",
+          "Two-part & silicone mold generator for 3D printing — runs in your browser.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
