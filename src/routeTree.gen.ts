@@ -27,6 +27,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as CheckoutPackRouteImport } from './routes/checkout.$pack'
+import { Route as StudioAiRouteImport } from './routes/studio_.ai'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -118,6 +119,11 @@ const CheckoutPackRoute = CheckoutPackRouteImport.update({
   path: '/checkout/$pack',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioAiRoute = StudioAiRouteImport.update({
+  id: '/studio_/ai',
+  path: '/studio/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/checkout/$pack': typeof CheckoutPackRoute
+  '/studio/ai': typeof StudioAiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/checkout/$pack': typeof CheckoutPackRoute
+  '/studio/ai': typeof StudioAiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/checkout/$pack': typeof CheckoutPackRoute
+  '/studio_/ai': typeof StudioAiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/checkout/$pack'
+    | '/studio/ai'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/checkout/$pack'
+    | '/studio/ai'
   id:
     | '__root__'
     | '/'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/checkout/$pack'
+    | '/studio_/ai'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   StudioRoute: typeof StudioRoute
   TermsRoute: typeof TermsRoute
   CheckoutPackRoute: typeof CheckoutPackRoute
+  StudioAiRoute: typeof StudioAiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -392,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutPackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio_/ai': {
+      id: '/studio_/ai'
+      path: '/studio/ai'
+      fullPath: '/studio/ai'
+      preLoaderRoute: typeof StudioAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudioRoute: StudioRoute,
   TermsRoute: TermsRoute,
   CheckoutPackRoute: CheckoutPackRoute,
+  StudioAiRoute: StudioAiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
