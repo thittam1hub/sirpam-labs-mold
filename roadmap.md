@@ -27,7 +27,10 @@
 - [x] 17 Browser check: Chrome + Safari build molds; no-3D browsers get a clear message
 - [x] 18 Large-file limits: 200 MB, 2M triangles, empty/shapeless files explained
 - [x] 19 Rate limits: AI maker 20/hour per person; contact 3/hour per email, 60/hour total
-- [ ] 20, 23–25 limits, rate limits, backups, share images, analytics, speed
+- [x] 20 Backups: daily automatic, ~14 days kept (photos in storage not included)
+- [ ] 23 Share images — needs the published web address (do at publish)
+- [x] 24 Visitor stats: built-in hosting stats, no cookies, no banner needed
+- [ ] 25 Page speed — measure on the published site
 - [ ] 21, 22, 12 publish, guide pages, error tracking
 - [ ] 1–3, 7 payments + branded email — blocked on workspace move / domain
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
