@@ -34,7 +34,9 @@ function ContactPage() {
     setBusy(true);
     setErrorMessage(null);
     const { error } = await supabase.from("contact_messages").insert({ name, email, message, age_confirmed: ageOk });
-    if (error) setErrorMessage("Your message could not be sent. Please email us instead.");
+    if (error) setErrorMessage(error.message.includes("rate_limited")
+      ? "You've sent several messages recently. Please wait an hour, or email us directly."
+      : "Your message could not be sent. Please email us instead.");
     else setSent(true);
     setBusy(false);
   };
