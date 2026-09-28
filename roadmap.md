@@ -37,3 +37,5 @@
 - [ ] 7 branded email — needs your own domain
 - [ ] Going live with payments — verification in the Payments tab + publish
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
+
+- [ ] Razorpay webhook setup: user adds webhook URLs + secrets in Razorpay dashboard
