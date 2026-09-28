@@ -27,6 +27,8 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as CheckoutPackRouteImport } from './routes/checkout.$pack'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as StudioAiRouteImport } from './routes/studio_.ai'
 
 const IndexRoute = IndexRouteImport.update({
@@ -119,6 +121,16 @@ const CheckoutPackRoute = CheckoutPackRouteImport.update({
   path: '/checkout/$pack',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudioAiRoute = StudioAiRouteImport.update({
   id: '/studio_/ai',
   path: '/studio/ai',
@@ -144,7 +156,9 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/checkout/$pack': typeof CheckoutPackRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
+  '/guides/': typeof GuidesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -165,7 +179,9 @@ export interface FileRoutesByTo {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/checkout/$pack': typeof CheckoutPackRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
+  '/guides': typeof GuidesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,7 +203,9 @@ export interface FileRoutesById {
   '/studio': typeof StudioRoute
   '/terms': typeof TermsRoute
   '/checkout/$pack': typeof CheckoutPackRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/studio_/ai': typeof StudioAiRoute
+  '/guides/': typeof GuidesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -210,7 +228,9 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/checkout/$pack'
+    | '/guides/$slug'
     | '/studio/ai'
+    | '/guides/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -231,7 +251,9 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/checkout/$pack'
+    | '/guides/$slug'
     | '/studio/ai'
+    | '/guides'
   id:
     | '__root__'
     | '/'
@@ -252,7 +274,9 @@ export interface FileRouteTypes {
     | '/studio'
     | '/terms'
     | '/checkout/$pack'
+    | '/guides/$slug'
     | '/studio_/ai'
+    | '/guides/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -274,7 +298,9 @@ export interface RootRouteChildren {
   StudioRoute: typeof StudioRoute
   TermsRoute: typeof TermsRoute
   CheckoutPackRoute: typeof CheckoutPackRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   StudioAiRoute: typeof StudioAiRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -405,6 +431,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutPackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/studio_/ai': {
       id: '/studio_/ai'
       path: '/studio/ai'
@@ -434,7 +474,9 @@ const rootRouteChildren: RootRouteChildren = {
   StudioRoute: StudioRoute,
   TermsRoute: TermsRoute,
   CheckoutPackRoute: CheckoutPackRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   StudioAiRoute: StudioAiRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
