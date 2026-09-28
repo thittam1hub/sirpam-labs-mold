@@ -375,6 +375,13 @@ export async function generateMold(
       splitPos, wallThickness, clearance,
     });
     if (res) { [topResult, bottomResult] = res; sealed = true; }
+    else notices.push('Tongue & groove could not be built around this cavity (the wall is too thin at the split), so keyed pins were used instead.');
+  } else if (extras.seal === 'tongueGroove') {
+    notices.push(curved
+      ? 'Tongue & groove is not used with the curved split: the halves nest into each other and align themselves.'
+      : cutAngle !== 0
+        ? 'Tongue & groove needs a flat, untilted split, so keyed pins were used instead.'
+        : 'Tongue & groove needs a box shell, not a form-fit shell, so keyed pins were used instead.');
   }
 
   // Round 8: user lock size/count/style. Omitted = legacy round pins.
