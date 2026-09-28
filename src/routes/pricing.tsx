@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditStatus, type CreditStatus, type RegionTier } from "@/lib/credits";
+import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditPacks, getCreditStatus, type CreditPack, type CreditStatus, type RegionTier } from "@/lib/credits";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Info } from "lucide-react";
 
@@ -23,14 +23,16 @@ function PricingPage() {
   const [status, setStatus] = useState<CreditStatus | null>(null);
   const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
+  const [packs, setPacks] = useState<CreditPack[]>(CREDIT_PACKS.map((p) => ({ ...p, usd: { ...p.usd } })));
   useEffect(() => {
     getCreditStatus().then(setStatus).catch(() => {});
+    getCreditPacks().then(setPacks).catch(() => {});
     const g = guessRegion();
     setTier(g.tier);
     setIndia(g.india);
   }, []);
 
-  const price = (p: (typeof CREDIT_PACKS)[number]) =>
+  const price = (p: CreditPack) =>
     tier === "value" && india ? { label: `₹${p.inr.toLocaleString("en-IN")}`, per: `₹${(p.inr / p.credits).toFixed(1)}` }
       : { label: `$${p.usd[tier]}`, per: `$${(p.usd[tier] / p.credits).toFixed(2)}` };
 
@@ -58,7 +60,7 @@ function PricingPage() {
         </div>
 
         <section className="mt-6 grid gap-6 md:grid-cols-3">
-          {CREDIT_PACKS.map((p) => {
+          {packs.map((p) => {
             const pr = price(p);
             const best = "best" in p && p.best;
             return (
