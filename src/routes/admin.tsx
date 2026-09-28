@@ -130,7 +130,7 @@ function AdminPage() {
                   </form>
                   <p className="mt-1 text-xs text-muted-foreground">Added credits are bonus credits valid for 365 days. For refunds of failed actions, the system returns credits automatically.</p>
                   <div className="mt-4 max-h-80 overflow-auto">
-                    <table className="w-full text-sm"><tbody>
+                    <table className="w-full text-sm"><thead className="sr-only"><tr><th scope="col">Date</th><th scope="col">Activity</th><th scope="col">Status</th><th scope="col">Credits</th></tr></thead><tbody>
                       {user.history.map((r) => (
                         <tr key={r.id} className="border-t border-border">
                           <td className="py-1.5 pr-2 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
@@ -144,7 +144,7 @@ function AdminPage() {
                   {purchases.length > 0 && (
                     <div className="mt-5">
                       <h3 className="font-semibold">Purchases</h3>
-                      <table className="mt-2 w-full text-sm"><tbody>
+                      <table className="mt-2 w-full text-sm"><thead className="sr-only"><tr><th scope="col">Date</th><th scope="col">Pack</th><th scope="col">Payment</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody>
                         {purchases.map((p) => (
                           <tr key={p.id} className="border-t border-border">
                             <td className="py-1.5 pr-2 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
@@ -174,7 +174,7 @@ function AdminPage() {
               </form>
               <p className="mt-1 text-xs text-muted-foreground">Credits from a code last
                 <input type="number" min={1} max={730} value={promo.days} onChange={(e) => setPromo({ ...promo, days: e.target.value })} className="mx-1 w-16 rounded border border-input bg-background px-1" aria-label="Days valid" /> days.</p>
-              <table className="mt-4 w-full text-sm"><tbody>
+              <table className="mt-4 w-full text-sm"><thead className="sr-only"><tr><th scope="col">Code</th><th scope="col">Credits</th><th scope="col">Used</th><th scope="col">Ends</th><th scope="col">Action</th></tr></thead><tbody>
                 {overview.promos.map((p) => (
                   <tr key={p.code} className="border-t border-border">
                     <td className="py-2 font-semibold">{p.code}</td>

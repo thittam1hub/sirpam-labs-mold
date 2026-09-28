@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditPacks, getCreditStatus, type CreditPack, type CreditStatus, type RegionTier } from "@/lib/credits";
@@ -20,13 +21,11 @@ export const Route = createFileRoute("/pricing")({
 });
 
 function PricingPage() {
-  const [status, setStatus] = useState<CreditStatus | null>(null);
+  const { data: status = null } = useQuery({ queryKey: ["credits", "status"], queryFn: getCreditStatus, retry: false });
   const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
-  const [packs, setPacks] = useState<CreditPack[]>(CREDIT_PACKS.map((p) => ({ ...p, usd: { ...p.usd } })));
+  const { data: packs = CREDIT_PACKS } = useQuery({ queryKey: ["credit-packs"], queryFn: getCreditPacks, staleTime: 10 * 60_000 });
   useEffect(() => {
-    getCreditStatus().then(setStatus).catch(() => {});
-    getCreditPacks().then(setPacks).catch(() => {});
     const g = guessRegion();
     setTier(g.tier);
     setIndia(g.india);

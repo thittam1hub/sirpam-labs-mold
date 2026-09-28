@@ -60,11 +60,14 @@ function GalleryPage() {
   const [err, setErr] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(24);
 
+  const loadSeq = useRef(0);
   const load = async () => {
+    const seq = ++loadSeq.current;
     setLoading(true);
     const { data, error } = await supabase.from("gallery_items")
       .select("id,title,notes,material,photo_paths,created_at,price_paid,currency,size_x_mm,size_y_mm,size_z_mm,source,stl_name,stl_size,best_settings,rating")
       .order("created_at", { ascending: false }).limit(60);
+    if (seq !== loadSeq.current) return;
     if (error) { setErr(error.message); setLoading(false); return; }
     const list = (data ?? []) as Item[];
     setItems(list);
@@ -73,6 +76,7 @@ function GalleryPage() {
       const { data: signed } = await supabase.storage.from("mold-photos").createSignedUrls(paths, 3600);
       const map: Record<string, string> = {};
       signed?.forEach((s) => { if (s.path && s.signedUrl) map[s.path] = s.signedUrl; });
+      if (seq !== loadSeq.current) return;
       setUrls(map);
     }
     setLoading(false);
@@ -115,8 +119,8 @@ function GalleryPage() {
     setBusy(false);
   };
 
+  const [toDelete, setToDelete] = useState<Item | null>(null);
   const remove = async (it: Item) => {
-    if (!confirm(`Delete "${it.title}"?`)) return;
     if (it.photo_paths.length) await supabase.storage.from("mold-photos").remove(it.photo_paths);
     await supabase.from("gallery_items").delete().eq("id", it.id);
     load();
@@ -137,11 +141,11 @@ function GalleryPage() {
         ) : (
           <>
             <form onSubmit={add} className="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-5 md:grid-cols-2">
-              <input required placeholder="Title (e.g. Mushroom candle mold)" value={title} onChange={(e) => setTitle(e.target.value)}
+              <input required aria-label="Title" placeholder="Title (e.g. Mushroom candle mold)" value={title} onChange={(e) => setTitle(e.target.value)}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-              <input placeholder="Material (e.g. PLA + Smooth-On 25)" value={material} onChange={(e) => setMaterial(e.target.value)}
+              <input aria-label="Material" placeholder="Material (e.g. PLA + Smooth-On 25)" value={material} onChange={(e) => setMaterial(e.target.value)}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-              <textarea placeholder="Notes: print settings, what worked, what to fix…" value={notes} onChange={(e) => setNotes(e.target.value)}
+              <textarea aria-label="Notes" placeholder="Notes: print settings, what worked, what to fix…" value={notes} onChange={(e) => setNotes(e.target.value)}
                 className="min-h-20 rounded-lg border border-input bg-background px-3 py-2 text-sm md:col-span-2" />
               <div className="grid grid-cols-[1fr_90px] gap-2">
                 <input type="number" min="0" step="0.01" placeholder="What I paid (total)" value={price} onChange={(e) => setPrice(e.target.value)}
@@ -150,7 +154,7 @@ function GalleryPage() {
                   {["INR", "USD", "EUR", "GBP"].map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
-              <input placeholder="Made by (e.g. home print, JLC3DP, Craftcloud)" value={source} onChange={(e) => setSource(e.target.value)}
+              <input aria-label="Made by" placeholder="Made by (e.g. home print, JLC3DP, Craftcloud)" value={source} onChange={(e) => setSource(e.target.value)}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
               <div className="grid grid-cols-3 gap-2 md:col-span-2">
                 {([["Width mm", sx, setSx], ["Depth mm", sy, setSy], ["Height mm", sz, setSz]] as const).map(([ph, v, set]) => (
@@ -159,9 +163,9 @@ function GalleryPage() {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground md:col-span-2">Mold size = the outside box of the printed mold. The Finish step and the mold report show it for each piece.</p>
-              <input maxLength={200} placeholder="STL file used (e.g. bala_murugan_v1.stl)" value={stlName} onChange={(e) => setStlName(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-              <input maxLength={100} placeholder="STL size (e.g. 60 × 40 × 90 mm)" value={stlSize} onChange={(e) => setStlSize(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
-              <textarea maxLength={2000} placeholder="Settings that worked best: split axis, wall, clearance, layer height, infill, casting material…" value={best} onChange={(e) => setBest(e.target.value)} className="min-h-16 rounded-lg border border-input bg-background px-3 py-2 text-sm md:col-span-2" />
+              <input maxLength={200} aria-label="STL file used" placeholder="STL file used (e.g. bala_murugan_v1.stl)" value={stlName} onChange={(e) => setStlName(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+              <input maxLength={100} aria-label="STL size" placeholder="STL size (e.g. 60 × 40 × 90 mm)" value={stlSize} onChange={(e) => setStlSize(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+              <textarea maxLength={2000} aria-label="Settings that worked best" placeholder="Settings that worked best: split axis, wall, clearance, layer height, infill, casting material…" value={best} onChange={(e) => setBest(e.target.value)} className="min-h-16 rounded-lg border border-input bg-background px-3 py-2 text-sm md:col-span-2" />
               <div className="flex items-center gap-1 text-sm md:col-span-2" role="radiogroup" aria-label="How well it worked">
                 <span className="mr-2 text-muted-foreground">How well it worked:</span>
                 {[1, 2, 3, 4, 5].map((n) => (
