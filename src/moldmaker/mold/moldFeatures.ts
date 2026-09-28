@@ -37,6 +37,8 @@ export interface MoldExtras extends Round6Extras, Round7Extras {
   lockStyle?: LockStyle;
   lockDiameterMm?: number;
   lockCount?: 2 | 4;
+  /** Hug molds: flat parting flange width, mm. 0/omitted = none. */
+  flangeMm?: number;
 }
 
 export type LockStyle = 'round' | 'cone' | 'square' | 'magnet';

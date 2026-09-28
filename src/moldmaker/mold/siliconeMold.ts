@@ -24,6 +24,7 @@ import {
   lateralAxisIndices,
 } from './moldBox';
 import { envelopeAroundManifold, offsetOutward } from './moldOffset';
+import { buildPartingFlange, planHugLocks, cavityHighPoints } from './formFitLocks';
 import {
   type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit,
   asymmetricCavityBox, lateralToWorld,
@@ -89,6 +90,8 @@ export interface SiliconeMoldOptions {
 
 export interface SiliconeMoldResult {
   pieces: THREE.BufferGeometry[];
+  /** Plain-language notes about fallbacks. */
+  notices?: string[];
   /** Export filename suffixes, parallel to `pieces`. */
   labels: string[];
   repairs: MeshRepairLog;
@@ -188,9 +191,12 @@ export async function generateSiliconeMold(
 
   const extras: MoldExtras = options.extras ?? {};
   let lastEnv: any = null;
+  let hugCavity: any = null;
   const pieces: any[] = [];
   const labels: string[] = [];
   let siliconeVolumeCm3 = 0;
+  const notices: string[] = [];
+  const hug = !!options.formFit && options.type !== 'skinCore';
 
   /** Drill the pour sprue and two vents down through the top face. */
   const addPourSystem = (solid: any, env: any, cavityBox: THREE.Box3) => {
@@ -204,6 +210,11 @@ export async function generateSiliconeMold(
     spruePos[latA] = center.getComponent(latA);
     spruePos[latB] = center.getComponent(latB);
 
+    let hp: number[][] = [];
+    if (hug && (extras.cavityCenters ?? []).length <= 1) {
+      hp = cavityHighPoints(cleanGeometry.attributes.position.array, axis, 3, Math.max(sprueRadius * 4, maxExtent * 0.2));
+      if (hp[0]) { spruePos[latA] = hp[0][latA]; spruePos[latB] = hp[0][latB]; }
+    }
     const centers = (extras.cavityCenters ?? []).length > 1
       ? extras.cavityCenters!.map(c => lateralToWorld(axis, c.a, c.b, spruePos[primary]))
       : [spruePos];
@@ -218,7 +229,9 @@ export async function generateSiliconeMold(
     // the extremities last, so that's where they belong.
     const ventR = Math.max(sprueRadius * 0.25, 0.8);
     const inset = wallThickness * 0.6;
-    const corners: Array<[number, number]> = [
+    const corners: Array<[number, number]> = hp.length > 1
+      ? hp.slice(1).map(q => [q[latA], q[latB]] as [number, number])
+      : [
       [cavityBox.min.getComponent(latA) + inset, cavityBox.min.getComponent(latB) + inset],
       [cavityBox.max.getComponent(latA) - inset, cavityBox.max.getComponent(latB) - inset],
     ];
@@ -248,7 +261,20 @@ export async function generateSiliconeMold(
       (refBox.max.getComponent(primary) - refBox.min.getComponent(primary)) * offset;
     const pinRadius = wallThickness * PIN_RADIUS_RATIO;
     const pinHeight = wallThickness * PIN_HEIGHT_RATIO;
-    const pinPositions = getRegistrationPinPositionsForEnvelope(env, refBox, splitPos, cutAngle);
+    let pinPositions = getRegistrationPinPositionsForEnvelope(env, refBox, splitPos, cutAngle);
+    let pinR = pinRadius;
+    const pads: any[] = [];
+    if (hug) {
+      if (cutAngle !== 0) {
+        pinPositions = [];
+        notices.push('Locks on a form-fit shell need a flat, untilted split, so this mold has none. Set the tilt to 0 or use a box shell.');
+      } else {
+        const c = boundingBox.getCenter(new THREE.Vector3());
+        const plan = planHugLocks(wasm, solid, axis, splitPos,
+          { a: c.getComponent(latA), b: c.getComponent(latB) }, pinRadius, clearance, 4, pinHeight);
+        pinPositions = plan.positions; pinR = plan.lockR; pads.push(...plan.pads); notices.push(...plan.notices);
+      }
+    }
 
     let top = above;
     let bottom = below;
@@ -260,16 +286,24 @@ export async function generateSiliconeMold(
       });
       if (res) { [top, bottom] = res; sealed = true; }
     }
+    for (const pad of pads) {
+      const hh = pad.halfHeight;
+      const up = axialCylinder(wasm, axis, hh, pad.r, pad.r, 32, pad.at.map((v: number, i: number) => i === primary ? splitPos + hh / 2 : v));
+      const dn = axialCylinder(wasm, axis, hh, pad.r, pad.r, 32, pad.at.map((v: number, i: number) => i === primary ? splitPos - hh / 2 : v));
+      top = top.add(up.subtract(hugCavity ?? master));
+      bottom = bottom.add(dn.subtract(hugCavity ?? master));
+    }
+    const pinRadius_ = pinR;
     for (const pinPos of (sealed ? [] : pinPositions)) {
       top = top.add(
-        axialCylinder(wasm, axis, pinHeight, pinRadius, pinRadius, 16, pinPos),
+        axialCylinder(wasm, axis, pinHeight, pinRadius_, pinRadius_, 16, pinPos),
       );
       bottom = bottom.subtract(
         axialCylinder(
           wasm, axis,
           pinHeight + clearance * 2,
-          pinRadius + clearance,
-          pinRadius + clearance,
+          pinRadius_ + clearance,
+          pinRadius_ + clearance,
           16,
           pinPos,
         ),
@@ -350,6 +384,15 @@ export async function generateSiliconeMold(
     } else {
       // Closed, keyed, split box with a pour sprue and vents.
       let shell = outer.subtract(cavitySolid);
+      if (options.formFit) {
+        hugCavity = cavitySolid;
+        if ((extras.flangeMm ?? 0) > 0) {
+          const sp = cavityBox.min.getComponent(primary) + (cavityBox.max.getComponent(primary) - cavityBox.min.getComponent(primary)) * offset;
+          const fl = cutAngle === 0 ? buildPartingFlange(wasm, outer, axis, sp, extras.flangeMm!, Math.max(6, wallThickness * 2)) : null;
+          if (fl) shell = shell.add(fl);
+          else notices.push(cutAngle !== 0 ? 'The parting flange needs a flat, untilted split, so it was left off.' : 'The parting flange could not be built for this shape, so it was left off.');
+        }
+      }
       shell = addPourSystem(shell, outerEnv, cavityBox);
       const [top, bottom] = splitAndKey(shell, outerEnv, cavityBox);
       pieces.push(top, bottom);
@@ -395,5 +438,5 @@ export async function generateSiliconeMold(
   }
 
   const pieceGeos = finalPieces.map(p => manifoldToGeometry(p));
-  return { pieces: pieceGeos, labels: finalLabels, repairs, siliconeVolumeCm3 };
+  return { pieces: pieceGeos, labels: finalLabels, repairs, siliconeVolumeCm3, ...(notices.length ? { notices } : {}) };
 }
