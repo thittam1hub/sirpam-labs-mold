@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       contact_messages: {
         Row: {
+          age_confirmed: boolean
           created_at: string
           email: string
           id: string
@@ -23,6 +24,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          age_confirmed?: boolean
           created_at?: string
           email: string
           id?: string
@@ -30,6 +32,7 @@ export type Database = {
           name: string
         }
         Update: {
+          age_confirmed?: boolean
           created_at?: string
           email?: string
           id?: string
@@ -301,18 +304,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_confirmed_at: string | null
           avatar_url: string | null
           display_name: string
           id: string
           updated_at: string
         }
         Insert: {
+          age_confirmed_at?: string | null
           avatar_url?: string | null
           display_name?: string
           id: string
           updated_at?: string
         }
         Update: {
+          age_confirmed_at?: string | null
           avatar_url?: string | null
           display_name?: string
           id?: string
