@@ -298,6 +298,7 @@ const initialState: AppState = {
   skinThicknessMm: 0,
   includeCore: true,
   formFit: false,
+  buildNotices: [],
   tier2: DEFAULT_TIER2,
   pieceLabels: [],
   siliconeVolumeCm3: 0,
@@ -694,11 +695,12 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         moldPieces: result.pieces,
         moldGenerated: true,
         pieceLabels: (result as { labels?: string[] }).labels ?? [],
+        buildNotices: (result as { notices?: string[] }).notices ?? [],
         siliconeVolumeCm3: (result as { siliconeVolumeCm3?: number }).siliconeVolumeCm3 ?? 0,
         generatedParams: params,
         generating: false,
         showOriginal: false,
-        infoMessage: pendingAutoRepairNote.current ?? repairNote,
+        infoMessage: [pendingAutoRepairNote.current ?? repairNote, ...((result as { notices?: string[] }).notices ?? [])].filter(Boolean).join(' ') || null,
       }));
       pendingAutoRepairNote.current = null;
       autoRepairTried.current = false;
