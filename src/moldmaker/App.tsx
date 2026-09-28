@@ -1564,6 +1564,9 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                   Try Sample
                 </button>
               </div>
+              <Link to="/studio/ai" style={{ display: 'inline-block', marginTop: spacing.lg, color: colors.primary, fontWeight: 700, fontSize: fontSizes.sm, pointerEvents: 'auto' }}>
+                or create a model with AI
+              </Link>
             </div>
           )}
 
