@@ -125,6 +125,7 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
         pieces: result.pieces.map(serializeGeometry),
         repairs: result.repairs,
         labels: (result as { labels?: string[] }).labels,
+        notices: (result as { notices?: string[] }).notices,
         siliconeVolumeCm3: (result as { siliconeVolumeCm3?: number }).siliconeVolumeCm3,
       },
     };

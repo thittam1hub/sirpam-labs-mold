@@ -138,6 +138,7 @@ export type WorkerResponse =
          *  only — the rigid path leaves this undefined and callers fall
          *  back to the historical top/bottom/part_N naming. */
         labels?: string[];
+        notices?: string[];
         /** Estimated silicone consumption in cm³ (silicone path only). */
         siliconeVolumeCm3?: number;
         /** Mesh validation log from the pre-flight repair pass. Always

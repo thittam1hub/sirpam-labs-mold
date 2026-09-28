@@ -163,6 +163,8 @@ export interface GenerateMoldResult {
    *  to surface a "we auto-repaired your mesh" toast, or ignore it entirely
    *  if the input was clean. See validateMesh.ts for what gets reported. */
   repairs: MeshRepairLog;
+  /** Fallbacks and switched-off features, in plain words. Absent = none. */
+  notices?: string[];
 }
 
 export async function generateMold(
@@ -707,7 +709,7 @@ export async function generateMold(
   if (hollow) pieces.push(hollow.core);
   const pieceGeos = pieces.map(p => manifoldToGeometry(p));
 
-  return { pieces: pieceGeos, repairs };
+  return notices.length ? { pieces: pieceGeos, repairs, notices } : { pieces: pieceGeos, repairs };
 }
 
 /**
