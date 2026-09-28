@@ -1,46 +1,36 @@
-# Legal exposure audit and fixes
+# Legal fixes that apply to this app
 
-## What the checklist found in this app
+Only the items that fit Sirpam 3D Labs Mold are kept. The rest of the checklist doesn't apply, for the reasons below.
 
-| # | Item | Found in the app | Action |
-|---|------|------------------|--------|
-| 1 | Age gate (COPPA) | Email sign-up and Google sign-in on the sign-in page; Contact form collects name + email. No age check anywhere. | Add "I am 13 or older", checked on the server |
-| 2 | Remote fonts | Space Grotesk + DM Sans loaded from Google Fonts on every page (visitor IP goes to Google) | Self-host both fonts |
-| 3 | Analytics / replay | No session replay, heatmaps or keystroke tools. Only the Studio's own usage stats: already opt-in, off by default, stored and revocable, no personal data | Add a "turn off" link in Account and in the Privacy page; no other change |
-| 4 | Marketing email | The app sends no marketing email. Only sign-in and password emails (exempt). | Mark as transactional-only in code; no sends added |
-| 5 | Auto-renewal | No subscriptions: credit packs are one-time and payments are still off | Add a "one-time purchase, no auto-renewal" line next to every buy button; revisit when payments go live |
-| 6 | Uploads (DMCA) | Gallery photos and profile pictures, both private to the owner. AI-made models are downloaded, not published. | Add a Copyright page with takedown steps, notice email and repeat-infringer rule; link it in the footer and in the Gallery |
-| + | Privacy / Terms | Pages exist and are in the footer, but not linked from sign-up. The list of services we send data to is not complete. | Link both from sign-up; list every service from the code |
-| + | Cookies / consent | No tracking cookies. Only sign-in session, theme and usage-stats choice stored in the browser. | Explain this in the Privacy page; no banner needed |
-| + | Secrets / data in browser code | Must be checked by scanning the built app | Scan and fix anything found |
+## Skipped (not relevant to this app)
 
-## Changes
+- **Session replay / analytics:** the app has no replay, heatmap or keystroke tools. The Studio's usage stats are already opt-in, off by default, and can be turned off again.
+- **Marketing email rules:** the app sends no marketing email, only sign-in and password emails.
+- **Auto-renewal rules:** there are no subscriptions. Credit packs are one-time purchases, and payments are still off.
+- **DMCA agent and takedown page:** Gallery photos and profile pictures are private to their owner, and nothing users upload is shown publicly. Worth adding only if you later make content public.
+- **Cookie banner:** there are no tracking cookies. The browser only stores the sign-in session, the theme choice, and the usage-stats choice.
 
-1. **Age gate**
-   - Sign-up form: required "I am 13 or older" checkbox, plus links to Terms and Privacy.
-   - Email sign-up goes through a server check that refuses the request before an account is created if the box isn't confirmed. Nothing is stored from a refused attempt.
-   - Google sign-in can't be checked beforehand, so on first sign-in a one-time "Confirm you are 13 or older" screen blocks the app (no credits, no data) until confirmed. Choosing "I am under 13" deletes the account at once.
-   - The confirmation is saved on the profile with a date.
-   - Contact form: the same checkbox, also enforced by the database, so a message can't be saved without it.
-2. **Fonts:** install the two fonts as packages, bundle them with the app, remove the Google links.
-3. **Usage stats:** keep as is. Add a switch in Account → Profile to turn them on or off, and name the stats service in Privacy.
-4. **Email:** a code comment on the auth email setup saying these are transactional only and must not carry marketing.
-5. **Purchases:** a "One-time purchase. Credits do not renew automatically." line under the buy buttons on Pricing and Checkout.
-6. **Copyright page** (`/copyright`): how to send a notice (to sirpam3dlabs@gmail.com), what to include, counter-notice, and how repeat infringers are handled. A footer link, and a "Report copyright issue" link in the Gallery.
-7. **Privacy page:** a list of services taken from the code: Lovable Cloud (database, sign-in, storage), Google (Google sign-in), Lovable AI (AI model maker prompts and photos), and the usage-stats service (only if you opt in). Also what's stored in the browser, and the age rule.
-8. **Secrets scan:** build the app, search the files sent to the browser for private keys and service passwords, remove any debug logging of emails or other personal data.
+## What will be fixed
 
-## What you will still have to do
+1. **Age check (13+)**
+   - Sign-up form: a required "I am 13 or older" checkbox, plus links to Terms and Privacy.
+   - Email sign-up is checked on the server, so an account can't be created without the confirmation.
+   - Google sign-in: on the first visit, a one-time "Confirm you are 13 or older" screen appears before the app can be used. Choosing "under 13" deletes the account right away.
+   - Contact form: the same checkbox, also checked by the database.
+2. **Fonts from Google:** the two fonts are bundled with the app instead of loaded from Google, so visitors' addresses are no longer sent to Google.
+3. **Privacy page:** a list of every outside service the app actually sends data to (Lovable Cloud for database, sign-in and storage; Google for Google sign-in; Lovable AI for AI Model Maker prompts and photos; the usage-stats service only if you opt in). It also covers what's stored in the browser and the 13+ rule.
+4. **Hidden keys and personal data check:** scan the app code that runs in visitors' browsers for private keys, and remove any logging of emails or personal details.
 
-- **Register a DMCA agent** at copyright.gov/dmca-directory ($6). You need a postal address; a home address works but becomes public, so a PO box is common. Then send me the agent name and address, and I'll put them on the Copyright page. Note this is a US process. As an Indian business it's optional, but it gives you safe-harbour protection for US visitors.
-- **Postal address:** only needed if you ever send marketing email (not planned).
-- **Auto-renewal rules:** only apply if you later add subscriptions. We'd add the renewal terms, a cancel button and reminder emails then.
-- A lawyer review of Terms/Privacy before taking payments is recommended; I'm not a lawyer.
+At the end you get a short Found / Changed / Still to do note per item.
+
+## What you still have to do
+
+Nothing is required now. Get a lawyer to review Terms and Privacy before payments go live.
 
 ## Technical details
 
-- Migration: `profiles.age_confirmed_at timestamptz`; `contact_messages.age_confirmed boolean not null` + check (true).
-- `src/lib/signup.functions.ts`: zod-validated server fn (`ageConfirmed: z.literal(true)`) calling `auth.signUp` with a publishable server client; the auth page stops calling `signUp` directly.
-- Age screen in `AppSessionProvider`: gate for signed-in users whose profile has no `age_confirmed_at`; the under-13 path calls the existing account-deletion flow.
-- Fonts: `@fontsource/space-grotesk` + `@fontsource-variable/dm-sans` imported in `__root.tsx`; remove preconnect/stylesheet links.
-- Final report: a Found / Changed / You still need to block for each item, plus a summary table with files.
+- Migration: `profiles.age_confirmed_at timestamptz`; `contact_messages.age_confirmed boolean not null default false` + check (age_confirmed).
+- `src/lib/signup.functions.ts`: zod server fn (`ageConfirmed: z.literal(true)`) that performs `auth.signUp` with a publishable server client; the auth page calls it instead of `signUp` directly.
+- Age gate in `AppSessionProvider` for signed-in users without `age_confirmed_at`; the under-13 path uses the existing account-deletion flow.
+- Fonts: `@fontsource/space-grotesk` + `@fontsource-variable/dm-sans` imported in the root route; remove the Google preconnect and stylesheet links.
+- Scan the built client bundle for `service_role`, `sk_`, and secret env names; check `console.log` calls in `src/lib` and `src/routes`.
