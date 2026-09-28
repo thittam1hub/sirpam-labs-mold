@@ -15,7 +15,7 @@ export const Route = createFileRoute("/checkout/$pack")({
   },
   head: ({ loaderData }) => {
     const pack = CREDIT_PACKS.find((p) => p.id === loaderData?.id);
-    if (!pack) return { meta: [{ title: "Pack not found" }, { name: "robots", content: "noindex" }] };
+    if (!pack) return { meta: [{ title: "Pack not found" }, { name: "robots", content: "noindex, nofollow" }] };
     const t = `Buy ${pack.name} pack — ${pack.credits} credits | ${BUSINESS.product}`;
     const d = `Checkout for the ${pack.name} credit pack: ${pack.credits} mold credits, valid for 24 months.`;
     return {
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/checkout/$pack")({
         { title: t }, { name: "description", content: d },
         { property: "og:title", content: t }, { property: "og:description", content: d },
         { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-        { name: "robots", content: "noindex" },
+        { name: "robots", content: "noindex, nofollow" },
       ],
     };
   },
