@@ -43,6 +43,7 @@ export function fitFormFitLocks(
     console.warn('Form-fit lock slice failed', e);
     return [];
   }
+  console.log("ffl polys", polys.length, polys.map(p=>p.length), "center", center, "split", splitPos);
   if (polys.length === 0) return [];
 
   const inside = (x: number, y: number) => {
