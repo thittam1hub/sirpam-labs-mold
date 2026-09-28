@@ -24,7 +24,7 @@ describe('hug molds', () => {
     expect(r.pieces.length).toBe(2);
     expect((r.notices ?? []).join(' ')).not.toMatch(/No room/);
     // Top half is heavier than bottom by the pins (never floating: pieces stay single solids).
-    for (const p of r.pieces) expect(p.attributes.position.count).toBeGreaterThan(0);
+    for (const p of r.pieces) expect((p.attributes['position']?.count ?? 0)).toBeGreaterThan(0);
   }, 120000);
 });
 
