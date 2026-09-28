@@ -38,6 +38,8 @@ export interface Tier2Settings {
   lockDiameterMm?: number;
   lockCount?: 2 | 4;
   flangeMm?: number;
+  flangeBoltMm?: number;
+  partingBoard?: boolean;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -68,6 +70,8 @@ export const DEFAULT_TIER2: Tier2Settings = {
   lockDiameterMm: 0,
   lockCount: 4,
   flangeMm: 0,
+  flangeBoltMm: 0,
+  partingBoard: false,
 };
 
 interface Props {
@@ -322,12 +326,25 @@ export default function AdvancedMoldPanel(p: Props) {
             </>
           )}
 
-          {p.formFit && (isRigid || p.siliconeType === 'blockTwoPart') && (
+          {p.formFit && p.siliconeType !== 'blockOneWay' || p.formFit && isRigid ? (
             <>
               <Slider label="Parting flange" value={t.flangeMm ?? 0} min={0} max={20} step={1}
                 unit={(t.flangeMm ?? 0) === 0 ? ' (off)' : ' mm'} onChange={v => onChange({ flangeMm: v })} />
               <div style={s.hint}>A flat rim around the split of the form-fit shell. The locks sit in it, and you can clamp it shut. 8 to 12 mm is typical. Needs a flat, untilted split.</div>
+              {(t.flangeMm ?? 0) > 0 && (
+                <>
+                  <Slider label="Flange bolt holes" value={t.flangeBoltMm ?? 0} min={0} max={8} step={1}
+                    unit={(t.flangeBoltMm ?? 0) === 0 ? ' (off)' : ' mm'} onChange={v => onChange({ flangeBoltMm: v })} />
+                  <div style={s.hint}>Four through-holes for bolts or clamps, between the locks. M3 = 3 mm, M4 = 4 mm.</div>
+                </>
+              )}
             </>
+          ) : null}
+          {p.moldMode === 'silicone' && p.siliconeType === 'blockTwoPart' && (
+            <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+              <input type="checkbox" checked={!!t.partingBoard} onChange={e => onChange({ partingBoard: e.target.checked })} />
+              Printable parting board with silicone keys
+            </label>
           )}
 
           <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
@@ -457,5 +474,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard]);
 }

@@ -997,7 +997,7 @@ export default function ControlPanel({
               instead of an analytic box. Hidden for skin molds: the mother
               mold there already hugs the inflated model, so the toggle would
               be a no-op. */}
-          {!(state.moldMode === 'silicone' && state.siliconeType === 'skinCore') && (
+          {true && (
             <div style={{ marginBottom: spacing.md }}>
               <label
                 style={{
@@ -1012,7 +1012,7 @@ export default function ControlPanel({
                   checked={state.formFit}
                   onChange={e => onFormFitChange(e.target.checked)}
                 />
-                Form fit shell (hugs the model)
+                {state.moldMode === 'silicone' && state.siliconeType === 'skinCore' ? 'Form fit mother mold (hugs the skin)' : 'Form fit shell (hugs the model)'}
               </label>
               {state.formFit && (
                 <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
