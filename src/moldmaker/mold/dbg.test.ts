@@ -9,6 +9,7 @@ it('dbg', async () => {
   if ((g as any).geometry) g = (g as any).geometry;
   g.computeBoundingBox();
   console.log('bb', g.boundingBox);
-  const r = await generateMold(g, g.boundingBox!, 'y', 0.5, { wallThicknessRatio: 0.15, clearanceMm: 0.2, sprueDiameterMm: 5, moldBoxShape: 'rect', cutAngle: 0, formFit: true, extras: { wallMm: 5 } } as any);
-  console.log('notices', r.notices);
+  for (const axis of ['x','y','z'] as const) for (const wr of [0.1, 0.15]) {
+  const r = await generateMold(g, g.boundingBox!, axis, 0.5, { wallThicknessRatio: wr, clearanceMm: 0.2, sprueDiameterMm: 5, moldBoxShape: 'rect', cutAngle: 0, formFit: true } as any);
+  console.log('notices', axis, wr, r.notices); }
 }, 60000);
