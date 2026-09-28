@@ -428,6 +428,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
    * three-way drift that would otherwise appear the first time someone
    * "fixes" a bug in just one code path.
    */
+  // Largest side of the model at print scale; a change re-frames the 3D view.
+  const modelFitSize = useMemo(() => {
+    if (!state.boundingBox) return undefined;
+    const v = state.boundingBox.getSize(new THREE.Vector3());
+    return Math.max(v.x, v.y, v.z) * state.scale;
+  }, [state.boundingBox, state.scale]);
+
   const commitGeometry = useCallback((
     geometry: THREE.BufferGeometry,
     fileName: string,
