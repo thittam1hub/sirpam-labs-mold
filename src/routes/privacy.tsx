@@ -41,7 +41,7 @@ function PrivacyPage() {
         <h2 className="mt-8 text-xl font-semibold">Age requirement</h2>
         <p className="mt-2 text-muted-foreground">You must be 13 or older to create an account or send us a message. If you tell us you are under 13, your account and its data are deleted immediately. If you believe a child under 13 has given us information, email <a href="mailto:sirpam3dlabs@gmail.com" className="text-primary">sirpam3dlabs@gmail.com</a> and we will delete it.</p>
         <h2 className="mt-8 text-xl font-semibold">Payments</h2>
-        <p className="mt-2 text-muted-foreground">Online card payments are not enabled. If they are introduced, this policy will identify the provider and explain what payment information it processes before checkout goes live.</p>
+        <p className="mt-2 text-muted-foreground">International orders are sold by Paddle.com, our Merchant of Record, which handles the sale, payments, tax and invoicing. Indian orders are processed by Razorpay. We share your account email and the pack you buy with them; they collect card, UPI or bank details directly, and we never see or store those. We keep a record of each purchase (pack, amount, currency, payment reference) for receipts, refunds and tax records.</p>
         <h2 className="mt-8 text-xl font-semibold">Your choices</h2>
         <p className="mt-2 text-muted-foreground">You can delete gallery items at any time, and ask us to delete your account and data.</p>
         <LegalFooter />
