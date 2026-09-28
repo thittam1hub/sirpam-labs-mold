@@ -284,7 +284,9 @@ export default function AdvancedMoldPanel(p: Props) {
           </div>
           <div style={s.hint}>
             {t.seal === 'tongueGroove'
-              ? (p.cutAngle !== 0 || (p.formFit && !isSkin))
+              ? t.curvedSplit
+                ? 'Not used with the curved split — the halves nest and align themselves.'
+                : (p.cutAngle !== 0 || (p.formFit && !isSkin))
                 ? 'Needs a flat (untilted) split and a box shell — keyed pins will be used instead.'
                 : 'Continuous ridge around the cavity: leak-tight and self-aligning. Best for thin resins and silicone.'
               : 'Four locating pins — quick to print, fine for thicker materials.'}

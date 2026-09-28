@@ -220,6 +220,8 @@ export interface AppState {
   tier2: Tier2Settings;
   /** Export filename suffixes for the current pieces (silicone workflows). */
   pieceLabels: string[];
+  /** Plain-language notes from the last mold build (fallbacks, skipped features). */
+  buildNotices: string[];
   /** Estimated silicone consumption of the current mold, cm³. 0 = unknown. */
   siliconeVolumeCm3: number;
   /** Params used to generate the current mold — null when no mold exists. */
@@ -1766,6 +1768,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               geometry={state.originalGeometry}
               pieces={state.moldPieces}
               labels={state.pieceLabels}
+              notices={state.buildNotices}
               fileName={state.fileName}
               moldMode={state.moldMode}
               axis={state.axis}
@@ -1825,6 +1828,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         triangles={state.originalGeometry ? Math.round((state.originalGeometry.index ? state.originalGeometry.index.count : state.originalGeometry.attributes.position.count) / 3) : 0}
         scale={state.scale}
         hasMold={state.moldGenerated}
+        notes={state.moldGenerated ? state.buildNotices : []}
         busy={state.generating ? 'Building mold…' : state.autoDetecting ? 'Finding best split…' : stepExporting ? 'Exporting STEP…' : null}
       />
       </div>
