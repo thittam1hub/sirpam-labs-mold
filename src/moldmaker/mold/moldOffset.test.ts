@@ -17,7 +17,7 @@ describe('offsetOutwardEx', () => {
   it('gives an even wall on a dense mesh (distance field)', async () => {
     const wasm = await getManifold();
     // Long thin capsule-ish shape: the old stretch method badly distorts it.
-    const m = wasm.Manifold.sphere(5, 200).scale([4, 1, 1]);
+    const m = wasm.Manifold.sphere(5, 400).scale([4, 1, 1]);
     expect(m.numTri()).toBeGreaterThan(50000);
     const bb = new THREE.Box3(new THREE.Vector3(-20, -5, -5), new THREE.Vector3(20, 5, 5));
     const t0 = performance.now();
