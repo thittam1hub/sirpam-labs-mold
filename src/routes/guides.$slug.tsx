@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { getGuide, GUIDES, type Guide } from "@/lib/guides";
 
 export const Route = createFileRoute("/guides/$slug")({
+  staticData: { sitemap: false },
   loader: ({ params }) => {
     const guide = getGuide(params.slug);
     if (!guide) throw notFound();
