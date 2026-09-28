@@ -60,6 +60,10 @@ function ContactPage() {
             <input required aria-label="Your name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
             <input required type="email" aria-label="Your email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
             <textarea required rows={5} aria-label="Your message" placeholder="How can we help?" value={message} onChange={(e) => setMessage(e.target.value)} className={inputCls} />
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input type="checkbox" required checked={ageOk} onChange={(e) => setAgeOk(e.target.checked)} className="mt-0.5" />
+              <span>I am 13 or older. We use your details only to reply (see the <a href="/privacy" className="text-primary">Privacy Policy</a>).</span>
+            </label>
             <Button disabled={busy}>
               {busy ? "Sending…" : "Send message"}
             </Button>
