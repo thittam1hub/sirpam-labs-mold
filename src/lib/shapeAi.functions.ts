@@ -41,6 +41,14 @@ export const generateShape = createServerFn({ method: "POST" })
       || Date.now() - new Date(hold.created_at).getTime() > 25 * 60_000) {
       return { ok: false, error: "Your credit reservation expired. Please try again." };
     }
+    // Fair-use limit: at most 20 AI generations per person per hour.
+    const { count } = await context.supabase.from("credit_holds")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId).eq("action", "ai_shape")
+      .gte("created_at", new Date(Date.now() - 3600_000).toISOString());
+    if ((count ?? 0) > 20) {
+      return { ok: false, error: "You've made a lot of models in the last hour. Please wait a little and try again — your credits weren't used." };
+    }
     try {
       const raw = await generateShapeJson(key, data.prompt, data.image);
       const m = raw.match(/\{[\s\S]*\}/);
