@@ -3,7 +3,7 @@
 - [x] Phase 2: low-balance warnings, history filters + CSV, usage summary, promo codes
 - [ ] Phase 2: referral credits — waiting on your decision
 - [x] Production-readiness: purchase records, receipts, admin refund path, expiry warnings, promo rate limit, packs in database
-- [ ] Phase 3: Razorpay / Paddle payments — waiting on your choice and the workspace move (record_purchase is ready for the webhook)
+- [x] Phase 3: Paddle (international) + Razorpay (India) checkout, verified crediting, refunds remove unused credits
 - [x] Phase 4: admin page (user lookup, adjust credits, promo codes, usage stats, purchase refunds)
 - [x] Phase 5: server-only balance changes, duplicate-proof references, live checks run
 
@@ -33,5 +33,7 @@
 - [ ] 25 Page speed — measure on the published site
 - [x] 22 Guide pages: /guides + silicone molds, 3D printed molds, STL to mold
 - [ ] 21 publish + Search Console; crash tracking after publish
-- [ ] 1–3, 7 payments + branded email — blocked on workspace move / domain
+- [x] 1–3 payments, webhook, inviter purchase bonus (10 credits)
+- [ ] 7 branded email — needs your own domain
+- [ ] Going live with payments — verification in the Payments tab + publish
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
