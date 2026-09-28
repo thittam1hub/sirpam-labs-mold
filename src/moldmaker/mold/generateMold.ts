@@ -325,6 +325,16 @@ export async function generateMold(
     envelope = envelopeAroundManifold(fullBox, axis, wallThickness);
     moldCavity = fullBox.subtract(cavitySolid);
     cavityCut = cavitySolid;
+    const flangeMm = extras.flangeMm ?? 0;
+    if (flangeMm > 0) {
+      const flange = cutAngle === 0 && !r6.curvedSplit
+        ? buildPartingFlange(wasm, fullBox, axis, splitPos, flangeMm, Math.max(6, wallThickness * 2))
+        : null;
+      if (flange) moldCavity = moldCavity.add(flange);
+      else notices.push(cutAngle !== 0 || r6.curvedSplit
+        ? 'The parting flange needs a flat, untilted split, so it was left off.'
+        : 'The parting flange could not be built for this shape, so it was left off.');
+    }
   } else {
     const fullBox = createMoldBoxManifold(wasm, envelope);
     const r7g: Round7Extras = extras;
@@ -401,41 +411,19 @@ export async function generateMold(
     const [la, lb] = lateralAxisIndices(axis);
     const c = boundingBox.getCenter(new THREE.Vector3());
     const want = extras.lockCount === 2 ? 2 : 4;
-    // Thin form-fit walls: shrink the locks (down to 1.5 mm across) before giving up.
-    let fitted: number[][] = [];
-    const baseR = lockR;
-    for (const f of [1, 0.75, 0.55]) {
-      const r = Math.max(0.75, baseR * f);
-      fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
-        { a: c.getComponent(la), b: c.getComponent(lb) },
-        lockStyle === 'square' ? r * Math.SQRT2 : r, clearance, want);
-      if (fitted.length >= want) { lockR = r; break; }
-      if (r === 0.75) { lockR = r; break; }
+    const plan = planHugLocks(wasm, moldCavity, axis, splitPos,
+      { a: c.getComponent(la), b: c.getComponent(lb) }, lockR, clearance, want, pinHeight,
+      { square: lockStyle === 'square', magnet: lockStyle === 'magnet' });
+    lockR = plan.lockR;
+    for (const pad of plan.pads) {
+      const q = pad.at;
+      const up = axialCylinder(wasm, axis, q[la]!, q[lb]!, splitPos, splitPos + pad.halfHeight, pad.r, pad.r, 32);
+      const dn = axialCylinder(wasm, axis, q[la]!, q[lb]!, splitPos - pad.halfHeight, splitPos, pad.r, pad.r, 32);
+      if (up) topResult = topResult.add(up.subtract(cavityCut));
+      if (dn) bottomResult = bottomResult.add(dn.subtract(cavityCut));
     }
-    if (fitted.length < want) {
-      // Wall too thin for locks: add lock bosses (solid pads straddling the
-      // split, centred on the wall) and put full-size locks in those.
-      lockR = baseR;
-      fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
-        { a: c.getComponent(la), b: c.getComponent(lb) }, 0, 0, want, 0.3);
-      const bR = (lockStyle === 'square' ? lockR * Math.SQRT2 : lockR) + clearance + 1.6;
-      const hh = Math.max(pinHeight / 2 + clearance + 1.2, lockStyle === 'magnet' ? 4.4 : 0);
-      for (const q of fitted) {
-        const up = axialCylinder(wasm, axis, q[la]!, q[lb]!, splitPos, splitPos + hh, bR, bR, 32);
-        const dn = axialCylinder(wasm, axis, q[la]!, q[lb]!, splitPos - hh, splitPos, bR, bR, 32);
-        if (up) topResult = topResult.add(up.subtract(cavityCut));
-        if (dn) bottomResult = bottomResult.add(dn.subtract(cavityCut));
-      }
-      if (fitted.length) notices.push('The form-fit wall is thinner than the locks, so small round pads were added on the outside of the split to hold them.');
-    } else if (lockR < baseR) {
-      notices.push(`The form-fit wall is thin, so the locks were made smaller (${(lockR * 2).toFixed(1)} mm across) to fit inside it.`);
-    }
-    lockPositions = fitted;
-    if (fitted.length < want) {
-      notices.push(fitted.length === 0
-        ? 'No room for locks on this form-fit shell, so this mold has none. Increase the wall thickness or use a box shell.'
-        : `Only ${fitted.length} of ${want} locks fit on this form-fit shell. Increase the wall thickness for more.`);
-    }
+    notices.push(...plan.notices);
+    lockPositions = plan.positions;
   } else if (options.formFit && !sealed) {
     lockPositions = [];
     notices.push('Locks on a form-fit shell need a flat, untilted split, so this mold has none. Set the tilt to 0 or use a box shell.');
