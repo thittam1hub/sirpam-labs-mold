@@ -25,7 +25,7 @@ describe.skipIf(!run)("credit functions (live)", () => {
 
   it("hold then release leaves the balance unchanged", async () => {
     const before = await status();
-    const { data: h, error } = await sb.rpc("hold_credits", { _action: "export" });
+    const { data: h, error } = await sb.rpc("hold_credits", { _action: "export_stl" });
     expect(error).toBeNull();
     const hold = h as { ok: boolean; holdId?: string };
     if (!hold.ok) return; // nothing to spend — still a valid outcome
@@ -37,7 +37,7 @@ describe.skipIf(!run)("credit functions (live)", () => {
   });
 
   it("a hold cannot be released twice", async () => {
-    const { data } = await sb.rpc("hold_credits", { _action: "export" });
+    const { data } = await sb.rpc("hold_credits", { _action: "export_stl" });
     const hold = data as { ok: boolean; holdId?: string };
     if (!hold.ok) return;
     expect((await sb.rpc("release_hold", { _id: hold.holdId })).data).toBe(true);
