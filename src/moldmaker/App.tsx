@@ -1128,6 +1128,12 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             setState(prev => ({ ...prev, axis: e.key.toLowerCase() as Axis }));
           }
           break;
+        case '1': case '2': case '3': case '4': case '5':
+          if (e.key === '1' || state.originalGeometry) {
+            e.preventDefault();
+            setStep(Number(e.key) - 1);
+          }
+          break;
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -1185,6 +1191,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           .sirpam-hide-sm{display:none !important}
           .sirpam-show-sm{display:block}
           .sirpam-body{flex-direction:column}
+          .sirpam-rail{order:3;width:100% !important;flex-direction:row !important;justify-content:space-around;padding:4px !important}
+          .sirpam-rail-sep{display:none}
           .sirpam-body > main{min-height:45vh}
           .sirpam-panel{width:100% !important;max-height:55vh;border-radius:20px 20px 0 0}
         }
@@ -1209,6 +1217,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         onExport={handleExport}
       />
       <div className="sirpam-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        <WorkflowRail step={step} onStep={setStep} hasModel={!!state.originalGeometry} hasMold={state.moldGenerated} />
         {/* 3D Viewport */}
         <main
           style={{ flex: 1, position: 'relative' }}
@@ -1722,7 +1731,10 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           }
           modelSlot={<>
             <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} scale={state.scale} onSetScale={sc => setState(prev => ({ ...prev, scale: sc }))} />
-            <AiShapePanel onCommit={commitGeometry} />
+            <Link to="/studio/ai" style={{ display: 'block', textDecoration: 'none', padding: spacing.lg, borderRadius: radii.lg, background: colors.sectionBg, boxShadow: shadows.raisedSm, color: colors.textBody }}>
+              <div style={{ fontWeight: 700, color: colors.primary, marginBottom: 4 }}>No model? Create one with AI</div>
+              <div style={{ fontSize: fontSizes.xs, color: colors.textMuted, lineHeight: 1.5 }}>Open the AI Model Maker, describe an object, preview and refine it, then send it straight back here.</div>
+            </Link>
           </>}
           reportSlot={<>
             <MoldReportPanel
@@ -1782,6 +1794,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           }
         />
       </div>
+      <StatusBar
+        size={state.boundingBox ? (() => { const v = state.boundingBox.getSize(new THREE.Vector3()); return { x: v.x, y: v.y, z: v.z }; })() : null}
+        triangles={state.originalGeometry ? Math.round((state.originalGeometry.index ? state.originalGeometry.index.count : state.originalGeometry.attributes.position.count) / 3) : 0}
+        scale={state.scale}
+        hasMold={state.moldGenerated}
+        busy={state.generating ? 'Building mold…' : state.autoDetecting ? 'Finding best split…' : stepExporting ? 'Exporting STEP…' : null}
+      />
       </div>
 
 
