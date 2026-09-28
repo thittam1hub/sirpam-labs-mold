@@ -24,6 +24,7 @@ export function fitFormFitLocks(
   lockR: number,
   clearance: number,
   count: number,
+  inset: number = lockR + clearance + 0.4,
 ): number[][] {
   const pi = primaryAxisIndex(axis);
   const [la, lb] = lateralAxisIndices(axis);
@@ -37,13 +38,12 @@ export function fitFormFitLocks(
   let polys: number[][][] = [];
   try {
     const section = shell.transform(M).slice(splitPos);
-    const safe = section.offset(-(lockR + clearance + 0.4), 'Round');
+    const safe = section.offset(-inset, 'Round');
     polys = safe.toPolygons().map((poly: any) => Array.from(poly, (pt: any) => [pt[0] ?? pt.x, pt[1] ?? pt.y]));
   } catch (e) {
     console.warn('Form-fit lock slice failed', e);
     return [];
   }
-  console.log("ffl polys", polys.length, polys.map(p=>p.length), "center", center, "split", splitPos);
   if (polys.length === 0) return [];
 
   const inside = (x: number, y: number) => {

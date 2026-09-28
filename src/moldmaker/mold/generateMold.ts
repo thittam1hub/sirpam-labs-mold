@@ -412,12 +412,29 @@ export async function generateMold(
       if (fitted.length >= want) { lockR = r; break; }
       if (r === 0.75) { lockR = r; break; }
     }
-    if (lockR < baseR && fitted.length) notices.push(`The form-fit wall is thin, so the locks were made smaller (${(lockR * 2).toFixed(1)} mm across) to fit inside it.`);
+    if (fitted.length < want) {
+      // Wall too thin for locks: add lock bosses (solid pads straddling the
+      // split, centred on the wall) and put full-size locks in those.
+      lockR = baseR;
+      fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
+        { a: c.getComponent(la), b: c.getComponent(lb) }, 0, 0, want, 0.3);
+      const bR = (lockStyle === 'square' ? lockR * Math.SQRT2 : lockR) + clearance + 1.6;
+      const hh = Math.max(pinHeight / 2 + clearance + 1.2, lockStyle === 'magnet' ? 4.4 : 0);
+      for (const q of fitted) {
+        const up = axialCylinder(wasm, axis, q[la]!, q[lb]!, splitPos, splitPos + hh, bR, bR, 32);
+        const dn = axialCylinder(wasm, axis, q[la]!, q[lb]!, splitPos - hh, splitPos, bR, bR, 32);
+        if (up) topResult = topResult.add(up.subtract(cavityCut));
+        if (dn) bottomResult = bottomResult.add(dn.subtract(cavityCut));
+      }
+      if (fitted.length) notices.push('The form-fit wall is thinner than the locks, so small round pads were added on the outside of the split to hold them.');
+    } else if (lockR < baseR) {
+      notices.push(`The form-fit wall is thin, so the locks were made smaller (${(lockR * 2).toFixed(1)} mm across) to fit inside it.`);
+    }
     lockPositions = fitted;
     if (fitted.length < want) {
       notices.push(fitted.length === 0
-        ? 'The form-fit wall is too thin at the split for locks, so this mold has none. Increase the wall thickness or use a box shell.'
-        : `The form-fit wall only had room for ${fitted.length} of ${want} locks. Increase the wall thickness for more.`);
+        ? 'No room for locks on this form-fit shell, so this mold has none. Increase the wall thickness or use a box shell.'
+        : `Only ${fitted.length} of ${want} locks fit on this form-fit shell. Increase the wall thickness for more.`);
     }
   } else if (options.formFit && !sealed) {
     lockPositions = [];
