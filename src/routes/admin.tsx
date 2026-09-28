@@ -27,6 +27,8 @@ type Promo = { code: string; credits: number; max_redemptions: number | null; re
 type Overview = { users: number; activeLast30: number; purchases: number; creditsSold: number; usageByAction: Record<string, number>; promos: Promo[] };
 type FoundUser = { id: string; email: string; createdAt: string; balance: number;
   history: { id: string; delta: number; reason: string; kind: string | null; status: string; created_at: string }[] };
+type AdminPurchase = { id: string; pack_name: string; credits: number; price: number; currency: string;
+  provider: string; payment_ref: string | null; status: string; created_at: string; refunded_at: string | null };
 
 const rpc = async <T,>(fn: string, args?: Record<string, unknown>): Promise<T> => {
   const { data, error } = await supabase.rpc(fn as never, args as never);
@@ -43,6 +45,7 @@ function AdminPage() {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [purchases, setPurchases] = useState<AdminPurchase[]>([]);
   const [promo, setPromo] = useState({ code: "", credits: "5", max: "100", expires: "", days: "90" });
   const [busy, setBusy] = useState(false);
 
