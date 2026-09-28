@@ -16,6 +16,13 @@ const STEPS: Array<{ title: string; body: string }> = [
 export default function GuidedTour() {
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const on = () => setSmall(mq.matches);
+    on(); mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
 
   useEffect(() => {
     try { if (!localStorage.getItem(KEY)) setOpen(true); } catch { /* storage blocked */ }
@@ -55,10 +62,14 @@ export default function GuidedTour() {
 
   const step = STEPS[i]!;
   const last = i === STEPS.length - 1;
+  // Phones: sit just under the top bar and stay compact, so the step bar and
+  // settings at the bottom stay reachable while the tour is open.
+  const body = small ? step.body.replace(' on the left rail (keys 1-5), with settings on the right and Back and Next at the bottom', ' on the bottom bar, with settings below the 3D view') : step.body;
   return (
     <div role="dialog" aria-label="Guided tour" style={{
-      position: 'fixed', left: 16, bottom: 16, zIndex: 60, width: 340, maxWidth: 'calc(100vw - 32px)',
-      background: colors.sectionBg, borderRadius: radii.xl, boxShadow: shadows.raised, padding: spacing.md + 4,
+      position: 'fixed', left: small ? 8 : 16, zIndex: 60, width: 340, maxWidth: small ? 'calc(100vw - 16px)' : 'calc(100vw - 32px)',
+      ...(small ? { top: 64, maxHeight: '45vh', overflowY: 'auto' as const } : { bottom: 16 }),
+      background: colors.sectionBg, borderRadius: radii.xl, boxShadow: shadows.raised, padding: small ? spacing.md : spacing.md + 4,
     }}>
       <div style={{ fontSize: fontSizes.xs, color: colors.textDim, marginBottom: spacing.xs }}>
         Step {i + 1} of {STEPS.length}
@@ -66,7 +77,7 @@ export default function GuidedTour() {
       <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: fontSizes.md, color: colors.textBody, marginBottom: spacing.sm }}>
         {step.title}
       </div>
-      <div style={{ fontSize: fontSizes.sm, color: colors.textMuted, lineHeight: 1.5 }}>{step.body}</div>
+      <div style={{ fontSize: small ? fontSizes.xs : fontSizes.sm, color: colors.textMuted, lineHeight: 1.5 }}>{body}</div>
       <div style={{ display: 'flex', gap: 4, margin: `${spacing.md}px 0` }}>
         {STEPS.map((_, k) => (
           <div key={k} style={{ flex: 1, height: 4, borderRadius: 2, background: k <= i ? colors.primary : colors.textDim, opacity: k <= i ? 1 : 0.3 }} />
