@@ -3,7 +3,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Link } from '@tanstack/react-router';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from '../../theme';
 import { supabase } from '@/integrations/supabase/client';
-import { getCreditStatus, CREDITS_EVENT, LOW_BALANCE, type CreditStatus } from '@/lib/credits';
+import { getCreditStatus, CREDITS_EVENT, LOW_BALANCE, EXPIRY_WARN_DAYS, daysUntilExpiry, type CreditStatus } from '@/lib/credits';
 import { useAppSession } from '@/components/AppSession';
 import { ChevronDown, Menu } from 'lucide-react';
 
@@ -129,6 +129,16 @@ export default function TopBar(p: Props) {
               Low — buy credits
             </Link>
           )}
+          {credits && (() => {
+            const d = daysUntilExpiry(credits);
+            return d !== null && d >= 0 && d <= EXPIRY_WARN_DAYS ? (
+              <Link to="/account" search={{ tab: 'credits' }} className="sirpam-hide-sm"
+                title={`${credits.nextExpiryAmount} credits expire on ${new Date(credits.nextExpiryAt!).toLocaleDateString()}`}
+                style={{ ...pill(), textDecoration: 'none', color: colors.primary }}>
+                {credits.nextExpiryAmount} expire {d === 0 ? 'today' : `in ${d}d`}
+              </Link>
+            ) : null;
+          })()}
           <button type="button" style={{ ...pill(), display: 'flex', alignItems: 'center', gap: 6 }}
             onClick={() => setMenu(menu === 'account' ? null : 'account')} aria-haspopup="menu" className="sirpam-hide-sm">
             {profile?.avatar_url && (

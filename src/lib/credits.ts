@@ -63,11 +63,62 @@ export const REGION_TIERS: { id: RegionTier; name: string; examples: string }[] 
 ];
 
 // Prices per region tier (USD). India is shown in rupees.
+// Fallback copy — the live catalog lives in the credit_packs table (see getCreditPacks).
 export const CREDIT_PACKS = [
   { id: "starter", name: "Starter", credits: 20, usd: { standard: 5, emerging: 3, value: 2 }, inr: 199 },
   { id: "maker", name: "Maker", credits: 60, usd: { standard: 12, emerging: 7, value: 5 }, inr: 499, best: true },
   { id: "studio", name: "Studio", credits: 200, usd: { standard: 30, emerging: 18, value: 12 }, inr: 1299 },
 ] as const;
+
+export type CreditPack = {
+  id: string; name: string; credits: number;
+  usd: Record<RegionTier, number>; inr: number; best?: boolean;
+};
+
+interface PackRow {
+  id: string; name: string; credits: number;
+  usd_standard: number; usd_emerging: number; usd_value: number;
+  inr: number; best: boolean;
+}
+
+/** Live pack catalog from the database; falls back to the bundled list offline. */
+export async function getCreditPacks(): Promise<CreditPack[]> {
+  try {
+    const { data, error } = await supabase
+      .from("credit_packs" as never)
+      .select("id, name, credits, usd_standard, usd_emerging, usd_value, inr, best, sort")
+      .order("sort", { ascending: true });
+    if (error || !data?.length) throw error;
+    return (data as unknown as PackRow[]).map((r) => ({
+      id: r.id, name: r.name, credits: r.credits, inr: r.inr, best: r.best,
+      usd: { standard: r.usd_standard, emerging: r.usd_emerging, value: r.usd_value },
+    }));
+  } catch {
+    return CREDIT_PACKS.map((p) => ({ ...p, usd: { ...p.usd } }));
+  }
+}
+
+export interface Purchase {
+  id: string; pack_name: string; credits: number; price: number; currency: string;
+  provider: string; status: string; created_at: string; refunded_at: string | null;
+}
+
+export async function getPurchases(): Promise<Purchase[]> {
+  const { data, error } = await supabase
+    .from("purchases" as never)
+    .select("id, pack_name, credits, price, currency, provider, status, created_at, refunded_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Purchase[];
+}
+
+/** Days until the next credit expiry, or null when nothing expires. */
+export function daysUntilExpiry(s: CreditStatus): number | null {
+  if (!s.nextExpiryAt || !(s.nextExpiryAmount ?? 0)) return null;
+  return Math.ceil((new Date(s.nextExpiryAt).getTime() - Date.now()) / 86400000);
+}
+
+export const EXPIRY_WARN_DAYS = 14;
 
 const VALUE_TZ = /^(Asia\/(Kolkata|Calcutta|Dhaka|Karachi|Colombo|Kathmandu|Jakarta|Manila|Ho_Chi_Minh|Saigon|Bangkok|Yangon|Phnom_Penh|Vientiane|Kuala_Lumpur)|Africa\/)/;
 const EMERGING_TZ = /^(America\/(Sao_Paulo|Argentina|Buenos_Aires|Bogota|Lima|Santiago|Mexico_City|Caracas|Montevideo|La_Paz|Guayaquil|Asuncion)|Europe\/(Warsaw|Bucharest|Sofia|Kiev|Kyiv|Belgrade|Budapest|Istanbul|Moscow|Minsk|Zagreb|Riga|Vilnius|Tallinn|Chisinau)|Asia\/(Dubai|Riyadh|Baghdad|Tehran|Amman|Beirut|Tbilisi|Yerevan|Baku|Almaty|Tashkent))/;

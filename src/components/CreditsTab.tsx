@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import {
-  ACTION_LABEL, KIND_LABEL, LOW_BALANCE, STATUS_LABEL, ledgerLabel, ledgerToCsv, redeemPromo,
-  type CreditStatus, type LedgerRow,
+  ACTION_LABEL, EXPIRY_WARN_DAYS, KIND_LABEL, LOW_BALANCE, STATUS_LABEL, daysUntilExpiry,
+  getPurchases, ledgerLabel, ledgerToCsv, redeemPromo,
+  type CreditStatus, type LedgerRow, type Purchase,
 } from "@/lib/credits";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,11 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
   const [code, setCode] = useState("");
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [promoBusy, setPromoBusy] = useState(false);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [receipt, setReceipt] = useState<Purchase | null>(null);
+
+  useEffect(() => { getPurchases().then(setPurchases).catch(() => {}); }, [rows]);
+  const expiryDays = daysUntilExpiry(status);
 
   const months = useMemo(() => Array.from(new Set(rows.map((r) => r.created_at.slice(0, 7)))), [rows]);
   const filtered = useMemo(() => rows.filter((r) => {
@@ -70,6 +76,12 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
           <Button asChild size="sm"><Link to="/pricing">Buy credits</Link></Button>
         </div>
       )}
+      {expiryDays !== null && expiryDays <= EXPIRY_WARN_DAYS && expiryDays >= 0 && (
+        <div role="status" className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm">
+          <b>{status.nextExpiryAmount} credits expire {expiryDays === 0 ? "today" : `in ${expiryDays} day${expiryDays === 1 ? "" : "s"}`}</b>
+          {" "}({new Date(status.nextExpiryAt!).toLocaleDateString()}). Use them before then — expired credits can't be restored.
+        </div>
+      )}
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-3xl bg-card p-6 shadow-sm">
           <p className="text-sm text-muted-foreground">Your credits</p>
@@ -105,6 +117,45 @@ export function CreditsTab({ status, rows, onChanged }: { status: CreditStatus; 
       <p className="mt-3 text-xs text-muted-foreground">
         Monthly free credits are used first, then promo and welcome credits, then purchased credits. Welcome credits last 90 days, purchased credits 24 months. You're only charged when an action succeeds.
       </p>
+
+      {purchases.length > 0 && (
+        <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold">Purchases</h2>
+          <table className="mt-4 w-full text-sm">
+            <tbody>
+              {purchases.map((p) => (
+                <tr key={p.id} className="border-t border-border">
+                  <td className="py-2 pr-2 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                  <td className="py-2 pr-2">{p.pack_name} pack · {p.credits} credits</td>
+                  <td className="py-2 pr-2">{p.currency === "INR" ? `₹${Number(p.price).toLocaleString("en-IN")}` : `$${p.price}`}</td>
+                  <td className="py-2 pr-2 text-xs text-muted-foreground">{p.status === "refunded" ? "Refunded" : "Paid"}</td>
+                  <td className="py-2 text-right">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setReceipt(p)}>Receipt</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {receipt && (
+        <div role="dialog" aria-modal="true" aria-label="Purchase receipt"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setReceipt(null)}>
+          <div className="w-full max-w-md rounded-3xl bg-card p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold">Receipt</h3>
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Item</dt><dd>{receipt.pack_name} pack — {receipt.credits} credits</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Price</dt><dd>{receipt.currency === "INR" ? `₹${Number(receipt.price).toLocaleString("en-IN")}` : `$${receipt.price}`} {receipt.currency}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Date</dt><dd>{new Date(receipt.created_at).toLocaleString()}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Status</dt><dd>{receipt.status === "refunded" ? `Refunded ${receipt.refunded_at ? new Date(receipt.refunded_at).toLocaleDateString() : ""}` : "Paid"}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Reference</dt><dd className="font-mono text-xs">{receipt.id.slice(0, 8)}</dd></div>
+            </dl>
+            <p className="mt-4 text-xs text-muted-foreground">Sirpam 3D Labs, India · sirpam3dlabs@gmail.com. Credits are valid 24 months from purchase.</p>
+            <Button type="button" variant="outline" className="mt-4 w-full" onClick={() => setReceipt(null)}>Close</Button>
+          </div>
+        </div>
+      )}
 
       <section className="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">

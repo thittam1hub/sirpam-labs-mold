@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { CREDIT_PACKS, guessRegion, type RegionTier } from "@/lib/credits";
+import { CREDIT_PACKS, guessRegion, getCreditPacks, type CreditPack, type RegionTier } from "@/lib/credits";
 import { BUSINESS } from "@/lib/business";
 import { LegalFooter } from "@/components/LegalFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -35,11 +35,16 @@ export const Route = createFileRoute("/checkout/$pack")({
 
 function CheckoutPage() {
   const { id } = Route.useLoaderData();
-  const pack = CREDIT_PACKS.find((p) => p.id === id);
+  const fallback = CREDIT_PACKS.find((p) => p.id === id);
+  const [pack, setPack] = useState<CreditPack | undefined>(
+    fallback ? { ...fallback, usd: { ...fallback.usd } } : undefined);
   const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
   const [agree, setAgree] = useState(false);
-  useEffect(() => { const g = guessRegion(); setTier(g.tier); setIndia(g.india); }, []);
+  useEffect(() => {
+    const g = guessRegion(); setTier(g.tier); setIndia(g.india);
+    getCreditPacks().then((ps) => { const live = ps.find((p) => p.id === id); if (live) setPack(live); }).catch(() => {});
+  }, [id]);
 
   if (!pack) return null;
 
