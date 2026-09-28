@@ -636,6 +636,10 @@ export async function generateMold(
       const feet = buildFeet(wasm, { axis, envMin: envelope.moldMin, envMax: eMax });
       if (feet) bottomResult = bottomResult.add(feet);
     }
+    if (options.formFit) {
+      const off = [r7.volumeLabel && 'volume label', r7.watermark && 'watermark', r7.moldFeet && !r6.standFins && 'mold feet'].filter(Boolean);
+      if (off.length) notices.push(`The ${off.join(', ')} ${off.length > 1 ? 'need' : 'needs'} a box shell, so ${off.length > 1 ? 'they were' : 'it was'} left off this form-fit mold.`);
+    }
   }
   let pieces: any[] = [topResult, bottomResult];
 
