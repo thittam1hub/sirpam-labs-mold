@@ -29,7 +29,7 @@ import {
 } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold } from './moldBox';
 import { envelopeAroundManifold, offsetOutwardEx } from './moldOffset';
-import { fitFormFitLocks } from './formFitLocks';
+import { buildPartingFlange, planHugLocks } from './formFitLocks';
 import { primaryAxisIndex } from './moldBox';
 import {
   type MoldExtras,
