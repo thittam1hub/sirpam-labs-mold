@@ -4,13 +4,23 @@ export type CreditAction =
   | "export_stl" | "export_obj" | "export_3mf" | "export_step"
   | "pro_features" | "ai_shape" | "auto_repair" | "mold_report";
 
-export interface CreditStatus { balance: number; monthlyFreeLeft: number; monthlyFreeLimit: number }
-export interface SpendResult { ok: boolean; charged: number; fromFree?: number; balance: number; needed?: number; monthlyFreeLeft?: number }
-export interface LedgerRow { id: string; delta: number; reason: string; reference: string | null; created_at: string }
+export interface CreditStatus {
+  balance: number; monthlyFreeLeft: number; monthlyFreeLimit: number;
+  nextExpiryAmount?: number; nextExpiryAt?: string | null;
+}
+export interface HoldResult { ok: boolean; holdId?: string; charged?: number; fromFree?: number; balance: number; needed?: number; monthlyFreeLeft?: number }
+export type SpendResult = HoldResult;
+export interface LedgerRow { id: string; delta: number; reason: string; reference: string | null; created_at: string; kind: string | null; status: string; expires_at: string | null }
 
 export const CREDITS_EVENT = "sirpam:credits";
+export const LOW_BALANCE = 2;
 
-// Mirrors the database function spend_credits (the source of truth).
+/** Credit policy — keep in sync with DB functions and Terms/Refund pages. */
+export const CREDIT_POLICY = {
+  welcome: 10, welcomeDays: 90, monthlyFree: 3, purchaseMonths: 24,
+};
+
+// Mirrors the database function _action_cost (the source of truth).
 export const ACTION_COST: Record<CreditAction, number> = {
   export_stl: 1, export_obj: 1, export_3mf: 2, export_step: 2,
   pro_features: 3, ai_shape: 3, auto_repair: 2, mold_report: 1,
@@ -19,15 +29,29 @@ export const ACTION_COST: Record<CreditAction, number> = {
 export const ACTION_LABEL: Record<string, string> = {
   export_stl: "STL export", export_obj: "OBJ export", export_3mf: "3MF export", export_step: "STEP (CAD) export",
   pro_features: "Pro mold features", ai_shape: "AI model maker", auto_repair: "Automatic repair", mold_report: "Mold report",
-  welcome: "Welcome credits", purchase: "Credit pack purchase",
+  welcome: "Welcome credits", purchase: "Credit pack purchase", promo: "Promo code", expired: "Credits expired",
 };
 
+export const KIND_LABEL: Record<string, string> = {
+  monthly: "Monthly free", welcome: "Welcome", promo: "Promo", bonus: "Bonus", referral: "Referral",
+  purchase: "Purchased", mixed: "Mixed", adjustment: "Adjustment",
+};
+export const STATUS_LABEL: Record<string, string> = {
+  held: "In progress", charged: "Charged", refunded: "Refunded", granted: "Added", expired: "Expired",
+};
+
+export function ledgerLabel(reason: string): string {
+  if (reason.startsWith("admin: ")) return `Adjustment — ${reason.slice(7)}`;
+  return ACTION_LABEL[reason] ?? reason;
+}
+
+/** Single price list used by Pricing, Help and prompts. */
 export const CREDIT_COSTS: { action: string; cost: string }[] = [
-  { action: "STL or OBJ export", cost: "1" },
-  { action: "3MF or STEP (CAD) export", cost: "2" },
-  { action: "AI model maker, per shape", cost: "3" },
-  { action: "Automatic repair of a broken model", cost: "2" },
-  { action: "One-page mold report", cost: "1" },
+  { action: "STL or OBJ export", cost: String(ACTION_COST.export_stl) },
+  { action: "3MF or STEP (CAD) export", cost: String(ACTION_COST.export_3mf) },
+  { action: "AI model maker, per shape", cost: String(ACTION_COST.ai_shape) },
+  { action: "Automatic repair of a broken model", cost: String(ACTION_COST.auto_repair) },
+  { action: "One-page mold report", cost: String(ACTION_COST.mold_report) },
 ];
 
 export type RegionTier = "standard" | "emerging" | "value";
@@ -64,60 +88,114 @@ export async function getCreditStatus(): Promise<CreditStatus | null> {
   return data as unknown as CreditStatus;
 }
 
-export async function getCreditHistory(): Promise<LedgerRow[]> {
+export async function getCreditHistory(limit = 500): Promise<LedgerRow[]> {
   const { data, error } = await supabase
     .from("credit_ledger" as never)
-    .select("id, delta, reason, reference, created_at")
+    .select("id, delta, reason, reference, created_at, kind, status, expires_at")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(limit);
   if (error) throw error;
   return (data ?? []) as unknown as LedgerRow[];
 }
 
+function notify() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(CREDITS_EVENT));
+}
+
+/** Reserve credits. They are only charged when captureHold is called. */
+export async function holdCredits(action: CreditAction): Promise<HoldResult> {
+  const { data, error } = await supabase.rpc("hold_credits" as never, { _action: action } as never);
+  if (error) throw error;
+  notify();
+  return data as unknown as HoldResult;
+}
+export async function captureHold(id: string): Promise<void> {
+  const { error } = await supabase.rpc("capture_hold" as never, { _id: id } as never);
+  if (error) console.error("Capture failed:", error);
+  notify();
+}
+export async function releaseHold(id: string): Promise<void> {
+  const { error } = await supabase.rpc("release_hold" as never, { _id: id } as never);
+  if (error) console.error("Release failed:", error);
+  notify();
+}
+
+/** Immediate charge (hold + capture). Prefer holdCredits + settle for actions that can fail. */
 export async function spendCredits(action: CreditAction): Promise<SpendResult> {
   const { data, error } = await supabase.rpc("spend_credits" as never, { _action: action } as never);
   if (error) throw error;
-  const r = data as unknown as SpendResult;
-  if (typeof window !== "undefined") window.dispatchEvent(new Event(CREDITS_EVENT));
-  return r;
+  notify();
+  return data as unknown as SpendResult;
 }
 
+export async function redeemPromo(code: string): Promise<{ ok: boolean; credits?: number; error?: string }> {
+  const { data, error } = await supabase.rpc("redeem_promo" as never, { _code: code } as never);
+  if (error) throw error;
+  notify();
+  return data as unknown as { ok: boolean; credits?: number; error?: string };
+}
+
+/** Handle for a reserved charge: call succeed() when the action worked, fail() otherwise. */
+export interface Charge { succeed: () => Promise<void>; fail: () => Promise<void> }
+
 /**
- * Shared charge flow for paid tools (AI maker, repair, report): requires
- * sign-in, confirms the cost, spends the credits. Returns true when the
- * action may proceed. `onMessage` surfaces errors/notes to the user.
+ * Shared charge flow for paid tools: requires sign-in, confirms the cost,
+ * and holds the credits. Returns a Charge (settle it!) or null when the
+ * action must not proceed.
  */
-export async function chargeFor(
+export async function reserveFor(
   action: CreditAction,
   onMessage: (msg: string) => void,
-): Promise<boolean> {
+): Promise<Charge | null> {
   try {
     const { data: s } = await supabase.auth.getSession();
     if (!s.session) {
-      onMessage(`Please sign in to use ${ACTION_LABEL[action]} — you get 10 welcome credits plus 3 free credits every month.`);
-      window.setTimeout(() => window.location.assign('/auth'), 1800);
-      return false;
+      onMessage(`Please sign in to use ${ACTION_LABEL[action]} — you get ${CREDIT_POLICY.welcome} welcome credits plus ${CREDIT_POLICY.monthlyFree} free credits every month.`);
+      window.setTimeout(() => window.location.assign(`/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`), 1800);
+      return null;
     }
     const status = await getCreditStatus();
     if (status) {
       const c = describeCharge(action, status);
       if (!c.affordable) {
         if (window.confirm(`${c.text.split('.')[0]}. You don't have enough credits. Open the Pricing page to buy more?`)) window.location.assign('/pricing');
-        return false;
+        return null;
       }
-      if (!window.confirm(`${c.text}\n\nContinue?`)) return false;
+      if (!window.confirm(`${c.text}\nYou're only charged if it succeeds.\n\nContinue?`)) return null;
     }
-    const r = await spendCredits(action);
-    if (!r.ok) {
+    const r = await holdCredits(action);
+    if (!r.ok || !r.holdId) {
       onMessage(`${ACTION_LABEL[action]} needs ${r.needed} credit(s) and you have ${r.balance}. Get more on the Pricing page (/pricing).`);
-      return false;
+      return null;
     }
-    return true;
+    const id = r.holdId;
+    let settled = false;
+    return {
+      succeed: async () => { if (!settled) { settled = true; await captureHold(id); } },
+      fail: async () => { if (!settled) { settled = true; await releaseHold(id); } },
+    };
   } catch (e) {
     console.error('Credit check failed:', e);
     onMessage('Could not check your credits. Please try again.');
-    return false;
+    return null;
   }
+}
+
+/** Legacy boolean flow: charges immediately on success of the hold. */
+export async function chargeFor(action: CreditAction, onMessage: (msg: string) => void): Promise<boolean> {
+  const c = await reserveFor(action, onMessage);
+  if (!c) return false;
+  await c.succeed();
+  return true;
+}
+
+export function ledgerToCsv(rows: LedgerRow[]): string {
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const lines = ["Date,Activity,Type,Status,Credits"];
+  for (const r of rows) {
+    lines.push([r.created_at, esc(ledgerLabel(r.reason)), KIND_LABEL[r.kind ?? ""] ?? "", STATUS_LABEL[r.status] ?? r.status, String(r.delta)].join(","));
+  }
+  return lines.join("\n");
 }
 
 /** Describe what an action will use, for the confirm prompt. */
