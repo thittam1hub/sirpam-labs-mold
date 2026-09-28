@@ -29,6 +29,7 @@ import {
 } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold } from './moldBox';
 import { envelopeAroundManifold, offsetOutwardEx } from './moldOffset';
+import { fitFormFitLocks } from './formFitLocks';
 import { primaryAxisIndex } from './moldBox';
 import {
   type MoldExtras,
@@ -391,9 +392,28 @@ export async function generateMold(
   const lockR = extras.lockDiameterMm && extras.lockDiameterMm > 0
     ? Math.min(extras.lockDiameterMm / 2, lockStyle === 'magnet' ? wallThickness * 0.45 + 2 : wallThickness * 0.4)
     : pinRadius;
-  const lockPositions = extras.lockCount === 2
+  let lockPositions = extras.lockCount === 2
     ? (envelope.shape === 'cylinder' ? [pinPositions[0], pinPositions[2]] : [pinPositions[0], pinPositions[3]]).filter(Boolean)
     : pinPositions;
+  // Form-fit shells: box-corner positions are empty air, so place locks in
+  // the real wall at the split instead.
+  if (options.formFit && !sealed && cutAngle === 0) {
+    const [la, lb] = lateralAxisIndices(axis);
+    const c = boundingBox.getCenter(new THREE.Vector3());
+    const want = extras.lockCount === 2 ? 2 : 4;
+    const fitted = fitFormFitLocks(wasm, moldCavity, axis, splitPos,
+      { a: c.getComponent(la), b: c.getComponent(lb) },
+      lockStyle === 'square' ? lockR * Math.SQRT2 : lockR, clearance, want);
+    lockPositions = fitted;
+    if (fitted.length < want) {
+      notices.push(fitted.length === 0
+        ? 'The form-fit wall is too thin at the split for locks, so this mold has none. Increase the wall thickness or use a box shell.'
+        : `The form-fit wall only had room for ${fitted.length} of ${want} locks. Increase the wall thickness for more.`);
+    }
+  } else if (options.formFit && !sealed) {
+    lockPositions = [];
+    notices.push('Locks on a form-fit shell need a flat, untilted split, so this mold has none. Set the tilt to 0 or use a box shell.');
+  }
   const rot = getRotationForAxis(axis);
   for (const pinPos of (sealed ? [] : lockPositions)) {
     if (lockStyle === 'magnet' && cutAngle === 0) {
