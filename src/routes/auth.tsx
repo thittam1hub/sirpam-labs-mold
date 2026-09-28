@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { signUpWithAgeCheck } from "@/lib/signup.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { BrandLink } from "@/components/BrandLink";
@@ -66,6 +67,7 @@ function AuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [ageOk, setAgeOk] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -85,11 +87,19 @@ function AuthPage() {
         goBack();
       }
     } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/auth` },
-      });
+      if (!ageOk) {
+        setMsgKind("error");
+        setMsg("You must be 13 or older to create an account.");
+        setBusy(false);
+        return;
+      }
+      let error: { message: string } | null = null;
+      try {
+        const r = await signUpWithAgeCheck({ data: { email, password, ageConfirmed: true, redirectTo: `${window.location.origin}/auth` } });
+        if (r.error) error = { message: r.error };
+      } catch {
+        error = { message: "Could not create the account. Please check your details and try again." };
+      }
       setMsgKind(error ? "error" : "info");
       setMsg(error ? error.message : "Check your email to confirm your account, then sign in.");
     }
@@ -160,6 +170,15 @@ function AuthPage() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+          )}
+          {mode === "up" && (
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input type="checkbox" required checked={ageOk} onChange={(e) => setAgeOk(e.target.checked)} className="mt-0.5" />
+              <span>
+                I am 13 or older and agree to the <Link to="/terms" className="text-primary">Terms</Link> and{" "}
+                <Link to="/privacy" className="text-primary">Privacy Policy</Link>.
+              </span>
+            </label>
           )}
           <button disabled={busy} className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
             {busy ? "Please wait…" : mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Send reset link"}
