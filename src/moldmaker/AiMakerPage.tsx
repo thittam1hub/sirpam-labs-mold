@@ -41,7 +41,7 @@ function sizeOf(g: THREE.BufferGeometry) {
 export default function AiMakerPage({ initialPrompt }: { initialPrompt?: string }) {
   const gen = useServerFn(generateShape);
   const navigate = useNavigate();
-  const { user } = useAppSession();
+  const { session } = useAppSession(); const user = session?.user ?? null;
   const [prompt, setPrompt] = useState(initialPrompt ?? '');
   const [style, setStyle] = useState<string | null>(null);
   const [heightMm, setHeightMm] = useState('');
@@ -97,7 +97,7 @@ export default function AiMakerPage({ initialPrompt }: { initialPrompt?: string 
       <style>{`@media (max-width: 900px){.ai-grid{grid-template-columns:1fr !important}.ai-view{min-height:340px !important}}`}</style>
       <header style={{ display: 'flex', alignItems: 'center', gap: spacing.md, padding: `${spacing.md}px ${spacing.xl}px`, background: colors.panelBg, boxShadow: shadows.raisedSm, position: 'sticky', top: 0, zIndex: 5 }}>
         <Link to="/studio" style={btn(false)}><ArrowLeft size={16} aria-hidden="true" /> Studio</Link>
-        <h1 style={{ margin: 0, fontFamily: fonts.heading, fontSize: fontSizes.lg, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h1 style={{ margin: 0, fontFamily: fonts.display, fontSize: fontSizes.lg, color: colors.textPrimary, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Sparkles size={20} color={colors.primary} aria-hidden="true" /> AI Model Maker
         </h1>
         <span style={{ flex: 1 }} />

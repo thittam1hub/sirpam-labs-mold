@@ -32,7 +32,13 @@ import {
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import GuidedTour from './components/GuidedTour';
 import TopBar from './components/layout/TopBar';
-import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel, AiShapePanel } from './components/ShopPanels';
+import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
+import WorkflowRail from './components/layout/WorkflowRail';
+import StatusBar from './components/layout/StatusBar';
+import { buildFromSpec } from './mold/modelTools';
+import { takeAiHandoff } from '@/lib/aiHandoff';
+import { Link } from '@tanstack/react-router';
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import FillOverlay from './components/FillOverlay';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import ThicknessOverlay from './components/ThicknessOverlay';
@@ -321,6 +327,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
    * lives outside AppState.
    */
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
+  useEffect(() => { try { if (localStorage.getItem('sirpam.panel') === '0') setPanelOpen(false); } catch { /* ignore */ } }, []);
   const [step, setStepRaw] = useState(() => initialStep ? initialStep - 1 : 0);
   useEffect(() => {
     if (initialStep) return;
@@ -431,6 +439,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     // entire question this event answers.
     telemetry.send(buildEvent('model_loaded', { success: true }));
   }, [telemetry]);
+
+  // Model handed over from the AI Model Maker page.
+  useEffect(() => {
+    const h = takeAiHandoff();
+    if (!h) return;
+    buildFromSpec(h.spec).then(g => commitGeometry(g, h.name)).catch(() => { /* ignore */ });
+  }, [commitGeometry]);
 
   // Model-prep tools (shrink, emboss, base, split…) replace the master but keep
   // every setting. One level of undo.
@@ -1128,6 +1143,12 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             setState(prev => ({ ...prev, axis: e.key.toLowerCase() as Axis }));
           }
           break;
+        case '1': case '2': case '3': case '4': case '5':
+          if (e.key === '1' || state.originalGeometry) {
+            e.preventDefault();
+            setStep(Number(e.key) - 1);
+          }
+          break;
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -1185,6 +1206,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           .sirpam-hide-sm{display:none !important}
           .sirpam-show-sm{display:block}
           .sirpam-body{flex-direction:column}
+          .sirpam-rail{order:3;width:100% !important;flex-direction:row !important;justify-content:space-around;padding:4px !important}
+          .sirpam-rail-sep{display:none}
           .sirpam-body > main{min-height:45vh}
           .sirpam-panel{width:100% !important;max-height:55vh;border-radius:20px 20px 0 0}
         }
@@ -1209,6 +1232,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         onExport={handleExport}
       />
       <div className="sirpam-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        <WorkflowRail step={step} onStep={setStep} hasModel={!!state.originalGeometry} hasMold={state.moldGenerated} />
         {/* 3D Viewport */}
         <main
           style={{ flex: 1, position: 'relative' }}
@@ -1216,6 +1240,10 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
         >
+          <button type="button" className="sirpam-hide-sm" onClick={() => setPanelOpen(o => { try { localStorage.setItem('sirpam.panel', o ? '0' : '1'); } catch { /* ignore */ } return !o; })} aria-label={panelOpen ? 'Hide settings panel' : 'Show settings panel'} title={panelOpen ? 'Hide settings' : 'Show settings'} aria-expanded={panelOpen}
+            style={{ position: 'absolute', bottom: spacing.lg, right: spacing.lg, zIndex: 7, border: 'none', borderRadius: radii.md, padding: 8, cursor: 'pointer', background: colors.sectionBg, color: colors.textBody, boxShadow: shadows.raisedSm, display: 'flex' }}>
+            {panelOpen ? <PanelRightClose size={18} aria-hidden="true" /> : <PanelRightOpen size={18} aria-hidden="true" />}
+          </button>
           <Canvas
             camera={{ position: [80, 60, 80], fov: 50, near: 0.1, far: 10000 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
@@ -1536,6 +1564,9 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                   Try Sample
                 </button>
               </div>
+              <Link to="/studio/ai" style={{ display: 'inline-block', marginTop: spacing.lg, color: colors.primary, fontWeight: 700, fontSize: fontSizes.sm, pointerEvents: 'auto' }}>
+                or create a model with AI
+              </Link>
             </div>
           )}
 
@@ -1584,6 +1615,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
 
         {/* Control Panel — axis/offset changes no longer wipe the mold; the
             Generate button relabels to "Regenerate Mold" when params drift. */}
+        <div style={{ display: panelOpen ? 'contents' : 'none' }}>
         <ControlPanel
           state={state}
           step={step}
@@ -1722,7 +1754,10 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           }
           modelSlot={<>
             <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} scale={state.scale} onSetScale={sc => setState(prev => ({ ...prev, scale: sc }))} />
-            <AiShapePanel onCommit={commitGeometry} />
+            <Link to="/studio/ai" style={{ display: 'block', textDecoration: 'none', padding: spacing.lg, borderRadius: radii.lg, background: colors.sectionBg, boxShadow: shadows.raisedSm, color: colors.textBody }}>
+              <div style={{ fontWeight: 700, color: colors.primary, marginBottom: 4 }}>No model? Create one with AI</div>
+              <div style={{ fontSize: fontSizes.xs, color: colors.textMuted, lineHeight: 1.5 }}>Open the AI Model Maker, describe an object, preview and refine it, then send it straight back here.</div>
+            </Link>
           </>}
           reportSlot={<>
             <MoldReportPanel
@@ -1781,7 +1816,15 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             />
           }
         />
+        </div>
       </div>
+      <StatusBar
+        size={state.boundingBox ? (() => { const v = state.boundingBox.getSize(new THREE.Vector3()); return { x: v.x, y: v.y, z: v.z }; })() : null}
+        triangles={state.originalGeometry ? Math.round((state.originalGeometry.index ? state.originalGeometry.index.count : state.originalGeometry.attributes.position.count) / 3) : 0}
+        scale={state.scale}
+        hasMold={state.moldGenerated}
+        busy={state.generating ? 'Building mold…' : state.autoDetecting ? 'Finding best split…' : stepExporting ? 'Exporting STEP…' : null}
+      />
       </div>
 
 
