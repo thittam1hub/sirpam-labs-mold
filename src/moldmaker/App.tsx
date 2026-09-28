@@ -1241,7 +1241,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           onDragOver={handleDragOver}
         >
           <button type="button" className="sirpam-hide-sm" onClick={() => setPanelOpen(o => { try { localStorage.setItem('sirpam.panel', o ? '0' : '1'); } catch { /* ignore */ } return !o; })} aria-label={panelOpen ? 'Hide settings panel' : 'Show settings panel'} title={panelOpen ? 'Hide settings' : 'Show settings'} aria-expanded={panelOpen}
-            style={{ position: 'absolute', top: spacing.md, right: spacing.md, zIndex: 7, border: 'none', borderRadius: radii.md, padding: 8, cursor: 'pointer', background: colors.sectionBg, color: colors.textBody, boxShadow: shadows.raisedSm, display: 'flex' }}>
+            style={{ position: 'absolute', bottom: spacing.lg, right: spacing.lg, zIndex: 7, border: 'none', borderRadius: radii.md, padding: 8, cursor: 'pointer', background: colors.sectionBg, color: colors.textBody, boxShadow: shadows.raisedSm, display: 'flex' }}>
             {panelOpen ? <PanelRightClose size={18} aria-hidden="true" /> : <PanelRightOpen size={18} aria-hidden="true" />}
           </button>
           <Canvas
