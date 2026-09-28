@@ -27,6 +27,8 @@ type Promo = { code: string; credits: number; max_redemptions: number | null; re
 type Overview = { users: number; activeLast30: number; purchases: number; creditsSold: number; usageByAction: Record<string, number>; promos: Promo[] };
 type FoundUser = { id: string; email: string; createdAt: string; balance: number;
   history: { id: string; delta: number; reason: string; kind: string | null; status: string; created_at: string }[] };
+type AdminPurchase = { id: string; pack_name: string; credits: number; price: number; currency: string;
+  provider: string; payment_ref: string | null; status: string; created_at: string; refunded_at: string | null };
 
 const rpc = async <T,>(fn: string, args?: Record<string, unknown>): Promise<T> => {
   const { data, error } = await supabase.rpc(fn as never, args as never);
@@ -43,6 +45,7 @@ function AdminPage() {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [purchases, setPurchases] = useState<AdminPurchase[]>([]);
   const [promo, setPromo] = useState({ code: "", credits: "5", max: "100", expires: "", days: "90" });
   const [busy, setBusy] = useState(false);
 
@@ -56,8 +59,19 @@ function AdminPage() {
   };
   const find = (e: React.FormEvent) => { e.preventDefault(); void run(async () => {
     const u = await rpc<FoundUser | null>("admin_find_user", { _email: email });
-    setUser(u); if (!u) setMsg("No user with that email.");
+    setUser(u); if (!u) { setMsg("No user with that email."); setPurchases([]); return; }
+    setPurchases(await rpc<AdminPurchase[]>("admin_list_purchases", { _email: email }));
   }); };
+  const refund = (p: AdminPurchase) => void run(async () => {
+    const why = window.prompt(`Refund ${p.pack_name} pack (${p.credits} credits)? Remaining credits from this purchase are removed. Reason:`);
+    if (!why || why.trim().length < 3) return;
+    const r = await rpc<{ removed: number; balance: number }>("admin_refund_purchase", { _purchase: p.id, _reason: why.trim() });
+    setMsg(`Refunded — removed ${r.removed} remaining credits. New balance: ${r.balance}.`);
+    if (user) {
+      setPurchases(await rpc<AdminPurchase[]>("admin_list_purchases", { _email: user.email }));
+      setUser(await rpc<FoundUser>("admin_find_user", { _email: user.email }));
+    }
+  });
   const adjust = (e: React.FormEvent) => { e.preventDefault(); if (!user) return; void run(async () => {
     const n = parseInt(amount, 10);
     if (!Number.isFinite(n) || n === 0) throw new Error("Enter a non-zero whole number.");
@@ -127,6 +141,24 @@ function AdminPage() {
                       ))}
                     </tbody></table>
                   </div>
+                  {purchases.length > 0 && (
+                    <div className="mt-5">
+                      <h3 className="font-semibold">Purchases</h3>
+                      <table className="mt-2 w-full text-sm"><tbody>
+                        {purchases.map((p) => (
+                          <tr key={p.id} className="border-t border-border">
+                            <td className="py-1.5 pr-2 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                            <td className="py-1.5 pr-2">{p.pack_name} · {p.credits} credits · {p.currency === "INR" ? `₹${Number(p.price).toLocaleString("en-IN")}` : `$${p.price}`}</td>
+                            <td className="py-1.5 pr-2 text-xs text-muted-foreground">{p.provider}{p.payment_ref ? ` · ${p.payment_ref}` : ""}</td>
+                            <td className="py-1.5 pr-2 text-xs">{p.status}</td>
+                            <td className="py-1.5 text-right">
+                              {p.status === "paid" && <Button size="sm" variant="outline" disabled={busy} onClick={() => refund(p)}>Refund</Button>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody></table>
+                    </div>
+                  )}
                 </div>
               )}
             </section>
