@@ -7,6 +7,7 @@ import type { MoldMode } from '../types';
 import { solidProps } from '../utils/tier2';
 import { addPrintJob } from '@/lib/printQueue.functions';
 import { useAppSession } from '@/components/AppSession';
+import { BUSINESS } from '@/lib/business';
 
 const s = {
   section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
@@ -39,7 +40,9 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
   const { session, ready } = useAppSession();
   const submit = useServerFn(addPrintJob);
   const [customer, setCustomer] = useState('');
-  const [contact, setContact] = useState('');
+  const [phone, setPhone] = useState('');
+  const [pin, setPin] = useState('');
+  const [city, setCity] = useState('');
   const [copies, setCopies] = useState(1);
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
@@ -68,13 +71,19 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
   const cost = specs.volume * density * pricePerKg / 1000;
   const matLabel = moldMode === 'silicone' ? `${material === 'resin' ? 'Resin' : 'PLA'} box + silicone` : material === 'resin' ? 'Resin' : 'PLA';
 
+  // Indian mobile: optional +91/0 prefix, then 10 digits starting 6-9. PIN: 6 digits, not starting with 0.
+  const mobile = phone.replace(/[\s-]/g, '').replace(/^(\+?91|0)/, '');
+  const phoneOk = /^[6-9]\d{9}$/.test(mobile);
+  const pinOk = /^[1-9]\d{5}$/.test(pin);
+  const canSend = !!customer.trim() && phoneOk && pinOk && !!city.trim();
+
   const send = async () => {
     setBusy(true); setErr(null);
     try {
       const r = await submit({
         data: {
           customer: customer.trim(),
-          contact: contact.trim(),
+          contact: `+91 ${mobile} | ${city.trim()} ${pin}`,
           project: fileName.replace(/\.[^.]+$/, '') || 'Untitled model',
           moldType: moldMode === 'silicone' ? 'Silicone mold with printed box' : 'Printed rigid mold',
           size: specs.size,
@@ -82,7 +91,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
           copies,
           material: matLabel,
           volumeCm3: specs.volume * copies,
-          estCost: (cost * copies).toFixed(2),
+          estCost: `Rs ${(cost * copies).toFixed(0)}`,
           notes: notes.trim() + (siliconeVolumeCm3 ? ` | silicone ~${(siliconeVolumeCm3 / 1000).toFixed(2)} L` : ''),
         },
       });
@@ -93,14 +102,20 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
     } finally { setBusy(false); }
   };
 
+  const waText = ref ? encodeURIComponent(
+    `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`,
+  ) : '';
+
   return (
     <div style={s.section} id="sirpam-print-queue">
       <div style={s.title}>Order this mold printed</div>
+      <div style={{ ...s.hint, marginTop: 0, marginBottom: spacing.xs }}>We print and deliver within India only.</div>
       <div style={s.kv}><span>Mold type</span><span>{moldMode === 'silicone' ? 'Silicone + box' : 'Rigid printed'}</span></div>
       <div style={s.kv}><span>Pieces</span><span>{pieces.length}</span></div>
       <div style={s.kv}><span>Overall size</span><span>{specs.size} mm</span></div>
       <div style={s.kv}><span>Material per set</span><span>{specs.volume.toFixed(1)} cm3</span></div>
-      <div style={s.kv}><span>Estimate</span><span>{(cost * copies).toFixed(2)}</span></div>
+      <div style={s.kv}><span>Material estimate</span><span>Rs {(cost * copies).toFixed(0)}</span></div>
+      <div style={s.hint}>Guide only, excludes GST, labour and delivery. We confirm the final price before printing. Nothing is charged here.</div>
 
       {ready && !session && (
         <div style={s.hint}>
@@ -110,27 +125,41 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
 
       {ready && session && !ref && (<>
         <input style={s.input} value={customer} maxLength={120} aria-label="Your name" placeholder="Your name"
-          onChange={e => setCustomer(e.target.value)} />
-        <input style={s.input} value={contact} maxLength={160} aria-label="WhatsApp number or email" placeholder="WhatsApp number or email"
-          onChange={e => setContact(e.target.value)} />
+          autoComplete="name" onChange={e => setCustomer(e.target.value)} />
+        <input style={s.input} value={phone} maxLength={16} inputMode="tel" autoComplete="tel" aria-label="WhatsApp mobile number"
+          placeholder="WhatsApp mobile (10 digits)" onChange={e => setPhone(e.target.value)} />
+        {phone && !phoneOk && <div style={s.hint}>Enter a 10-digit Indian mobile number.</div>}
+        <div style={{ display: 'flex', gap: spacing.xs }}>
+          <input style={s.input} value={city} maxLength={60} autoComplete="address-level2" aria-label="City" placeholder="City"
+            onChange={e => setCity(e.target.value)} />
+          <input style={s.input} value={pin} maxLength={6} inputMode="numeric" autoComplete="postal-code" aria-label="PIN code"
+            placeholder="PIN code" onChange={e => setPin(e.target.value.replace(/\D/g, ''))} />
+        </div>
+        {pin.length === 6 && !pinOk && <div style={s.hint}>That PIN code doesn't look right.</div>}
         <label style={{ ...s.hint, display: 'block' }}>How many mold sets?
           <input style={s.input} type="number" min={1} max={999} value={copies} aria-label="Number of mold sets"
             onChange={e => setCopies(Math.max(1, Math.min(999, parseInt(e.target.value) || 1)))} />
         </label>
         <textarea style={{ ...s.input, minHeight: 56, resize: 'vertical' }} value={notes} maxLength={1000}
-          aria-label="Notes for the workshop" placeholder="Colour, finish, delivery date, anything else"
+          aria-label="Notes for the workshop" placeholder="Colour, finish, needed-by date, GSTIN for a business invoice"
           onChange={e => setNotes(e.target.value)} />
-        <button type="button" style={s.btn} disabled={busy || !customer.trim() || contact.trim().length < 3} onClick={send}>
-          {busy ? 'Sending…' : 'Send to workshop'}
+        <button type="button" style={s.btn} disabled={busy || !canSend} onClick={send}>
+          {busy ? 'Sending…' : 'Request a quote'}
         </button>
-        <div style={s.hint}>We add it to our print queue and get back to you with a firm price and timeline. Estimates on this page are guides only.</div>
+        <div style={s.hint}>We reply on WhatsApp within 1 working day with the final price (incl. GST), a payment link and the delivery date.</div>
       </>)}
 
-      {ref && (
+      {ref && (<>
         <div style={{ ...s.hint, color: colors.primary, fontWeight: 600 }} role="status">
-          Sent — your reference is {ref}. We will contact you on the details you gave.
+          Quote requested — your reference is {ref}. We will message you on WhatsApp.
         </div>
-      )}
+        {BUSINESS.whatsapp && (
+          <a href={`https://wa.me/${BUSINESS.whatsapp}?text=${waText}`} target="_blank" rel="noopener noreferrer"
+            style={{ ...s.btn, display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+            Chat with us on WhatsApp
+          </a>
+        )}
+      </>)}
       {err && <div role="alert" style={{ ...s.hint, color: colors.primary, fontWeight: 600 }}>{err}</div>}
     </div>
   );
