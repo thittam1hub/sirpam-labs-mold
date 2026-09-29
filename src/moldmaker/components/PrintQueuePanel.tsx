@@ -8,6 +8,7 @@ import { solidProps } from '../utils/tier2';
 import { addPrintJob } from '@/lib/printQueue.functions';
 import { useAppSession } from '@/components/AppSession';
 import { BUSINESS } from '@/lib/business';
+import { trackEvent } from '@/components/Analytics';
 
 const s = {
   section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
@@ -97,6 +98,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
       });
       if (!r.ok) { setErr(r.error); return; }
       setRef(r.ref);
+      trackEvent('quote_requested', { pieces: pieces.length, copies, silicone: moldMode === 'silicone' });
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not send your job right now.');
     } finally { setBusy(false); }
@@ -159,6 +161,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
         </div>
         {BUSINESS.whatsapp && (
           <a href={`https://wa.me/${BUSINESS.whatsapp}?text=${waText}`} target="_blank" rel="noopener noreferrer"
+            onClick={() => trackEvent('whatsapp_contact_clicked', { stage: 'after_order' })}
             style={{ ...s.btn, display: 'block', textAlign: 'center', textDecoration: 'none' }}>
             Chat with us on WhatsApp
           </a>
@@ -168,6 +171,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
         <div style={s.hint} className="text-center">
           Prefer to ask a person first?{" "}
           <a href={`https://wa.me/${BUSINESS.whatsapp}?text=${waText}`} target="_blank" rel="noopener noreferrer"
+            onClick={() => trackEvent('whatsapp_contact_clicked', { stage: 'pre_order' })}
             style={{ color: colors.primary, fontWeight: 600 }}>
             Chat with us on WhatsApp
           </a>
