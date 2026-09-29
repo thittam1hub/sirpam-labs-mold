@@ -6,4 +6,4 @@ Disallow: /checkout/
 Disallow: /reset-password
 Disallow: /auth
 
-Sitemap: https://sculpt-joy-forge.lovable.app/sitemap.xml
+Sitemap: https://mold.sirpam3dlabs.in/sitemap.xml
