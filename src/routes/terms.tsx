@@ -23,11 +23,11 @@ function TermsPage() {
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="text-4xl font-bold">Terms of Service</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated September 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated 29 September 2026</p>
         <h2 className="mt-8 text-xl font-semibold">Who you are contracting with</h2>
         <p className="mt-2 text-muted-foreground">This service is provided by Sirpam 3D Labs, an individual seller based in India ("we", "us"). When you use Sirpam 3D Labs Mold, your agreement is with Sirpam 3D Labs.</p>
-        <h2 className="mt-8 text-xl font-semibold">Acceptance</h2>
-        <p className="mt-2 text-muted-foreground">By creating an account, buying credits, or continuing to use the service, you agree to these terms. If you do not agree, please do not use the service. You must be at least 13 years old, and if you use the service for an organisation you confirm you are allowed to accept these terms on its behalf.</p>
+        <h2 className="mt-8 text-xl font-semibold">Acceptance and agreement</h2>
+        <p className="mt-2 text-muted-foreground">By accessing or using the service, creating an account, or buying credits, you agree to be bound by these Terms of Service. If you do not agree, you must not use the service. You must be at least 13 years old, and if you use the service for an organisation you confirm you have authority to accept these terms on its behalf.</p>
         <h2 className="mt-8 text-xl font-semibold">Using the service</h2>
         <p className="mt-2 text-muted-foreground">Sirpam 3D Labs Mold lets you design 3D-printable molds in your browser. You are responsible for the models you upload and for having the right to use them.</p>
         <h2 className="mt-8 text-xl font-semibold">Accounts</h2>
@@ -38,14 +38,14 @@ function TermsPage() {
         <p className="mt-2 text-muted-foreground">Our order process for international buyers is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for those orders. Paddle provides all customer service inquiries and handles returns, under the <a className="text-primary" href="https://www.paddle.com/legal/checkout-buyer-terms" target="_blank" rel="noopener noreferrer">Paddle Buyer Terms</a>. Orders from India are paid through Razorpay and sold by Sirpam 3D Labs. Refunds follow our Refund policy.</p>
         <h2 className="mt-8 text-xl font-semibold">Your results</h2>
         <p className="mt-2 text-muted-foreground">Molds are generated automatically. Check them before printing or casting; we are not liable for failed prints, casts or materials.</p>
-        <h2 className="mt-8 text-xl font-semibold">Acceptable use</h2>
-        <p className="mt-2 text-muted-foreground">You must not: use the service for anything unlawful; commit fraud or send spam; upload models you do not have the rights to or otherwise infringe anyone's intellectual property; upload malware, probe or attack our systems, or scrape the service; reverse engineer the app, resell or redistribute it, or get around credit or usage limits.</p>
-        <h2 className="mt-8 text-xl font-semibold">Our intellectual property</h2>
+        <h2 className="mt-8 text-xl font-semibold">Prohibited use and misuse</h2>
+        <p className="mt-2 text-muted-foreground">You must not use the service unlawfully; commit fraud or send spam; upload content you do not have the right to use; infringe intellectual property or privacy rights; introduce malware; probe, attack or interfere with service security; scrape the service; reverse engineer the software; resell or redistribute the service; or circumvent credit, access or usage limits.</p>
+        <h2 className="mt-8 text-xl font-semibold">Ownership and intellectual property</h2>
         <p className="mt-2 text-muted-foreground">Sirpam 3D Labs owns the service and everything in it, including the software, mold engine, documentation, name and logo. We give you a limited, personal, non-transferable right to use the service. You keep ownership of the models you upload and the molds you export.</p>
-        <h2 className="mt-8 text-xl font-semibold">Service level</h2>
+        <h2 className="mt-8 text-xl font-semibold">Service availability and warranties</h2>
         <p className="mt-2 text-muted-foreground">The service is provided "as is" and "as available". We do not guarantee it will be uninterrupted, error-free or suitable for a particular purpose, and to the fullest extent the law allows we disclaim all implied warranties. Our total liability is limited to the amount you paid us in the 12 months before the claim, and we are not liable for indirect losses such as lost profits or data. Nothing here limits liability that cannot be limited by law.</p>
-        <h2 className="mt-8 text-xl font-semibold">Suspension and termination</h2>
-        <p className="mt-2 text-muted-foreground">We may suspend or close your account if you seriously or repeatedly break these terms, fail to pay or reverse a payment, or create a security or fraud risk. You can stop using the service and delete your account at any time from your Account page. When an account is closed, its data is deleted as described in our Privacy Policy.</p>
+        <h2 className="mt-8 text-xl font-semibold">Our right to suspend or terminate access</h2>
+        <p className="mt-2 text-muted-foreground">Sirpam 3D Labs may suspend or terminate your access if you materially breach these terms, fail to pay or reverse a payment, create a security or fraud risk, or repeatedly or seriously violate our policies. Where practical, we will notify you and give you a reasonable opportunity to correct the issue. You can stop using the service and delete your account at any time from your Account page. When an account is closed, its data is handled as described in our Privacy Policy.</p>
         <h2 className="mt-8 text-xl font-semibold">Governing law</h2>
         <p className="mt-2 text-muted-foreground">These terms are governed by the laws of India.</p>
         <h2 className="mt-8 text-xl font-semibold">Changes</h2>
