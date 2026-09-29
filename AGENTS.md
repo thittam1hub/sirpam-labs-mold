@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Mold cutting uses three-bvh-csg in the browser (src/lib/mold.ts) — open-source, pure JS, no server needed.
