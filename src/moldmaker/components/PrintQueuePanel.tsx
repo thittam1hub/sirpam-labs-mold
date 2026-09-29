@@ -161,6 +161,15 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
           </a>
         )}
       </>)}
+      {BUSINESS.whatsapp && !ref && (
+        <div style={s.hint} className="text-center">
+          Prefer to ask a person first?{" "}
+          <a href={`https://wa.me/${BUSINESS.whatsapp}?text=${waText}`} target="_blank" rel="noopener noreferrer"
+            style={{ color: colors.primary, fontWeight: 600 }}>
+            Chat with us on WhatsApp
+          </a>
+        </div>
+      )}
       {err && <div role="alert" style={{ ...s.hint, color: colors.primary, fontWeight: 600 }}>{err}</div>}
     </div>
   );

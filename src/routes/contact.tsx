@@ -50,8 +50,15 @@ function ContactPage() {
       <main className="mx-auto max-w-2xl px-6 pb-16">
         <h1 className="text-3xl font-bold">Contact us</h1>
         <p className="mt-2 text-muted-foreground">
-          Questions about mold making, credits, or your account? Write to us here, or email{" "}
-          <a href="mailto:sirpam3dlabs@gmail.com" className="text-primary">sirpam3dlabs@gmail.com</a>.
+          Questions about mold making, credits, or your account? Message us on WhatsApp{" "}
+          {BUSINESS.whatsapp && (
+            <a href={`https://wa.me/${BUSINESS.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-primary">
+              +91 {BUSINESS.whatsapp.slice(2)}
+            </a>
+          )}{" "}
+          or email{" "}
+          <a href={`mailto:${BUSINESS.email}`} className="text-primary">{BUSINESS.email}</a>. We print and
+          deliver within India only.
         </p>
         {sent ? (
           <div className="mt-6 rounded-3xl bg-card p-6 shadow-sm">
