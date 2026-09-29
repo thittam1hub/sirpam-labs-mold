@@ -7,7 +7,6 @@ import { getCreditStatus, CREDITS_EVENT, LOW_BALANCE, EXPIRY_WARN_DAYS, daysUnti
 import { useAppSession } from '@/components/AppSession';
 import { ChevronDown, Menu } from 'lucide-react';
 
-import logo from '@/assets/sirpam-logo.svg.asset.json';
 
 type Fmt = 'stl' | 'obj' | '3mf' | 'step';
 
@@ -95,7 +94,7 @@ export default function TopBar(p: Props) {
       background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 20, fontFamily: fonts.body, minWidth: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0, flexShrink: 0 }}>
-        <img src={logo.url} alt="Sirpam logo" width={30} height={30} style={{ width: 30, height: 30, borderRadius: '50%', boxShadow: shadows.raisedSm, objectFit: 'cover' }} />
+        <img src="/logo.svg" alt="Sirpam logo" width={30} height={30} style={{ width: 30, height: 30, borderRadius: '50%', boxShadow: shadows.raisedSm, objectFit: 'cover' }} />
         <h1 className="sirpam-hide-sm" style={{ margin: 0, fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
           Sirpam <span style={{ color: colors.primary }}>3D Labs</span> Mold
         </h1>
