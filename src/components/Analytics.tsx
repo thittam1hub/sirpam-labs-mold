@@ -19,8 +19,10 @@ function loadGoogleAnalytics(measurementId: string) {
   document.head.appendChild(script);
 
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
+  // gtag.js reads `arguments` objects from dataLayer, not plain arrays.
+  window.gtag = function gtag() {
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer!.push(arguments);
   };
   window.gtag("js", new Date());
   // Route changes are sent manually below, so the tag does not double-count.
