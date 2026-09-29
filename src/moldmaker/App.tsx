@@ -32,6 +32,7 @@ import {
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
+import { PrintQueuePanel } from './components/PrintQueuePanel';
 import WorkflowRail from './components/layout/WorkflowRail';
 import StatusBar from './components/layout/StatusBar';
 import { buildFromSpec } from './mold/modelTools';
@@ -1814,14 +1815,22 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             <OverhangPanel pieces={state.moldPieces} labels={state.pieceLabels} />
           </>
           }
-          packSlot={
+          packSlot={<>
             <PlatePackerPanel
               pieces={state.moldPieces}
               bed={getPresetById(state.selectedPrinterId)?.volumeMm ?? null}
               material={state.estimator.material}
               pricePerKg={state.estimator.pricePerKg}
             />
-          }
+            <PrintQueuePanel
+              pieces={state.moldPieces}
+              fileName={state.fileName}
+              moldMode={state.moldMode}
+              material={state.estimator.material}
+              pricePerKg={state.estimator.pricePerKg}
+              siliconeVolumeCm3={state.siliconeVolumeCm3}
+            />
+          </>}
           toolsSlot={
             <ModelToolsPanel
               geometry={state.originalGeometry}
