@@ -86,6 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Two-part & silicone mold generator for 3D printing — runs in your browser.",
       },
       { name: "author", content: "Sirpam 3D Labs" },
+      {
+        name: "google-site-verification",
+        content: "hBsXphoZUIdaYl3CTs72oG3GtNfijWCxFtT76XB64Tw",
+      },
       { property: "og:title", content: "Sirpam 3D Labs Mold" },
       {
         property: "og:description",
