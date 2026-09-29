@@ -102,9 +102,10 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
     } finally { setBusy(false); }
   };
 
-  const waText = ref ? encodeURIComponent(
-    `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`,
-  ) : '';
+  const waMsg = ref
+    ? `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`
+    : `Hi Sirpam 3D Labs, I'm designing a mold in your studio (${moldMode === 'silicone' ? 'silicone mold + printed box' : 'printed rigid mold'}): ${pieces.length} pieces, ${specs.size} mm, about ${specs.volume.toFixed(1)} cm3 of material. Could you tell me the price and delivery time?`;
+  const waText = encodeURIComponent(waMsg);
 
   return (
     <div style={s.section} id="sirpam-print-queue">

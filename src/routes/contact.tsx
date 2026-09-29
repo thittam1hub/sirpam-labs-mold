@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LegalFooter } from "@/components/LegalFooter";
+import { BUSINESS } from "@/lib/business";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
