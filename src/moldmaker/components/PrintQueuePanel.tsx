@@ -104,7 +104,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
 
       {ready && !session && (
         <div style={s.hint}>
-          <Link to="/auth" style={{ color: colors.primary, fontWeight: 600 }}>Sign in</Link> to send this mold to our workshop.
+          <Link to="/auth" search={{ redirect: '/studio' }} style={{ color: colors.primary, fontWeight: 600 }}>Sign in</Link> to send this mold to our workshop.
         </div>
       )}
 
