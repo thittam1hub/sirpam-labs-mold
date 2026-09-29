@@ -32,6 +32,7 @@ import {
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
+import { PrintQueuePanel } from './components/PrintQueuePanel';
 import WorkflowRail from './components/layout/WorkflowRail';
 import StatusBar from './components/layout/StatusBar';
 import { buildFromSpec } from './mold/modelTools';
