@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { BrandLink } from "@/components/BrandLink";
+import { BUSINESS } from "@/lib/business";
 import showcase from "@/assets/real-mold-workbench.webp";
 import { Droplet, Factory, FlaskConical, RotateCw, Scissors, Wrench } from "lucide-react";
 
@@ -178,6 +179,15 @@ function LandingPage() {
           <Link to="/shop">Shop</Link>
           <Link to="/gallery">Gallery</Link>
           <Link to="/auth" search={{ redirect: "/studio" }}>Sign in</Link>
+        </div>
+        <div className="mx-auto mt-3 flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {BUSINESS.whatsapp && (
+            <a href={`https://wa.me/${BUSINESS.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-primary">
+              WhatsApp +91 {BUSINESS.whatsapp.slice(2)}
+            </a>
+          )}
+          <a href={`mailto:${BUSINESS.email}`} className="text-primary">{BUSINESS.email}</a>
+          <span>Prints and dispatches within India only.</span>
         </div>
       </footer>
     </div>

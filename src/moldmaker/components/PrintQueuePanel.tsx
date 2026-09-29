@@ -102,9 +102,11 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
     } finally { setBusy(false); }
   };
 
-  const waText = ref ? encodeURIComponent(
-    `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`,
-  ) : '';
+  const waMsg = ref
+    ? `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`
+    : `Hi Sirpam 3D Labs, I'm designing a mold in your studio (${moldMode === 'silicone' ? 'silicone mold + printed box' : 'printed rigid mold'}): ${pieces.length} pieces, ${specs.size} mm, about ${specs.volume.toFixed(1)} cm3 of material. Could you tell me the price and delivery time?`;
+  const waText = encodeURIComponent(waMsg);
+  const estimate = Math.round(cost * copies);
 
   return (
     <div style={s.section} id="sirpam-print-queue">
@@ -114,8 +116,10 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
       <div style={s.kv}><span>Pieces</span><span>{pieces.length}</span></div>
       <div style={s.kv}><span>Overall size</span><span>{specs.size} mm</span></div>
       <div style={s.kv}><span>Material per set</span><span>{specs.volume.toFixed(1)} cm3</span></div>
-      <div style={s.kv}><span>Material estimate</span><span>Rs {(cost * copies).toFixed(0)}</span></div>
-      <div style={s.hint}>Guide only, excludes GST, labour and delivery. We confirm the final price before printing. Nothing is charged here.</div>
+      {estimate > 0 && <div style={s.kv}><span>Material estimate</span><span>Rs {estimate.toLocaleString("en-IN")}</span></div>}
+      <div style={s.hint}>{estimate > 0
+        ? "Guide only — excludes GST, labour and delivery. We confirm the final price before printing. Nothing is charged here."
+        : "Add your material price in the estimator to see a cost guide here. We always confirm the final price (incl. GST, labour and delivery) before printing. Nothing is charged here."}</div>
 
       {ready && !session && (
         <div style={s.hint}>
@@ -160,6 +164,15 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
           </a>
         )}
       </>)}
+      {BUSINESS.whatsapp && !ref && (
+        <div style={s.hint} className="text-center">
+          Prefer to ask a person first?{" "}
+          <a href={`https://wa.me/${BUSINESS.whatsapp}?text=${waText}`} target="_blank" rel="noopener noreferrer"
+            style={{ color: colors.primary, fontWeight: 600 }}>
+            Chat with us on WhatsApp
+          </a>
+        </div>
+      )}
       {err && <div role="alert" style={{ ...s.hint, color: colors.primary, fontWeight: 600 }}>{err}</div>}
     </div>
   );

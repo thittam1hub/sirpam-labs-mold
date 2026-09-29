@@ -6,5 +6,5 @@ export const BUSINESS = {
   country: "India",
   email: "sirpam3dlabs@gmail.com",
   // Workshop WhatsApp in international format without "+" (e.g. "919876543210"). Empty hides the chat button.
-  whatsapp: "",
+  whatsapp: "919789391798",
 };

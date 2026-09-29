@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LegalFooter } from "@/components/LegalFooter";
+import { BUSINESS } from "@/lib/business";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -49,13 +50,20 @@ function ContactPage() {
       <main className="mx-auto max-w-2xl px-6 pb-16">
         <h1 className="text-3xl font-bold">Contact us</h1>
         <p className="mt-2 text-muted-foreground">
-          Questions about mold making, credits, or your account? Write to us here, or email{" "}
-          <a href="mailto:sirpam3dlabs@gmail.com" className="text-primary">sirpam3dlabs@gmail.com</a>.
+          Questions about mold making, credits, or your account? Message us on WhatsApp{" "}
+          {BUSINESS.whatsapp && (
+            <a href={`https://wa.me/${BUSINESS.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-primary">
+              +91 {BUSINESS.whatsapp.slice(2)}
+            </a>
+          )}{" "}
+          or email{" "}
+          <a href={`mailto:${BUSINESS.email}`} className="text-primary">{BUSINESS.email}</a>. We print and
+          deliver within India only.
         </p>
         {sent ? (
           <div className="mt-6 rounded-3xl bg-card p-6 shadow-sm">
             <p className="font-semibold">Message sent.</p>
-            <p className="mt-1 text-sm text-muted-foreground">We'll reply to your email as soon as we can.</p>
+            <p className="mt-1 text-sm text-muted-foreground">We reply within 1 working day, on WhatsApp or email.</p>
           </div>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-card p-6 shadow-sm">
