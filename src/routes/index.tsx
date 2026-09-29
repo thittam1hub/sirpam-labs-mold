@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { BrandLink } from "@/components/BrandLink";
+import { BUSINESS } from "@/lib/business";
 import showcase from "@/assets/real-mold-workbench.webp";
 import { Droplet, Factory, FlaskConical, RotateCw, Scissors, Wrench } from "lucide-react";
 
