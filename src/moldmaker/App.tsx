@@ -30,7 +30,6 @@ import {
   type ProjectMeta, type ProjectParams,
 } from './services/projectStorage';
 import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
-import GuidedTour from './components/GuidedTour';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
 import WorkflowRail from './components/layout/WorkflowRail';
@@ -1869,12 +1868,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       {shortcutHelpOpen && (
         <ShortcutCheatSheet onClose={() => setShortcutHelpOpen(false)} />
       )}
-
-      {/* First-run consent modal. Only ever visible if the build was
-          configured with a telemetry host AND the user hasn't yet been
-          asked. Rendered outside the main layout flow so it can overlay
-          everything including the control panel. */}
-      <GuidedTour />
 
       {telemetryModalOpen && (
         <FirstRunTelemetryModal
