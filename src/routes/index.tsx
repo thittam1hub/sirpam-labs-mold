@@ -104,9 +104,9 @@ function LandingPage() {
           </div>
           <img
             src={showcase}
-            alt="A real two-part 3D-printed mold with registration pins, vents and its orange cast part"
+            alt="An open two-part 3D-printed duck mold with registration pins, pour spout and vents, beside the finished yellow cast duck"
             width={1600}
-            height={1000}
+            height={1008}
             fetchPriority="high"
             className="mx-auto mt-10 aspect-[8/5] w-full max-w-4xl rounded-2xl border border-border object-cover shadow-lg"
           />
