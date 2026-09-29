@@ -13,6 +13,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppSessionProvider } from "@/components/AppSession";
+import { Analytics } from "@/components/Analytics";
+import { getAnalyticsConfig } from "@/lib/analytics.functions";
 
 function NotFoundComponent() {
   return (
@@ -139,10 +141,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const analytics = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
       <AppSessionProvider>
+        <Analytics gaId={analytics?.gaId} clarityId={analytics?.clarityId} />
         <Outlet />
       </AppSessionProvider>
     </QueryClientProvider>
