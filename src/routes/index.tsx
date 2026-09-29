@@ -1,24 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { MoldMaker } from "@/components/MoldMaker";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Cast/Forge — Two-part mold maker from 3D models" },
+      { name: "description", content: "Upload an STL or OBJ and generate a printable two-part mold with keys and pour spout." },
+      { property: "og:title", content: "Cast/Forge — Two-part mold maker" },
+      { property: "og:description", content: "Turn any watertight 3D model into a printable two-part casting mold." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: MoldMaker,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
