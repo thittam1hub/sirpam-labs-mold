@@ -39,3 +39,16 @@
 - [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
 
 - [x] Razorpay webhook setup
+
+# Roadmap — overall app improvement checklist (Sep 29)
+- [x] 7 Sample template gallery: mushroom, chess pawn, vase, heart — one click each in the Studio
+- [x] 35 Analytics events: mold_generated, file_exported, quote_requested, whatsapp_contact_clicked
+- [x] 36 Privacy page discloses Google Analytics + Microsoft Clarity (inputs masked)
+- [x] 29 Share images (og:image) for home and pricing — points at mold.sirpam3dlabs.in/og-image.png; verify at publish
+- [x] 9 checked: batch ZIP of both halves does not exist (only 3MF container) — future item
+- [x] 8 checked: project save/restore already exists (device storage + shareable .sirpam.json file)
+- [ ] 6 Guided onboarding hints — deferred (tour was removed by request; ask before re-adding)
+- [ ] 10 Split the two largest Studio files into smaller modules
+- [ ] 18 UI/flow tests for sign-up, quote request, gallery
+- [ ] 22 Crash tracking in production — after publish
+- [ ] 42 Turn on Google Sheets notification rules (Tools → Notification rules) — your action

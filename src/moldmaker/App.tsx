@@ -15,7 +15,8 @@ import HeatmapOverlay from './components/HeatmapOverlay';
 import SplitLineOverlay from './components/SplitLineOverlay';
 import { useMoldGenerator, EXPLODE_OFFSET_RATIO } from './hooks/useMoldGenerator';
 import { loadFile, parseFile } from './utils/fileLoader';
-import { createSampleModel } from './utils/sampleModel';
+import { buildSampleTemplate, SAMPLE_TEMPLATES, type SampleTemplateId } from './utils/sampleTemplates';
+import { trackEvent } from '@/components/Analytics';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
 import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts, sceneColors } from './theme';
 import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
@@ -516,9 +517,9 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     }
   }, [commitGeometry, telemetry]);
 
-  const handleLoadSample = useCallback(() => {
+  const loadTemplate = useCallback((id: SampleTemplateId) => {
     try {
-      const { geometry, fileName } = createSampleModel();
+      const { geometry, fileName } = buildSampleTemplate(id);
       commitGeometry(geometry, fileName);
     } catch (err) {
       console.error('Sample load failed:', err);
@@ -529,6 +530,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       }));
     }
   }, [commitGeometry, telemetry]);
+
+  const handleLoadSample = useCallback(() => loadTemplate('mushroom'), [loadTemplate]);
 
   /**
    * Drag-and-drop handler. We only accept a single file — dropping a
@@ -734,6 +737,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // Z dominates (it will) or any axis is unexpectedly common — a signal
       // about auto-detect quality and the default axis choice.
       telemetry.send(buildEvent('mold_generated', { success: true, axisUsed: params.axis }));
+      trackEvent('mold_generated', { axis: params.axis });
       // Consent moment: AFTER the user has just seen the product deliver
       // value, not before. Gated on `configured` so open-source forks without
       // a telemetry host never see this modal, and on `needsConsent` so we
@@ -1050,6 +1054,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // bundle pulling its weight, or should we lazy-load / split it?"
       await charge.succeed();
       telemetry.send(buildEvent('file_exported', { format }));
+      trackEvent('file_exported', { format });
     } catch (err) {
       // 'Export cancelled' is the user's choice, not a failure — surface a
       // gentler note (and skip the console.error noise) so it doesn't look
@@ -1580,25 +1585,34 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                 >
                   Browse Files
                 </button>
-                <button
-                  type="button"
-                  onClick={handleLoadSample}
-                  style={{
-                    background: colors.sectionBg,
-                    color: colors.textBody,
-                    border: 'none',
-                    borderRadius: radii.pill,
-                    padding: `${spacing.md}px ${spacing.xl}px`,
-                    fontSize: fontSizes.md,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    boxShadow: shadows.raisedSm,
-                  }}
-                  aria-label="Load the built-in sample model"
-                >
-                  Try Sample
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs, alignItems: 'center', pointerEvents: 'auto' }}>
+                  <span style={{ fontSize: fontSizes.sm, color: colors.textFaint }}>or try a sample model</span>
+                  <div style={{ display: 'flex', gap: spacing.xs, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {SAMPLE_TEMPLATES.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => loadTemplate(t.id)}
+                        title={t.hint}
+                        style={{
+                          background: colors.sectionBg,
+                          color: colors.textBody,
+                          border: 'none',
+                          borderRadius: radii.pill,
+                          padding: `${spacing.sm}px ${spacing.md}px`,
+                          fontSize: fontSizes.sm,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          boxShadow: shadows.raisedSm,
+                        }}
+                        aria-label={`Load the sample ${t.label} model`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
               <Link to="/studio/ai" style={{ display: 'inline-block', marginTop: spacing.lg, color: colors.primary, fontWeight: 700, fontSize: fontSizes.sm, pointerEvents: 'auto' }}>
                 or create a model with AI

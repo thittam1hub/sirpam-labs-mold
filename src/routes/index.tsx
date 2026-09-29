@@ -23,6 +23,8 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
+      { name: "twitter:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
     ],
     links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
