@@ -48,6 +48,15 @@ function loadClarity(projectId: string) {
 }
 
 /**
+ * Fires a GA4 event if analytics is loaded. Safe to call anywhere in the
+ * browser (no-ops before gtag.js exists or during SSR).
+ */
+export function trackEvent(name: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", name, params ?? {});
+}
+
+/**
  * Loads Google Analytics 4 and Microsoft Clarity in the browser only, and
  * reports one page view per client-side route change.
  */
