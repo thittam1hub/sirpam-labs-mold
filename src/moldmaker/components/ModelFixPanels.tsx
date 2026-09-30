@@ -7,6 +7,7 @@ import { reserveFor } from '@/lib/credits';
 import { CASTING_MATERIALS, solidProps, type CastingMaterialId } from '../utils/tier2';
 import { leakGuide } from '../utils/shopAdvice';
 import { MATERIALS } from '../utils/costEstimate';
+import { buildFlashGuide } from '../utils/flashGuide';
 
 const s = {
   section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
