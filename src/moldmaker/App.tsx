@@ -23,14 +23,11 @@ import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/co
 import { translateStepError } from './mold/stepExportErrors';
 import { summarizeRepairs } from './mold/validateMesh';
 import { repairModel, describeRepair } from './mold/meshFix';
-import { useTelemetry } from './services/useTelemetry';
-import { buildEvent } from './services/telemetryEvents';
 import {
   listProjects, saveProject, getProject, deleteProject,
   downloadProjectFile, pickProjectFile, newProjectId,
   type ProjectMeta, type ProjectParams,
 } from './services/projectStorage';
-import FirstRunTelemetryModal from './components/FirstRunTelemetryModal';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
 import { PrintQueuePanel } from './components/PrintQueuePanel';
@@ -371,13 +368,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     try { localStorage.setItem('sirpam.step', String(n)); } catch { /* ignore */ }
   }, []);
   /**
-   * First-run telemetry consent modal visibility. Set to true in the
-   * mold_generated success branch IFF telemetry is configured and we haven't
-   * asked the user yet. Deliberately NOT stored in AppState — it's a
-   * one-shot modal driven by a settings value that already persists.
-   */
-  const [telemetryModalOpen, setTelemetryModalOpen] = useState(false);
-  /**
    * Busy indicator for STEP export specifically. Other formats finish in
    * milliseconds so they don't need a visible state. STEP can run for ~60s
    * total (both halves) in a worker, so the UI disables other export buttons
@@ -386,7 +376,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
   const [stepExporting, setStepExporting] = useState(false);
   const { generateMold, generateSilicone, exportFiles, cancelStepExport, autoDetectPlane, suggestParting } =
     useMoldGenerator();
-  const telemetry = useTelemetry();
 
   // ── Saved projects (browser-only, IndexedDB) ──
   const [projects, setProjects] = useState<ProjectMeta[]>([]);
@@ -402,7 +391,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
   // won't. The send call itself is safely no-op when disabled/unconfigured,
   // so double-fire in dev is a cosmetic dashboard issue, not a correctness one.
   useEffect(() => {
-    telemetry.send(buildEvent('session_started', {}));
+    
     // telemetry.send is a stable useCallback — but listing it would tangle
     // the lint dep array with first-render semantics. Disable is localized.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -462,7 +451,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     // Telemetry: model_loaded (success). No properties from the file — not
     // size, not triangle count, not filename. "Did a load succeed" is the
     // entire question this event answers.
-    telemetry.send(buildEvent('model_loaded', { success: true }));
+    
   }, [telemetry]);
 
   // Model handed over from the AI Model Maker page.
@@ -509,13 +498,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       commitGeometry(result.geometry, result.fileName);
     } catch (err) {
       console.error('File load failed:', err);
-      telemetry.send(buildEvent('model_loaded', { success: false, failureReason: 'parse_error' }));
+      
       setState(prev => ({
         ...prev,
         errorMessage: err instanceof Error ? err.message : 'Failed to load file.',
       }));
     }
-  }, [commitGeometry, telemetry]);
+  }, [commitGeometry]);
 
   const loadTemplate = useCallback((id: SampleTemplateId) => {
     try {
@@ -523,13 +512,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       commitGeometry(geometry, fileName);
     } catch (err) {
       console.error('Sample load failed:', err);
-      telemetry.send(buildEvent('model_loaded', { success: false, failureReason: 'unknown' }));
+      
       setState(prev => ({
         ...prev,
         errorMessage: err instanceof Error ? err.message : 'Failed to load sample.',
       }));
     }
-  }, [commitGeometry, telemetry]);
+  }, [commitGeometry]);
 
   const handleLoadSample = useCallback(() => loadTemplate('mushroom'), [loadTemplate]);
 
@@ -548,13 +537,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       commitGeometry(result.geometry, result.fileName);
     } catch (err) {
       console.error('Drop-load failed:', err);
-      telemetry.send(buildEvent('model_loaded', { success: false, failureReason: 'parse_error' }));
+      
       setState(prev => ({
         ...prev,
         errorMessage: err instanceof Error ? err.message : 'Failed to load dropped file.',
       }));
     }
-  }, [commitGeometry, telemetry]);
+  }, [commitGeometry]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     // Must preventDefault on *both* dragover and drop to opt out of the
@@ -736,15 +725,12 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // Telemetry: mold_generated (success). `axisUsed` lets us spot whether
       // Z dominates (it will) or any axis is unexpectedly common — a signal
       // about auto-detect quality and the default axis choice.
-      telemetry.send(buildEvent('mold_generated', { success: true, axisUsed: params.axis }));
+      
       trackEvent('mold_generated', { axis: params.axis });
       // Consent moment: AFTER the user has just seen the product deliver
       // value, not before. Gated on `configured` so open-source forks without
       // a telemetry host never see this modal, and on `needsConsent` so we
       // don't re-ask users who've already made a decision.
-      if (telemetry.configured && telemetry.needsConsent) {
-        setTelemetryModalOpen(true);
-      }
     } catch (err) {
       console.error('Mold generation failed:', err);
       // Coarse failure tagging only — the exception message may contain
@@ -752,13 +738,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // majority of cases (boolean op threw, result was empty). If we later
       // want to distinguish non_manifold, add a typed check in the mold code
       // and surface a distinct error class, not a message string.
-      telemetry.send(
-        buildEvent('mold_generated', {
-          success: false,
-          axisUsed: params.axis,
-          failureReason: 'csg_failed',
-        }),
-      );
+      
       const msg = err instanceof Error ? err.message : '';
       // Auto-repair: broken-surface failures are fixed and retried once
       // automatically instead of only being flagged.
@@ -802,7 +782,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     state.additionalPlanes, state.isHollow,
     state.moldMode, state.siliconeType, state.siliconeMarginMm,
     state.skinThicknessMm, state.includeCore, state.formFit, state.tier2,
-    state.generating, generateMold, generateSilicone, telemetry,
+    state.generating, generateMold, generateSilicone,
   ]);
 
   // Retry the mold once the auto-repaired model is in state.
@@ -829,19 +809,17 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // Telemetry: plane_auto_detected (success). Compare `axisDetected`
       // against the later `mold_generated.axisUsed` in the dashboard to
       // estimate how often users accept vs override auto-detect.
-      telemetry.send(
-        buildEvent('plane_auto_detected', { success: true, axisDetected: result.axis }),
-      );
+      
     } catch (err) {
       console.error('Auto-detect failed:', err);
-      telemetry.send(buildEvent('plane_auto_detected', { success: false }));
+      
       setState(prev => ({
         ...prev,
         autoDetecting: false,
         errorMessage: err instanceof Error ? err.message : 'Auto-detect failed.',
       }));
     }
-  }, [state.originalGeometry, state.autoDetecting, autoDetectPlane, telemetry]);
+  }, [state.originalGeometry, state.autoDetecting, autoDetectPlane]);
 
   // ── Split advisor (worker-side parting-setup sweep) ──
   const handleSuggestParting = useCallback(async () => {
@@ -1053,7 +1031,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       // STEP success-count specifically answers task #27: "is the 66 MB OCP
       // bundle pulling its weight, or should we lazy-load / split it?"
       await charge.succeed();
-      telemetry.send(buildEvent('file_exported', { format }));
+      
       trackEvent('file_exported', { format });
     } catch (err) {
       // 'Export cancelled' is the user's choice, not a failure — surface a
@@ -1078,7 +1056,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     } finally {
       if (format === 'step') setStepExporting(false);
     }
-  }, [state.moldPieces, state.fileName, state.scale, state.pieceLabels, state.tier2.orientForPrint, exportFiles, telemetry]);
+  }, [state.moldPieces, state.fileName, state.scale, state.pieceLabels, state.tier2.orientForPrint, exportFiles]);
 
   const handleCancelStepExport = useCallback(() => {
     cancelStepExport();
@@ -1759,10 +1737,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             setState(prev => ({ ...prev, scale }))}
           onResetScale={() =>
             setState(prev => ({ ...prev, scale: 1.0 }))}
-          telemetryConfigured={telemetry.configured}
-          telemetryEnabled={telemetry.settings.telemetryEnabled}
-          onTelemetryAllow={telemetry.grant}
-          onTelemetryDecline={telemetry.decline}
           stepExporting={stepExporting}
           onCancelStepExport={handleCancelStepExport}
           moldSlot={
@@ -1892,24 +1866,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         <ShortcutCheatSheet onClose={() => setShortcutHelpOpen(false)} />
       )}
 
-      {telemetryModalOpen && (
-        <FirstRunTelemetryModal
-          onAllow={() => {
-            telemetry.grant();
-            setTelemetryModalOpen(false);
-          }}
-          onDecline={() => {
-            telemetry.decline();
-            setTelemetryModalOpen(false);
-          }}
-          onDismiss={() => {
-            // Escape / backdrop — close without recording a decision. The
-            // modal will reappear on the next successful mold generation.
-            // See component docblock for why we don't treat this as decline.
-            setTelemetryModalOpen(false);
-          }}
-        />
-      )}
     </>
   );
 }
