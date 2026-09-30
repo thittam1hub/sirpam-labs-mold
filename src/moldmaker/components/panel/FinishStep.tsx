@@ -6,6 +6,7 @@ import type { ProjectMeta } from '../../services/projectStorage';
 import { meshVolumeCm3, estimatePieceCost, estimateSiliconeCost } from '../../utils/costEstimate';
 import { solidProps, CASTING_MATERIALS, type CastingMaterialId } from '../../utils/tier2';
 import { styles, colors, spacing, fontSizes } from './tokens';
+import { CompatCard } from '../CompatCard';
 
 /** Typical Indian retail price ₹/kg per casting material — editable in the panel. */
 const CAST_PRICE_DEFAULT_INR: Record<CastingMaterialId, number> = {
@@ -50,6 +51,14 @@ export function FinishStep(props: FinishStepProps) {
       <div style={styles.section}>
         <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Material & Cost</h2>
         {hasMold && <CastMaterialPanel state={state} estimator={props.estimator} onEstimatorChange={props.onEstimatorChange} />}
+        {hasMold && (
+          <CompatCard input={{
+            castingMaterial: state.tier2.castingMaterial,
+            moldMode: state.moldMode,
+            siliconeType: state.siliconeType,
+            printMaterial: props.estimator.material,
+          }} />
+        )}
         {!hasMold ? (
           <div style={styles.hint}>Generate a mold to see material and cost estimates.</div>
         ) : state.moldMode === 'silicone' ? (

@@ -124,6 +124,7 @@ export function useMoldGeneration(
       flangeMm: params.formFit && t2.flangeMm && t2.flangeMm > 0 ? t2.flangeMm : undefined,
       flangeBoltMm: params.formFit && t2.flangeMm && t2.flangeBoltMm && t2.flangeBoltMm > 0 ? t2.flangeBoltMm : undefined,
       partingBoard: params.moldMode === 'silicone' && t2.partingBoard ? true : undefined,
+      wallRibs: params.moldMode === 'silicone' && !params.formFit && t2.wallRibs ? true : undefined,
     };
 
     try {

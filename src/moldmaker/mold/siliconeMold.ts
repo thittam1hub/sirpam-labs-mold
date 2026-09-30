@@ -24,6 +24,7 @@ import { getRegistrationPinPositionsForEnvelope, getRotationForAxis } from './ch
 import { computeMoldEnvelope, createMoldBoxManifold, primaryAxisIndex, lateralAxisIndices, type MoldEnvelope } from './moldBox';
 import { envelopeAroundManifold, offsetOutward } from './moldOffset';
 import { buildPartingFlange, planHugLocks, cavityHighPoints, flangeBoltCutters, skinRim, partingBoard } from './formFitLocks';
+import { buildWallRibs } from './proFeatures';
 import {
   type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit, asymmetricCavityBox, lateralToWorld,
 } from './moldFeatures';
@@ -238,6 +239,15 @@ export async function generateSiliconeMold(
         : boundingBox.clone().expandByScalar(margin);
       env = computeMoldEnvelope(cavityBox, shape, axis, wall);
       outer = createMoldBoxManifold(wasm, env);
+      if (extras.wallRibs) {
+        const ribbed = buildWallRibs(wasm, outer, { axis, envMin: env.moldMin, envSize: env.moldSize, wall });
+        if (ribbed) {
+          outer = ribbed.solid;
+          notices.push(`Added stiffening ribs on ${ribbed.ribbedFaces} wide wall${ribbed.ribbedFaces > 1 ? 's' : ''} so the box does not bulge under the silicone's weight.`);
+        } else {
+          notices.push('Wall ribs were on, but every wall is under 120 mm wide, so none were needed.');
+        }
+      }
       cavity = createMoldBoxManifold(wasm, computeMoldEnvelope(cavityBox, shape, axis, 0));
     }
     siliconeVolumeCm3 = Math.max(0, cm3(cavity) - cm3(master));

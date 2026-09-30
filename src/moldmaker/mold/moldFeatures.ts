@@ -43,6 +43,8 @@ export interface MoldExtras extends Round6Extras, Round7Extras {
   flangeBoltMm?: number | undefined;
   /** Silicone two-part: add a printable parting board with key bumps. */
   partingBoard?: boolean | undefined;
+  /** Silicone box molds: stiffening ribs on walls wider than ~120 mm. */
+  wallRibs?: boolean | undefined;
 }
 
 export type LockStyle = 'round' | 'cone' | 'square' | 'magnet';

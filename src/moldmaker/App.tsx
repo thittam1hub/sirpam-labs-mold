@@ -264,6 +264,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                     moldMode={state.moldMode}
                     siliconeType={state.siliconeType}
                     formFit={state.formFit}
+                    printMaterial={state.estimator.material}
                   />
                   <MoldPrepPanel
                     castingMaterial={state.tier2.castingMaterial}
@@ -315,7 +316,9 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                   pricePerKg={state.estimator.pricePerKg}
                   siliconePricePerLiter={state.estimator.siliconePricePerLiter}
                   wallMm={state.moldMode === 'silicone' ? (state.siliconeMarginMm || 10) : 5}
-                  printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
+                   printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
+                   planeOffset={state.planeOffset}
+                   cutAngle={state.cutAngle}
                 />
                 <OverhangPanel pieces={state.moldPieces} labels={state.pieceLabels} />
               </>}

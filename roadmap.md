@@ -16,3 +16,15 @@
 - [ ] Structural ribs for large silicone molds (stand-fins exist; ribs are new) — quick win
 - [ ] Flash/seam trim guide in the mold report — quick win
 - [ ] Clamp-wing pressure lands (clamp wings exist; add seating flats) — quick win
+
+## Reddit pain-point plan — Phase 1 (done, awaiting user review)
+- [x] Material compatibility advisor (rules table + card in Mold step and Finish report)
+- [x] Seam/flash trim guide in mold report (split-line length + per-material trimming advice)
+- [x] Structural ribs for wide silicone box walls (optional extra, >120 mm walls)
+- Verified: tsgo clean, 48 tests pass, build OK, browser smoke (caution card + finish report) clean
+## Phase 2 (not started — waits on user go-ahead)
+- [ ] Air-trap preview with one-click vent placement
+- [ ] Demolding risk score (undercut + draft, 0–100)
+## Phase 3
+- [ ] Leak check (parting-plane contact validation)
+- [ ] Cure-time & pour planner card
