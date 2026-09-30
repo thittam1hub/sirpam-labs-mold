@@ -64,6 +64,13 @@
       "when": 1790753836780,
       "tag": "0008_replay_drop_project_file_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790753853070,
+      "tag": "0009_replay_contact_message_validation",
+      "breakpoints": true
     }
   ]
 }
