@@ -206,6 +206,13 @@ export function useMoldGeneration(
             return;
           }
           await charge.fail();
+          autoRepairTried.current = false;
+          setState(prev => ({
+            ...prev,
+            generating: false,
+            errorMessage: `This model can't be made into a mold yet. We tried to fix it (${describeRepair(report)}), but it still isn't one closed solid. No credits were used. Try "Repair model" or "Reduce detail" in the Model step, or export a cleaner file from your 3D program.`,
+          }));
+          return;
         } catch (e) { await charge?.fail(); console.error('Auto-repair failed:', e); }
       }
       autoRepairTried.current = false;

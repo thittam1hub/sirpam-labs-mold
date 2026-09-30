@@ -420,7 +420,7 @@ export function describeRepair(r: RepairReport): string {
   if (r.droppedDuplicate) parts.push(`${r.droppedDuplicate.toLocaleString()} duplicates removed`);
   if (r.droppedNonManifold) parts.push(`${r.droppedNonManifold.toLocaleString()} overlapping faces removed`);
   if (r.flipped) parts.push(`${r.flipped.toLocaleString()} inside-out faces turned`);
-  if (r.holesClosed) parts.push(`${r.holesClosed} holes closed`);
+  if (r.holesClosed) parts.push(`${r.holesClosed} hole${r.holesClosed === 1 ? "" : "s"} closed`);
   if (r.rebuilt) parts.push('surface rebuilt as one clean solid');
   return parts.length ? parts.join(', ') : 'no problems found';
 }
