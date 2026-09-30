@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppSessionProvider } from "@/components/AppSession";
+import { CLARITY_PROJECT_ID, getAnalyticsConfig } from "@/lib/analytics.functions";
 
 function NotFoundComponent() {
   return (
@@ -73,9 +74,28 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+function analyticsScripts(gaMeasurementId: string | null | undefined) {
+  const scripts: Array<Record<string, unknown>> = [
+    {
+      children: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_PROJECT_ID}");`,
+    },
+  ];
+  if (gaMeasurementId) {
+    scripts.push(
+      { src: `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`, async: true },
+      {
+        children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaMeasurementId}');`,
+      },
+    );
+  }
+  return scripts;
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   staticData: { sitemap: false },
-  head: () => ({
+  loader: () => getAnalyticsConfig(),
+  head: ({ loaderData }) => ({
+    scripts: analyticsScripts(loaderData?.gaMeasurementId),
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
