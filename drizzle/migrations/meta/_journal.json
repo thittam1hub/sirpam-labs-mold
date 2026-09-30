@@ -106,6 +106,13 @@
       "when": 1790754098456,
       "tag": "0014_replay_referrals",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790754130148,
+      "tag": "0015_replay_account_deletion",
+      "breakpoints": true
     }
   ]
 }
