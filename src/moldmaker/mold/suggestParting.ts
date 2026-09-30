@@ -105,6 +105,6 @@ export function suggestBestParting(
       }
     }
   }
-  const result = best ?? coarse[0];
+  const result = (best ?? coarse[0])!;
   return { ...result, evaluated };
 }
