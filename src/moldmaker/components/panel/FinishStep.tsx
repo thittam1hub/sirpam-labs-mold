@@ -134,6 +134,58 @@ export function FinishStep(props: FinishStepProps) {
   );
 }
 
+/**
+ * "What one cast uses" — grams/ml of the chosen casting material per pour,
+ * scaled by the number of cavities, with an editable ₹/kg price. Silicone
+ * molds also show how much silicone the mold itself took.
+ */
+function CastMaterialPanel({ state, estimator, onEstimatorChange }: {
+  state: AppState;
+  estimator: FinishStepProps['estimator'];
+  onEstimatorChange: FinishStepProps['onEstimatorChange'];
+}) {
+  const [showPrice, setShowPrice] = useState(false);
+  const mat = CASTING_MATERIALS.find(m => m.id === state.tier2.castingMaterial) ?? CASTING_MATERIALS[0]!;
+  const cavities = Math.max(1, state.tier2.cavityCount);
+  const partCm3 = state.originalGeometry ? solidProps(state.originalGeometry).volume / 1000 : 0;
+  if (partCm3 <= 0) return null;
+  const waste = 1.05; // mixing cups, stuck-to-walls, topping up
+  const ml = partCm3 * cavities * waste;
+  const grams = ml * mat.density;
+  const pricePerKg = estimator.castingPricePerKg > 0 ? estimator.castingPricePerKg : CAST_PRICE_DEFAULT_INR[mat.id];
+  const cost = (grams / 1000) * pricePerKg;
+
+  return (
+    <div style={{ marginBottom: spacing.md }}>
+      <div style={{ ...styles.label, marginBottom: spacing.xs }}>What one cast uses — {mat.label}{cavities > 1 ? ` × ${cavities} copies` : ''}</div>
+      <div style={styles.statRow}><span>Casting material</span><span>{ml.toFixed(0)} ml · {grams.toFixed(0)} g</span></div>
+      {state.moldMode === 'silicone' && state.siliconeVolumeCm3 > 0 && (
+        <div style={styles.statRow}><span>Silicone in the mold</span><span>{state.siliconeVolumeCm3.toFixed(0)} ml · {(state.siliconeVolumeCm3 * 1.1).toFixed(0)} g (once)</span></div>
+      )}
+      <div style={{ ...styles.statRow, color: colors.textPrimary }}><span>Material cost per cast</span><span>{inr(cost)}</span></div>
+      {showPrice ? (
+        <label style={{ ...styles.label, display: 'block', marginTop: spacing.xs }}>
+          Your {mat.label} price (₹ per kg)
+          <input
+            type="number" min={0} step={10} value={estimator.castingPricePerKg || CAST_PRICE_DEFAULT_INR[mat.id]}
+            onChange={e => onEstimatorChange({ castingPricePerKg: parseFloat(e.target.value) || 0 })}
+            style={{ ...styles.input, marginTop: spacing.xs }}
+            aria-label="Casting material price per kilogram"
+          />
+        </label>
+      ) : (
+        <button type="button" style={{ ...styles.button, ...styles.secondaryBtn, marginTop: spacing.xs, padding: `${spacing.xs}px ${spacing.sm}px` }}
+          onClick={() => setShowPrice(true)}>
+          Use my own price
+        </button>
+      )}
+      <div style={{ ...styles.hint, marginTop: spacing.xs }}>
+        Based on your model's volume + 5% for mixing and waste. Price is a typical Indian retail guide — always check your supplier.
+      </div>
+    </div>
+  );
+}
+
 function SiliconeCostEstimate({ volumeCm3, estimator, onEstimatorChange }: {
   volumeCm3: number;
   estimator: FinishStepProps['estimator'];
