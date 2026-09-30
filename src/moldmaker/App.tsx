@@ -437,9 +437,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       boundingBox: bbox,
       showOriginal: true,
     });
-    // Telemetry: model_loaded (success). No properties from the file — not
-    // size, not triangle count, not filename. "Did a load succeed" is the
-    // entire question this event answers.
     
   }, []);
 
@@ -711,9 +708,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       }));
       pendingAutoRepairNote.current = null;
       autoRepairTried.current = false;
-      // Telemetry: mold_generated (success). `axisUsed` lets us spot whether
-      // Z dominates (it will) or any axis is unexpectedly common — a signal
-      // about auto-detect quality and the default axis choice.
       
       trackEvent('mold_generated', { axis: params.axis });
       // Consent moment: AFTER the user has just seen the product deliver
@@ -795,9 +789,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         planeOffset: result.offset,
         autoDetecting: false,
       }));
-      // Telemetry: plane_auto_detected (success). Compare `axisDetected`
-      // against the later `mold_generated.axisUsed` in the dashboard to
-      // estimate how often users accept vs override auto-detect.
       
     } catch (err) {
       console.error('Auto-detect failed:', err);
@@ -1014,11 +1005,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         // rigid runs pass an empty list and keep top/bottom naming.
         state.pieceLabels.length > 0 ? state.pieceLabels : undefined,
       );
-      // Telemetry: file_exported (success only — we don't event failures here
-      // because export failures are extremely rare and the signal we actually
-      // want is "which format matters", which is the success count per format).
-      // STEP success-count specifically answers task #27: "is the 66 MB OCP
-      // bundle pulling its weight, or should we lazy-load / split it?"
       await charge.succeed();
       
       trackEvent('file_exported', { format });
