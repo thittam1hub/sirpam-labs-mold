@@ -164,6 +164,48 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_packs: {
+        Row: {
+          active: boolean
+          best: boolean
+          created_at: string
+          credits: number
+          id: string
+          inr: number
+          name: string
+          sort: number
+          usd_emerging: number
+          usd_standard: number
+          usd_value: number
+        }
+        Insert: {
+          active?: boolean
+          best?: boolean
+          created_at?: string
+          credits: number
+          id: string
+          inr: number
+          name: string
+          sort?: number
+          usd_emerging: number
+          usd_standard: number
+          usd_value: number
+        }
+        Update: {
+          active?: boolean
+          best?: boolean
+          created_at?: string
+          credits?: number
+          id?: string
+          inr?: number
+          name?: string
+          sort?: number
+          usd_emerging?: number
+          usd_standard?: number
+          usd_value?: number
+        }
+        Relationships: []
+      }
       gallery_items: {
         Row: {
           best_settings: string | null
@@ -263,6 +305,21 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_attempts: {
+        Row: {
+          attempted_at: string
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       promo_codes: {
         Row: {
           active: boolean
@@ -321,6 +378,54 @@ export type Database = {
             referencedColumns: ["code"]
           },
         ]
+      }
+      purchases: {
+        Row: {
+          created_at: string
+          credits: number
+          currency: string
+          id: string
+          pack_id: string
+          pack_name: string
+          payment_ref: string | null
+          price: number
+          provider: string
+          refunded_at: string | null
+          region: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          currency?: string
+          id?: string
+          pack_id: string
+          pack_name: string
+          payment_ref?: string | null
+          price: number
+          provider?: string
+          refunded_at?: string | null
+          region?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          currency?: string
+          id?: string
+          pack_id?: string
+          pack_name?: string
+          payment_ref?: string | null
+          price?: number
+          provider?: string
+          refunded_at?: string | null
+          region?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       quote_requests: {
         Row: {
@@ -408,7 +513,12 @@ export type Database = {
         Returns: undefined
       }
       admin_find_user: { Args: { _email: string }; Returns: Json }
+      admin_list_purchases: { Args: { _email: string }; Returns: Json }
       admin_overview: { Args: never; Returns: Json }
+      admin_refund_purchase: {
+        Args: { _purchase: string; _reason: string }
+        Returns: Json
+      }
       admin_set_promo_active: {
         Args: { _active: boolean; _code: string }
         Returns: undefined
@@ -435,6 +545,18 @@ export type Database = {
         Returns: boolean
       }
       hold_credits: { Args: { _action: string }; Returns: Json }
+      record_purchase: {
+        Args: {
+          _currency: string
+          _pack_id: string
+          _payment_ref: string
+          _price: number
+          _provider: string
+          _region: string
+          _user: string
+        }
+        Returns: Json
+      }
       redeem_promo: { Args: { _code: string }; Returns: Json }
       release_hold: { Args: { _id: string }; Returns: boolean }
       spend_credits: { Args: { _action: string }; Returns: Json }
