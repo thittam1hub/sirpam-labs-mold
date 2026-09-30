@@ -44,6 +44,8 @@ export function useModelIngestion(
     try {
       const { geometry, fileName } = buildSampleTemplate(id);
       commitGeometry(geometry, fileName);
+      if (id === 'candle') setState(prev => ({ ...prev, tier2: { ...prev.tier2, castingMaterial: 'wax', corePinMm: 3 } }));
+      if (id === 'soap') setState(prev => ({ ...prev, tier2: { ...prev.tier2, castingMaterial: 'soap' } }));
     } catch (err) {
       console.error('Sample load failed:', err);
       setState(prev => ({ ...prev, errorMessage: err instanceof Error ? err.message : 'Failed to load sample.' }));

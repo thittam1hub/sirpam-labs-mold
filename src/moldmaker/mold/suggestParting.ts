@@ -54,6 +54,34 @@ function subsample(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
   return g;
 }
 
+/**
+ * Offset (0..1) of the widest cross-section along an axis — where a shop
+ * would draw the parting line so neither half has to pass a wider section.
+ */
+export function widestOutlineOffset(geometry: THREE.BufferGeometry, axis: Axis, bbox: THREE.Box3): number {
+  const i = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;
+  const [ja, jb] = i === 0 ? [1, 2] : i === 1 ? [0, 2] : [0, 1];
+  const lo = bbox.min.getComponent(i), span = bbox.max.getComponent(i) - lo;
+  if (span <= 0) return 0.5;
+  const BINS = 40;
+  const mnA = new Array(BINS).fill(Infinity), mxA = new Array(BINS).fill(-Infinity);
+  const mnB = new Array(BINS).fill(Infinity), mxB = new Array(BINS).fill(-Infinity);
+  const pos = geometry.getAttribute('position').array as ArrayLike<number>;
+  for (let v = 0; v + 2 < pos.length; v += 3) {
+    const k = Math.min(BINS - 1, Math.max(0, Math.floor(((pos[v + i]! - lo) / span) * BINS)));
+    const a = pos[v + ja]!, b = pos[v + jb]!;
+    if (a < mnA[k]) mnA[k] = a; if (a > mxA[k]) mxA[k] = a;
+    if (b < mnB[k]) mnB[k] = b; if (b > mxB[k]) mxB[k] = b;
+  }
+  let best = -1, at = 0.5;
+  for (let k = 0; k < BINS; k++) {
+    if (!isFinite(mnA[k])) continue;
+    const area = (mxA[k] - mnA[k]) * (mxB[k] - mnB[k]);
+    if (area > best + 1e-9) { best = area; at = (k + 0.5) / BINS; }
+  }
+  return Math.round(Math.max(0.15, Math.min(0.85, at)) * 100) / 100;
+}
+
 const scoreOf = (undercut: number, offset: number, cutAngle: number) =>
   undercut + 0.02 * Math.abs(offset - 0.5) + Math.abs(cutAngle) * 0.0005;
 
@@ -88,7 +116,15 @@ export function suggestBestParting(
   let best: SuggestResult | null = null;
   let bestScore = Infinity;
   const maxTilt = ENABLE_OBLIQUE_PLANES ? MAX_CUT_ANGLE_DEGREES : 0;
-  for (const seed of coarse.slice(0, 3)) {
+  // Seed the fine pass with the widest-outline split on every axis too.
+  const seeds = [...coarse.slice(0, 3)];
+  for (const axis of axes) {
+    const offset = widestOutlineOffset(geometry, axis, bbox);
+    const undercut = undercutFraction(coarseGeo, axis, offset, bbox, 0);
+    evaluated++;
+    seeds.push({ axis, offset, cutAngle: 0, undercut, evaluated: 0 });
+  }
+  for (const seed of seeds) {
     const tilts = ENABLE_OBLIQUE_PLANES
       ? [...new Set([-5, 0, 5].map((d) => Math.max(-maxTilt, Math.min(maxTilt, seed.cutAngle + d))))]
       : [0];

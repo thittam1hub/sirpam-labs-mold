@@ -24,6 +24,8 @@ export interface Tier2Settings {
   clampBoltMm?: 0 | 3 | 4 | 5;
   clampLands?: boolean;
   corePinMm?: 0 | 2 | 3 | 5 | 8;
+  pourFunnel?: boolean;
+  clampJig?: boolean;
   autoVents?: boolean;
   standFins?: boolean;
   /** Round 7. Optional so older projects still load. */
@@ -253,6 +255,17 @@ export default function AdvancedMoldPanel(p: Props) {
                   ))}
                 </div>
                 <div style={s.hint}>A removable pin straight through the middle — for bead holes, wick channels or hanging holes.</div>
+
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                  <input type="checkbox" checked={!!t.pourFunnel} onChange={e => onChange({ pourFunnel: e.target.checked })} />
+                  Printable pour funnel
+                </label>
+                <div style={s.hint}>An extra funnel piece that plugs into the pour hole — less spilling, steadier pour.</div>
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.sm }}>
+                  <input type="checkbox" checked={!!t.clampJig} onChange={e => onChange({ clampJig: e.target.checked })} />
+                  Clamp sleeve
+                </label>
+                <div style={s.hint}>A printed band that slides over the seam and holds both halves shut — no rubber bands or clamps needed.</div>
 
                 <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
                   <input type="checkbox" checked={!!t.autoVents} onChange={e => onChange({ autoVents: e.target.checked })} />
@@ -509,5 +522,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.clampLands, t.corePinMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.clampLands, t.corePinMm, t.pourFunnel, t.clampJig, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
 }
