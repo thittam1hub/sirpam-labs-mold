@@ -156,14 +156,12 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
         <div style={s.hint}>{MOLD_STYLES.find(x => x[0] === style)![2]}{style !== 'standard' && ' The model’s top faces up — use Turn 90° in the Model step if needed.'}</div>
 
         <div style={s.sub}>Air vents</div>
-        <Slider label="Air vent size" value={t.ventDiameterMm ?? 0} min={0} max={5} step={0.5}
-          unit={(t.ventDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ ventDiameterMm: v })} />
         <div style={s.row}>
           {([-1, 0, 1, 2, 3, 4] as const).map(n => (
             <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
           ))}
         </div>
-        <div style={s.hint}>Typical: 1.5–3 mm vents. Auto = worked out from your pour hole.</div>
+        <div style={s.hint}>Vent size lives in the Mold step next to the pour hole. Typical: 1.5–3 mm vents.</div>
       </>)}
 
       {blockSilicone && (<>
