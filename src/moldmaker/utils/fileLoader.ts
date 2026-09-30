@@ -1,139 +1,79 @@
-// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
+// Sirpam 3D Labs Mold — open STL / OBJ files from the user's device.
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-/**
- * Parses a raw model file buffer into a Three.js BufferGeometry.
- *
- * Shared by the Electron IPC path (where the main process hands us an
- * ArrayBuffer via `open-file-dialog`) and the browser file-input fallback,
- * so the "which loader do we use?" logic lives in exactly one place.
- *
- * Throws a user-facing Error on unsupported extensions or loader failures;
- * callers are expected to surface `err.message` to the UI.
- */
-export function parseModel(
-  arrayBuffer: ArrayBuffer,
-  fileName: string,
-): { geometry: THREE.BufferGeometry; fileName: string } {
-  const ext = fileName.toLowerCase().split('.').pop();
+export const MAX_FILE_MB = 200;
+export const MAX_TRIANGLES = 2_000_000;
 
+export interface LoadedModel {
+  geometry: THREE.BufferGeometry;
+  fileName: string;
+}
+
+/** Flatten every mesh in an OBJ scene into one position-only geometry. */
+function objToGeometry(root: THREE.Group): THREE.BufferGeometry {
+  root.updateMatrixWorld(true);
+  const parts: THREE.BufferGeometry[] = [];
+  root.traverse(node => {
+    if (!(node instanceof THREE.Mesh) || !node.geometry?.getAttribute('position')) return;
+    const g = new THREE.BufferGeometry();
+    const src = node.geometry.index ? node.geometry.toNonIndexed() : node.geometry;
+    g.setAttribute('position', src.getAttribute('position').clone());
+    g.applyMatrix4(node.matrixWorld);
+    parts.push(g);
+  });
+  if (parts.length === 0) return new THREE.BufferGeometry();
+  if (parts.length === 1) return parts[0]!;
+  return mergeGeometries(parts, false) ?? parts[0]!;
+}
+
+/** Parse raw file bytes by extension. */
+export function parseModel(data: ArrayBuffer, fileName: string): LoadedModel {
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+  if (ext !== 'stl' && ext !== 'obj') {
+    throw new Error(`Unsupported file type: .${ext || '(none)'} — please use an .stl or .obj file.`);
+  }
   try {
-    if (ext === 'stl') {
-      const loader = new STLLoader();
-      const geometry = loader.parse(arrayBuffer);
-      return { geometry, fileName };
-    }
-
-    if (ext === 'obj') {
-      const text = new TextDecoder().decode(new Uint8Array(arrayBuffer));
-      const loader = new OBJLoader();
-      const obj = loader.parse(text);
-      const geometry = mergeObjGeometries(obj);
-      return { geometry, fileName };
-    }
-
-    throw new Error(`Unsupported file type: .${ext ?? '(none)'} — expected .stl or .obj`);
-  } catch (err) {
-    // Re-throw with a user-facing message. STLLoader/OBJLoader can throw on
-    // truncated or malformed files; surfacing the raw error ("Cannot read
-    // properties of undefined...") is useless to the user, so we wrap it.
-    if (err instanceof Error && err.message.startsWith('Unsupported file type')) {
-      throw err;
-    }
-    const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(`Failed to parse ${fileName}: ${detail}`);
+    const geometry = ext === 'stl'
+      ? new STLLoader().parse(data)
+      : objToGeometry(new OBJLoader().parse(new TextDecoder().decode(data)));
+    return { geometry, fileName };
+  } catch (e) {
+    throw new Error(`We couldn't read ${fileName}: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 
-/**
- * Parse an already-in-hand File (from <input type=file> or a drag-drop
- * DataTransfer). Shared by the file-input fallback inside loadFile() and
- * by the drag-drop handler in App.tsx so both entry points produce the
- * same normalized `{ geometry, fileName }` shape.
- */
-/** Largest model file the browser can safely open (files are parsed in memory). */
-export const MAX_FILE_MB = 200;
-/** Above this, the mold build gets slow; the user is pointed at Reduce detail. */
-export const MAX_TRIANGLES = 2_000_000;
-
-export async function parseFile(
-  file: File,
-): Promise<{ geometry: THREE.BufferGeometry; fileName: string }> {
-  const mb = file.size / (1024 * 1024);
+/** Read a dropped/picked File with size and triangle limits. */
+export async function parseFile(file: File): Promise<LoadedModel> {
   if (file.size === 0) throw new Error(`${file.name} is empty — check the file was exported fully.`);
+  const mb = file.size / 1048576;
   if (mb > MAX_FILE_MB) {
-    throw new Error(`${file.name} is ${mb.toFixed(0)} MB — the limit is ${MAX_FILE_MB} MB. Reduce the detail in your modelling or slicer tool (or export as binary STL, which is about 5× smaller) and try again.`);
+    throw new Error(`${file.name} is ${mb.toFixed(0)} MB — the limit is ${MAX_FILE_MB} MB. Export with less detail (binary STL is about 5× smaller) and try again.`);
   }
-  const arrayBuffer = await file.arrayBuffer();
-  const out = parseModel(arrayBuffer, file.name);
+  const out = parseModel(await file.arrayBuffer(), file.name);
   const pos = out.geometry.getAttribute('position');
   if (!pos || pos.count < 3) throw new Error(`${file.name} has no 3D shape in it — check you exported the model, not an empty scene.`);
-  const tris = out.geometry.index ? out.geometry.index.count / 3 : pos.count / 3;
+  const tris = (out.geometry.index?.count ?? pos.count) / 3;
   if (tris > MAX_TRIANGLES) {
-    throw new Error(`${file.name} has ${(tris / 1e6).toFixed(1)} million triangles — the limit is ${MAX_TRIANGLES / 1e6} million. Reduce the detail in your modelling tool first; molds rarely need more than 500,000.`);
+    throw new Error(`${file.name} has ${(tris / 1e6).toFixed(1)} million triangles — the limit is ${MAX_TRIANGLES / 1e6} million. Reduce the detail first; molds rarely need more than 500,000.`);
   }
   return out;
 }
 
-export async function loadFile(): Promise<{ geometry: THREE.BufferGeometry; fileName: string } | null> {
-  // Detect the hardened Electron bridge exposed by preload.ts. With
-  // contextIsolation:true + nodeIntegration:false, `window.require` is
-  // gone — `window.electronAPI` is the only way through. Types for this
-  // global come from renderer/electron.d.ts.
-  const electronAPI = typeof window !== 'undefined' ? window.electronAPI : undefined;
-
-  if (electronAPI) {
-    const result = await electronAPI.openFile();
-    if (!result) return null;
-
-    const { name, buffer } = result;
-    return parseModel(buffer, name);
-  }
-
-  // Browser fallback: use file input
+/** Show the browser's file picker. Resolves null if the user cancels. */
+export function loadFile(): Promise<LoadedModel | null> {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.stl,.obj';
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (!file) { resolve(null); return; }
-
-      try {
-        resolve(await parseFile(file));
-      } catch (err) {
-        reject(err);
-      }
-    };
+    input.addEventListener('change', () => {
+      const f = input.files?.[0];
+      if (!f) return resolve(null);
+      parseFile(f).then(resolve, reject);
+    });
+    input.addEventListener('cancel', () => resolve(null));
     input.click();
   });
-}
-
-function mergeObjGeometries(obj: THREE.Group): THREE.BufferGeometry {
-  const geometries: THREE.BufferGeometry[] = [];
-  obj.traverse((child) => {
-    if (child instanceof THREE.Mesh && child.geometry) {
-      const geo = child.geometry.clone();
-      if (child.matrixWorld) {
-        geo.applyMatrix4(child.matrixWorld);
-      }
-      // Ensure we have an indexed or non-indexed geometry with position
-      if (geo.attributes.position) {
-        geometries.push(geo);
-      }
-    }
-  });
-
-  if (geometries.length === 0) {
-    return new THREE.BufferGeometry();
-  }
-
-  if (geometries.length === 1) {
-    return geometries[0];
-  }
-
-  return mergeGeometries(geometries, false) || geometries[0];
 }

@@ -16,12 +16,12 @@ const recorded: Record<string, Metrics> = {};
 interface Metrics { pieces: number; volumes: number[]; sizes: number[][] }
 
 function volume(g: THREE.BufferGeometry): number {
-  const p = g.attributes['position'].array as ArrayLike<number>;
+  const pos = g.getAttribute('position');
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
   let v = 0;
-  for (let i = 0; i < p.length; i += 9) {
-    v += (p[i] * (p[i + 4] * p[i + 8] - p[i + 5] * p[i + 7])
-      - p[i + 1] * (p[i + 3] * p[i + 8] - p[i + 5] * p[i + 6])
-      + p[i + 2] * (p[i + 3] * p[i + 7] - p[i + 4] * p[i + 6])) / 6;
+  for (let i = 0; i < pos.count; i += 3) {
+    a.fromBufferAttribute(pos, i); b.fromBufferAttribute(pos, i + 1); c.fromBufferAttribute(pos, i + 2);
+    v += a.dot(b.cross(c)) / 6;
   }
   return Math.abs(v);
 }
@@ -59,7 +59,7 @@ describe('golden mold baseline', () => {
       const want = golden[key];
       if (!want) return;
       expect(got.pieces).toBe(want.pieces);
-      got.volumes.forEach((v, i) => expect(Math.abs(v - want.volumes[i])).toBeLessThanOrEqual(want.volumes[i] * 0.02 + 1));
+      got.volumes.forEach((v, i) => expect(Math.abs(v - (want.volumes[i] ?? 0))).toBeLessThanOrEqual((want.volumes[i] ?? 0) * 0.02 + 1));
     }, 180000);
   }
   it('writes baseline when missing', () => {
