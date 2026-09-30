@@ -38,7 +38,6 @@ export const Route = createFileRoute("/studio")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
   validateSearch: (search: Record<string, unknown>): { step?: number; tool?: StudioTool } => {
     const step = Number(search["step"]);

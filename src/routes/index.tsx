@@ -28,7 +28,6 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
       { name: "twitter:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
     ],
-    links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
   component: LandingPage,
 });
