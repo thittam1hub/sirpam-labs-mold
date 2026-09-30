@@ -4,7 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import type { MoldMode } from '../types';
-import { solidProps } from '../utils/tier2';
+import { solidProps, CASTING_MATERIALS, type CastingMaterialId } from '../utils/tier2';
 import { addPrintJob } from '@/lib/printQueue.functions';
 import { useAppSession } from '@/components/AppSession';
 import { BUSINESS } from '@/lib/business';
@@ -30,13 +30,15 @@ const s = {
  * Measurements are read from the generated pieces so the shop gets the
  * same numbers the user sees on screen.
  */
-export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePerKg, siliconeVolumeCm3 }: {
+export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePerKg, siliconeVolumeCm3, castingMaterial, cavities }: {
   pieces: THREE.BufferGeometry[];
   fileName: string;
   moldMode: MoldMode;
   material: 'pla' | 'resin';
   pricePerKg: number;
   siliconeVolumeCm3?: number;
+  castingMaterial?: CastingMaterialId;
+  cavities?: number;
 }) {
   const { session, ready } = useAppSession();
   const submit = useServerFn(addPrintJob);
@@ -71,6 +73,8 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
   const density = material === 'resin' ? 1.1 : 1.24;
   const cost = specs.volume * density * pricePerKg / 1000;
   const matLabel = moldMode === 'silicone' ? `${material === 'resin' ? 'Resin' : 'PLA'} box + silicone` : material === 'resin' ? 'Resin' : 'PLA';
+  const castMat = CASTING_MATERIALS.find(m => m.id === castingMaterial);
+  const castCopies = Math.max(1, cavities ?? 1);
 
   // Indian mobile: optional +91/0 prefix, then 10 digits starting 6-9. PIN: 6 digits, not starting with 0.
   const mobile = phone.replace(/[\s-]/g, '').replace(/^(\+?91|0)/, '');
@@ -105,8 +109,14 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
   };
 
   const waMsg = ref
-    ? `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`
-    : `Hi Sirpam 3D Labs, I'm designing a mold in your studio (${moldMode === 'silicone' ? 'silicone mold + printed box' : 'printed rigid mold'}): ${pieces.length} pieces, ${specs.size} mm, about ${specs.volume.toFixed(1)} cm3 of material. Could you tell me the price and delivery time?`;
+    ? `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${castCopies} set(s). Delivery PIN ${pin}.`
+    : `Hi Sirpam 3D Labs, I designed a mold in your studio and would like it printed:\n` +
+      `• Project: ${fileName.replace(/\.[^.]+$/, '') || 'Untitled model'}\n` +
+      `• Mold: ${moldMode === 'silicone' ? 'Silicone mold + printed box' : 'Printed rigid mold'}, ${pieces.length} piece(s)\n` +
+      `• Size: ${specs.size} mm · about ${specs.volume.toFixed(1)} cm³ of print material\n` +
+      (castMat ? `• Casting: ${castMat.label}${castCopies > 1 ? ` × ${castCopies} copies per mold` : ''}\n` : '') +
+      (siliconeVolumeCm3 ? `• Silicone needed: ~${(siliconeVolumeCm3 / 1000).toFixed(2)} L\n` : '') +
+      `\nCould you tell me the price and delivery time?`;
   const waText = encodeURIComponent(waMsg);
   const estimate = Math.round(cost * copies);
 
@@ -118,6 +128,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
       <div style={s.kv}><span>Pieces</span><span>{pieces.length}</span></div>
       <div style={s.kv}><span>Overall size</span><span>{specs.size} mm</span></div>
       <div style={s.kv}><span>Material per set</span><span>{specs.volume.toFixed(1)} cm3</span></div>
+      {castMat && <div style={s.kv}><span>Casting</span><span>{castMat.label}{castCopies > 1 ? ` × ${castCopies}` : ''}</span></div>}
       {estimate > 0 && <div style={s.kv}><span>Material estimate</span><span>Rs {estimate.toLocaleString("en-IN")}</span></div>}
       <div style={s.hint}>{estimate > 0
         ? "Guide only — excludes GST, labour and delivery. We confirm the final price before printing. Nothing is charged here."

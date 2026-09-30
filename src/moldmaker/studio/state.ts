@@ -67,6 +67,8 @@ export interface AppState {
     material: 'pla' | 'resin';
     pricePerKg: number;
     siliconePricePerLiter: number;
+    /** ₹ per kg of the casting material; 0 = use the built-in typical price. */
+    castingPricePerKg: number;
   };
   wireframe: boolean;
   generating: boolean;
@@ -109,7 +111,7 @@ export const initialAppState: AppState = {
   showHeatmap: false,
   showSplitLine: true,
   suggesting: false,
-  estimator: { material: 'pla', pricePerKg: 20, siliconePricePerLiter: 30 },
+  estimator: { material: 'pla', pricePerKg: 20, siliconePricePerLiter: 30, castingPricePerKg: 0 },
   wireframe: false,
   generating: false,
   boundingBox: null,

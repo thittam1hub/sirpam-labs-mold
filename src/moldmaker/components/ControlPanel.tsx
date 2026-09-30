@@ -57,7 +57,7 @@ interface ControlPanelProps {
   onToggleHeatmap: () => void;
   onToggleSplitLine: () => void;
   onSuggestParting: () => void;
-  estimator: { material: 'pla' | 'resin'; pricePerKg: number; siliconePricePerLiter: number };
+  estimator: { material: 'pla' | 'resin'; pricePerKg: number; siliconePricePerLiter: number; castingPricePerKg: number };
   onEstimatorChange: (patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number }) => void;
   projects: ProjectMeta[];
   projectBusy: boolean;
