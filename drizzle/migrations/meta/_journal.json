@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790752499049,
+      "tag": "0000_replay_gallery_items",
+      "breakpoints": true
+    }
+  ]
 }
