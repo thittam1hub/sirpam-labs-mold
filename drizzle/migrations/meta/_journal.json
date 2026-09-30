@@ -57,6 +57,13 @@
       "when": 1790752661663,
       "tag": "0007_replay_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790753836780,
+      "tag": "0008_replay_drop_project_file_policies",
+      "breakpoints": true
     }
   ]
 }
