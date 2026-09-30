@@ -40,3 +40,16 @@
 - [x] Feedback form verified in browser (submit works, no console errors)
 - [x] Google Drive client linked to project; server fns + DriveCard + OAuth return page written
 - [ ] Drive: user adds gateway callback URL in Google Cloud Console, then end-to-end connect test
+
+## Mold engine v3 plan (approved 2026-09-30)
+- [x] Step 0: 3d-print-modeling skill installed
+- [x] C10 cost per piece, C11 mold life, C12 print settings card (Finish step, 4 tests)
+- [x] B6 runner system — already existed (extras.runner)
+- [ ] A1 faster builds (2 threads + cache)
+- [ ] A2 auto draft angle
+- [ ] A4 repair summary + build block
+- [ ] C9 clamp-wing pressure lands
+- [ ] B5 core pins / inserts
+- [ ] A3 smart split surface
+- [ ] B7 pour funnel + clamp jig
+- [ ] B8 candle & soap presets
