@@ -19,6 +19,7 @@ import { Link } from '@tanstack/react-router';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import { CastRiskCard } from './components/CastRiskCard';
+import { PourPlanCard } from './components/PourPlanCard';
 import { getPresetById } from './utils/printerPresets';
 
 import { initialAppState, moldIsStale, type AppState } from './studio/state';
