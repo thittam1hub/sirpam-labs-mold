@@ -43,6 +43,13 @@
       "when": 1790752622387,
       "tag": "0005_replay_spend_credits_v3",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790752637778,
+      "tag": "0006_replay_contact_messages",
+      "breakpoints": true
     }
   ]
 }
