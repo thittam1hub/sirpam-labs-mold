@@ -48,7 +48,6 @@ export function MoldLifeCard({ state, estimator, castPriceDefault }: Props) {
       </div>
       <div style={styles.section}>
         <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Print settings</h2>
-        {silicone && estimator.material === 'resin' ? null : null}
         <div style={styles.statRow}><span>Layer height</span><span>{ps.layerMm} mm</span></div>
         {ps.walls > 0 && <div style={styles.statRow}><span>Walls</span><span>{ps.walls}</span></div>}
         <div style={styles.statRow}><span>Infill</span><span>{ps.infillPct}%</span></div>
