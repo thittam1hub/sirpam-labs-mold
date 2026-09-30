@@ -1,14 +1,18 @@
 # Roadmap
 
 ## In progress
-- [ ] Reddit pain-point research → propose unique features afterwards (background agent running, results awaited)
+- (none — awaiting user's pick from pain-point feature ideas)
 
 ## Blocked / waiting
 - (none)
 
 ## Done this round
-- [x] Material calculator — "What one cast uses" panel in Finish step: ml + grams per cast (model volume × cavities × 5% waste), silicone amount for silicone molds, ₹ cost per cast with editable ₹/kg price; cost rows now ₹-formatted
-- [x] Material presets — already built (Pour presets chips in Mold step); verified visible in preview
-- [x] Send-to-Sirpam — order panel now lists casting material + copies; WhatsApp pre-quote includes project name, mold type, size, material, casting material, copies, silicone needed; sheet order rows unchanged
-- [x] Multi-cavity molds — Copies slider (1–9) surfaced in Mold step under MOLD DETAILS with copy-layout hint
-- [x] Verified: typecheck clean, 33 engine tests pass, build OK, Studio preview check of Mold + Finish steps (no console errors)
+- [x] Reddit pain-point research (sub_dertspg4) — top issues: trapped air bubbles, misaligned seams, leaking molds, demolding tears (undercuts), key misalignment, mold deformation, layer-line transfer, cure inhibition, over-mixed silicone waste, clamping pressure
+
+## Proposed next features (from research; existing-engine overlaps noted)
+- [ ] Air-trap preview + auto vents at "dead air" pockets for the chosen orientation (extends existing auto vents + heatmap overlay) — big engineering
+- [ ] Undercut / tear-risk highlighter before generating (extends draft-analysis overlay) — big engineering
+- [ ] Material compatibility advisor: warn when print resin inhibits silicone cure (quick win)
+- [ ] Structural ribs for large silicone molds (stand-fins exist; ribs are new) — quick win
+- [ ] Flash/seam trim guide in the mold report — quick win
+- [ ] Clamp-wing pressure lands (clamp wings exist; add seating flats) — quick win
