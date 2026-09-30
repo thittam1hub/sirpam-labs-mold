@@ -188,7 +188,7 @@ function upperCentroid(g: THREE.BufferGeometry, pos: ArrayLike<number>, s: Split
     const ex = c(j, 0) - c(i, 0), ey = c(j, 1) - c(i, 1), ez = c(j, 2) - c(i, 2);
     const fx = c(k, 0) - c(i, 0), fy = c(k, 1) - c(i, 1), fz = c(k, 2) - c(i, 2);
     const w = Math.hypot(ey * fz - ez * fy, ez * fx - ex * fz, ex * fy - ey * fx) / 2;
-    sa += m[s.a] * w; sb += m[s.b] * w; area += w;
+    sa += m[s.a]! * w; sb += m[s.b]! * w; area += w;
   });
   return area > 0 ? [sa / area, sb / area] : [fallback.getComponent(s.a), fallback.getComponent(s.b)];
 }
@@ -238,7 +238,7 @@ export function computeChannelPositionsForEnvelope(
   for (const c of cands) {
     if (vents.length >= MAX_VENTS) break;
     const [a, b] = clampToMoldInterior(c.a, c.b, env, margins.ventMargin);
-    if (vents.every(v => Math.hypot(v[s.a] - a, v[s.b] - b) >= spacing)) vents.push(onSplit(s, a, b));
+    if (vents.every(v => Math.hypot(v[s.a]! - a, v[s.b]! - b) >= spacing)) vents.push(onSplit(s, a, b));
   }
   for (const [a, b] of fallbackVentSeeds(env, bbox, margins.ventMargin)) {
     if (vents.length >= MIN_VENTS) break;
