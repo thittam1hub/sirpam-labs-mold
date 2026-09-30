@@ -18,14 +18,14 @@ import {
 export { EXPLODE_OFFSET_RATIO } from '../mold/constants';
 
 type CommonOptions = {
-  wallThicknessRatio?: number;
-  clearanceMm?: number;
-  sprueDiameterMm?: number;
-  moldBoxShape?: MoldBoxShape;
-  cutAngle?: number;
-  isHollow?: boolean;
-  formFit?: boolean;
-  extras?: MoldExtras;
+  wallThicknessRatio?: number | undefined;
+  clearanceMm?: number | undefined;
+  sprueDiameterMm?: number | undefined;
+  moldBoxShape?: MoldBoxShape | undefined;
+  cutAngle?: number | undefined;
+  isHollow?: boolean | undefined;
+  formFit?: boolean | undefined;
+  extras?: MoldExtras | undefined;
 };
 
 /** Copy the model into fresh buffers (they are handed over to the worker). */
@@ -75,8 +75,8 @@ export function useMoldGenerator() {
   const generateMold = useCallback(async (
     geometry: THREE.BufferGeometry, boundingBox: THREE.Box3, axis: Axis, offset: number,
     options: CommonOptions & {
-      sprueOverride?: { a: number; b: number };
-      additionalPlanes?: Array<{ axis: Axis; offset: number; cutAngle?: number }>;
+      sprueOverride?: { a: number; b: number } | undefined;
+      additionalPlanes?: Array<{ axis: Axis; offset: number; cutAngle?: number | undefined }> | undefined;
     } = {},
   ): Promise<{ pieces: THREE.BufferGeometry[]; repairs: MeshRepairLog; notices?: string[] | undefined }> => {
     const req = { type: 'generate', id: ++nextId.current, payload: { ...meshPayload(geometry, boundingBox), axis, offset, ...options } } as WorkerRequest;
@@ -89,7 +89,7 @@ export function useMoldGenerator() {
     geometry: THREE.BufferGeometry, boundingBox: THREE.Box3, axis: Axis, offset: number,
     options: CommonOptions & {
       siliconeType: 'blockOneWay' | 'blockTwoPart' | 'skinCore';
-      siliconeMarginMm?: number; skinThicknessMm?: number; includeCore?: boolean;
+      siliconeMarginMm?: number | undefined; skinThicknessMm?: number | undefined; includeCore?: boolean | undefined;
     },
   ): Promise<{ pieces: THREE.BufferGeometry[]; labels: string[]; repairs: MeshRepairLog; siliconeVolumeCm3: number }> => {
     const { siliconeType, siliconeMarginMm, skinThicknessMm, includeCore, ...common } = options;

@@ -11,12 +11,12 @@ import { scanColumns, axialCylinder } from './proFeatures';
  */
 export interface Round7Extras {
   /** Text engraved on the top of the top piece (e.g. "42 ML"). */
-  volumeLabel?: string;
+  volumeLabel?: string | undefined;
   /** Text engraved on the underside of the bottom piece. */
-  watermark?: string;
-  moldFeet?: boolean;
-  gapFiller?: boolean;
-  pieceCount?: 2 | 3 | 4;
+  watermark?: string | undefined;
+  moldFeet?: boolean | undefined;
+  gapFiller?: boolean | undefined;
+  pieceCount?: 2 | 3 | 4 | undefined;
 }
 
 type V3 = [number, number, number];
