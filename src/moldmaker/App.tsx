@@ -264,6 +264,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                     moldMode={state.moldMode}
                     siliconeType={state.siliconeType}
                     formFit={state.formFit}
+                    printMaterial={state.estimator.material}
                   />
                   <MoldPrepPanel
                     castingMaterial={state.tier2.castingMaterial}

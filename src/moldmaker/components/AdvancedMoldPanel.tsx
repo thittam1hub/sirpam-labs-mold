@@ -4,6 +4,7 @@ import type { Axis, MoldMode, SiliconeMoldType } from '../types';
 import type { SealType, LockStyle } from '../mold/moldFeatures';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { CASTING_MATERIALS, adviseGate, solidProps, type CastingMaterialId, type GateAdvice } from '../utils/tier2';
+import { CompatCard } from './CompatCard';
 
 export interface Tier2Settings {
   seal: SealType;
@@ -131,7 +132,7 @@ const MOLD_STYLES = [
 ] as const;
 
 /** Mold-step settings. Single source of truth for mold type, casting material, vents and silicone thickness per side. */
-export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch: Partial<Tier2Settings>) => void; moldMode: MoldMode; siliconeType: SiliconeMoldType; formFit: boolean }) {
+export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch: Partial<Tier2Settings>) => void; moldMode: MoldMode; siliconeType: SiliconeMoldType; formFit: boolean; printMaterial?: 'pla' | 'resin' }) {
   const { settings: t, onChange } = p;
   const isRigid = p.moldMode === 'rigid';
   const blockSilicone = p.moldMode === 'silicone' && p.siliconeType !== 'skinCore';
@@ -145,6 +146,7 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
         {CASTING_MATERIALS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
       </select>
       <div style={s.hint}>Used everywhere: shrink compensation, cast weight, advisor and report.</div>
+      <CompatCard input={{ castingMaterial: t.castingMaterial, moldMode: p.moldMode, siliconeType: p.siliconeType, printMaterial: p.printMaterial ?? 'pla' }} />
 
       <div style={s.sub}>Copies per mold</div>
       <Slider label="Copies" value={t.cavityCount} min={1} max={9} step={1} unit="×"
