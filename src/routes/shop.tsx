@@ -8,11 +8,13 @@ import { trackEvent } from "@/components/Analytics";
 export const Route = createFileRoute("/shop")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/shop" }],
     meta: [
       { title: "Printing & Casting Service — Sirpam 3D Labs Mold" },
       { name: "description", content: "Sirpam 3D Labs prints your mold and casts your parts. Designed here, printed in our workshop, delivered across India." },
       { property: "og:title", content: "Printing & Casting Service — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "We print your mold and cast your parts in our own workshop. Delivered across India." },
+      { property: "og:url", content: "/shop" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },

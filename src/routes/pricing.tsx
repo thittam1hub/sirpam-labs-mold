@@ -8,11 +8,13 @@ import { Info } from "lucide-react";
 export const Route = createFileRoute("/pricing")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/pricing" }],
     meta: [
       { title: "Pricing — Sirpam 3D Labs Mold" },
       { name: "description", content: "10 welcome credits and 3 free credits every month. Credit packs with fair regional prices, valid for 24 months." },
       { property: "og:title", content: "Pricing — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Design molds free. Pay per export with credit packs priced for your region." },
+      { property: "og:url", content: "/pricing" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },

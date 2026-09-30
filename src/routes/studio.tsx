@@ -20,6 +20,7 @@ type StudioTool = keyof typeof studioTools;
 export const Route = createFileRoute("/studio")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/studio" }],
     meta: [
       { title: "Mold Maker Studio — Sirpam 3D Labs Mold" },
       {
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/studio")({
         content:
           "Turn 3D models into print-ready mold halves with auto-generated sprues, vents, and registration pins. Designed in your browser.",
       },
+      { property: "og:url", content: "/studio" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

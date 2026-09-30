@@ -5,11 +5,13 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/about")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/about" }],
     meta: [
       { title: "About — Sirpam 3D Labs Mold" },
       { name: "description", content: "Sirpam 3D Labs builds a browser-based mold maker that turns any 3D model into a printable two-part mold." },
       { property: "og:title", content: "About — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Who we are and how the mold maker came to be." },
+      { property: "og:url", content: "/about" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

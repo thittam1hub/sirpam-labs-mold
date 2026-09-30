@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/contact")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/contact" }],
     meta: [
       { title: "Contact us — Sirpam 3D Labs Mold" },
       { name: "description", content: "Questions about mold making, credits or your account? Contact Sirpam 3D Labs." },
       { property: "og:title", content: "Contact us — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Get in touch with Sirpam 3D Labs." },
+      { property: "og:url", content: "/contact" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
