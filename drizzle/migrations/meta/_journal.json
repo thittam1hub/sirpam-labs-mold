@@ -50,6 +50,13 @@
       "when": 1790752637778,
       "tag": "0006_replay_contact_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790752661663,
+      "tag": "0007_replay_profiles",
+      "breakpoints": true
     }
   ]
 }
