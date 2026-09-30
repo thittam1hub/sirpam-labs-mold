@@ -3,7 +3,7 @@
 // to Date" instead of always saying "Generate" and doing redundant CSG work.
 import type { AppState } from '../../App';
 import { tier2GeomKey } from '../AdvancedMoldPanel';
-import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from '../../mold/constants';
+import { WALL_THICKNESS_RATIO, CLEARANCE_MM } from '../../mold/constants';
 
 /** Structural (not reference) equality on the additional-planes list — every
  *  UI edit creates fresh objects, so `===` would always say "changed". */

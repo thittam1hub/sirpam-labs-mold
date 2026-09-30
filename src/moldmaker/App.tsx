@@ -228,7 +228,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               onFormFitChange={(formFit: boolean) => setState(prev => ({ ...prev, formFit }))}
               onResetDimensions={() => setState(prev => ({
                 ...prev, wallThicknessRatio: WALL_THICKNESS_RATIO, clearanceMm: CLEARANCE_MM,
-                sprueDiameterMm: SPRUE_DIAMETER_MM, moldBoxShape: 'rect', formFit: false,
+                sprueDiameterMm: 0, moldBoxShape: 'rect', formFit: false,
               }))}
               onGenerate={handleGenerate}
               onAutoDetect={handleAutoDetect}
