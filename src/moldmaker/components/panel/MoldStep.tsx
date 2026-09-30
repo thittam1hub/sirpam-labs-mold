@@ -46,6 +46,20 @@ const BOX_SHAPE_OPTIONS: { id: MoldBoxShape; label: string; title: string }[] = 
   { id: 'roundedRect', label: 'Rounded', title: 'Rectangular with rounded vertical edges — more durable on FDM' },
 ];
 
+/** Vent diameter the engine will use in Auto mode: 35% of the sprue gate radius, both ways. */
+function autoVentMm(state: AppState): number {
+  const maxExtent = state.boundingBox
+    ? Math.max(
+        state.boundingBox.max.x - state.boundingBox.min.x,
+        state.boundingBox.max.y - state.boundingBox.min.y,
+        state.boundingBox.max.z - state.boundingBox.min.z,
+      )
+    : 0;
+  const sprue = state.sprueDiameterMm > 0 ? state.sprueDiameterMm : suggestedSprueDiameterMm(maxExtent);
+  const gateR = Math.max(sprue / 2, 1) / SPRUE_TOP_MULTIPLIER;
+  return gateR * VENT_RADIUS_RATIO * 2;
+}
+
 export function MoldStep(props: MoldStepProps) {
   const { state, hasModel } = props;
   if (!hasModel) return null;

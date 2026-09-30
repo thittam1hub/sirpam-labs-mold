@@ -219,6 +219,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               onWallThicknessChange={(wallThicknessRatio: number) => setState(prev => ({ ...prev, wallThicknessRatio }))}
               onClearanceChange={(clearanceMm: number) => setState(prev => ({ ...prev, clearanceMm }))}
               onSprueDiameterChange={(sprueDiameterMm: number) => setState(prev => ({ ...prev, sprueDiameterMm }))}
+              onVentDiameterChange={(ventDiameterMm: number) => setState(prev => ({ ...prev, tier2: { ...prev.tier2, ventDiameterMm } }))}
               onMoldBoxShapeChange={(moldBoxShape: MoldBoxShape) => setState(prev => ({ ...prev, moldBoxShape }))}
               onMoldModeChange={(moldMode: MoldMode) => setState(prev => ({ ...prev, moldMode }))}
               onSiliconeTypeChange={(siliconeType: SiliconeMoldType) => setState(prev => ({ ...prev, siliconeType }))}
