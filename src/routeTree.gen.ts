@@ -30,7 +30,6 @@ import { Route as CheckoutPackRouteImport } from './routes/checkout.$pack'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as StudioAiRouteImport } from './routes/studio_.ai'
-import { Route as OauthGoogle_driveReturnRouteImport } from './routes/oauth.google_drive.return'
 import { Route as ApiPublicPaymentsRazorpayRouteImport } from './routes/api/public/payments/razorpay'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -139,11 +138,6 @@ const StudioAiRoute = StudioAiRouteImport.update({
   path: '/studio/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthGoogle_driveReturnRoute = OauthGoogle_driveReturnRouteImport.update({
-  id: '/oauth/google_drive/return',
-  path: '/oauth/google_drive/return',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaymentsRazorpayRoute =
   ApiPublicPaymentsRazorpayRouteImport.update({
     id: '/api/public/payments/razorpay',
@@ -179,7 +173,6 @@ export interface FileRoutesByFullPath {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
   '/guides/': typeof GuidesIndexRoute
-  '/oauth/google_drive/return': typeof OauthGoogle_driveReturnRoute
   '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -205,7 +198,6 @@ export interface FileRoutesByTo {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
   '/guides': typeof GuidesIndexRoute
-  '/oauth/google_drive/return': typeof OauthGoogle_driveReturnRoute
   '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -232,7 +224,6 @@ export interface FileRoutesById {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio_/ai': typeof StudioAiRoute
   '/guides/': typeof GuidesIndexRoute
-  '/oauth/google_drive/return': typeof OauthGoogle_driveReturnRoute
   '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -260,7 +251,6 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio/ai'
     | '/guides/'
-    | '/oauth/google_drive/return'
     | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -286,7 +276,6 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio/ai'
     | '/guides'
-    | '/oauth/google_drive/return'
     | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   id:
@@ -312,7 +301,6 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio_/ai'
     | '/guides/'
-    | '/oauth/google_drive/return'
     | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -339,7 +327,6 @@ export interface RootRouteChildren {
   GuidesSlugRoute: typeof GuidesSlugRoute
   StudioAiRoute: typeof StudioAiRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
-  OauthGoogle_driveReturnRoute: typeof OauthGoogle_driveReturnRoute
   ApiPublicPaymentsRazorpayRoute: typeof ApiPublicPaymentsRazorpayRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -493,13 +480,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioAiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/google_drive/return': {
-      id: '/oauth/google_drive/return'
-      path: '/oauth/google_drive/return'
-      fullPath: '/oauth/google_drive/return'
-      preLoaderRoute: typeof OauthGoogle_driveReturnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/payments/razorpay': {
       id: '/api/public/payments/razorpay'
       path: '/api/public/payments/razorpay'
@@ -539,7 +519,6 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesSlugRoute: GuidesSlugRoute,
   StudioAiRoute: StudioAiRoute,
   GuidesIndexRoute: GuidesIndexRoute,
-  OauthGoogle_driveReturnRoute: OauthGoogle_driveReturnRoute,
   ApiPublicPaymentsRazorpayRoute: ApiPublicPaymentsRazorpayRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

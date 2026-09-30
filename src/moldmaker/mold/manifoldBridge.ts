@@ -1,28 +1,147 @@
-// Sirpam 3D Labs Mold — conversion between three.js meshes and Manifold solids.
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import * as THREE from 'three';
 import { MERGE_TOLERANCE, dbg } from './constants';
 
-/* eslint-disable @typescript-eslint/no-explicit-any -- manifold-3d's typings
-   don't describe the Mesh constructor options we use. */
-type ManifoldWasm = any;
-type ManifoldSolid = any;
+// ─────────────────────────────────────────────────────────────────────────────
+// Manifold WASM loading
+// ─────────────────────────────────────────────────────────────────────────────
 
-let wasmPromise: Promise<ManifoldWasm> | null = null;
+// Lazily loaded Manifold WASM module. `any` is justified here — the published
+// type definitions don't cover the bridging API we use for mesh import/export.
+let manifoldModule: any = null;
 
-/** Load the Manifold WebAssembly module once and reuse it. */
-export function getManifold(): Promise<ManifoldWasm> {
-  if (!wasmPromise) {
-    wasmPromise = import('manifold-3d').then(async mod => {
-      const wasm = await mod.default();
-      wasm.setup?.();
-      return wasm;
-    });
-    wasmPromise.catch(() => { wasmPromise = null; });
+export async function getManifold(): Promise<any> {
+  if (manifoldModule) return manifoldModule;
+  const Module = await import('manifold-3d');
+  const wasm = await Module.default();
+  if (typeof wasm.setup === 'function') {
+    wasm.setup();
   }
-  return wasmPromise;
+  manifoldModule = wasm;
+  return manifoldModule;
 }
 
-/** Thrown when a boolean step leaves nothing behind. */
+// ─────────────────────────────────────────────────────────────────────────────
+// Geometry ↔ Manifold bridge
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Convert a THREE.BufferGeometry to a Manifold mesh.
+ *
+ * The key challenge: STL files store each triangle independently with its own
+ * 3 vertices, even when triangles share vertices. Manifold needs to know which
+ * vertices are the same point (shared edges) to form a valid manifold surface.
+ *
+ * We do this by:
+ * 1. Keeping all vertices as-is in vertProperties (non-indexed, 3 verts per tri)
+ * 2. Using mergeFromVert/mergeToVert to tell Manifold which verts are coincident
+ *    (within a tolerance), so it can reconstruct the mesh topology.
+ */
+export function geometryToManifold(wasm: any, geometry: THREE.BufferGeometry): any {
+  const { Manifold, Mesh } = wasm;
+
+  // Work with non-indexed geometry (STL files are already non-indexed)
+  const geo = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+
+  const positions = geo.attributes.position.array as Float32Array;
+  const vertCount = positions.length / 3;
+  const triCount = vertCount / 3;
+
+  // Build vertProperties (just positions, numProp=3)
+  const vertProperties = new Float32Array(positions);
+
+  // triVerts: sequential indices since each triangle owns its 3 verts
+  const triVerts = new Uint32Array(vertCount);
+  for (let i = 0; i < vertCount; i++) {
+    triVerts[i] = i;
+  }
+
+  // Build merge vectors: find vertices that are at the same position
+  // and tell Manifold they should be merged.
+  //
+  // Distance metric: Euclidean (L2).
+  // Bucket size equals the tolerance — a vertex within tolerance of a candidate
+  // is always in the candidate's bucket or one of the 26 neighbours, so the
+  // 3×3×3 neighbourhood search still covers every possible match.
+  const bucketSize = MERGE_TOLERANCE;
+  const toleranceSq = MERGE_TOLERANCE * MERGE_TOLERANCE;
+  // Numeric spatial hash (much faster than string keys on big meshes). A hash
+  // collision only adds extra candidates, which the distance test filters out.
+  const vertexMap = new Map<number, number[]>();
+  const hashKey = (a: number, b: number, c: number) =>
+    (Math.imul(a, 73856093) ^ Math.imul(b, 19349663) ^ Math.imul(c, 83492791)) | 0;
+
+  const offsets = [-1, 0, 1];
+  const mergeFrom: number[] = [];
+  const mergeTo: number[] = [];
+
+  for (let i = 0; i < vertCount; i++) {
+    const x = positions[i * 3];
+    const y = positions[i * 3 + 1];
+    const z = positions[i * 3 + 2];
+
+    const bx = Math.round(x / bucketSize);
+    const by = Math.round(y / bucketSize);
+    const bz = Math.round(z / bucketSize);
+
+    // Search neighboring buckets for a match within tolerance
+    let matchIdx = -1;
+    outer:
+    for (const dx of offsets) {
+      for (const dy of offsets) {
+        for (const dz of offsets) {
+          const key = hashKey(bx + dx, by + dy, bz + dz);
+          const bucket = vertexMap.get(key);
+          if (bucket) {
+            for (const j of bucket) {
+              const ddx = positions[j * 3] - x;
+              const ddy = positions[j * 3 + 1] - y;
+              const ddz = positions[j * 3 + 2] - z;
+              const distSq = ddx * ddx + ddy * ddy + ddz * ddz;
+              if (distSq < toleranceSq) {
+                matchIdx = j;
+                break outer;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (matchIdx >= 0) {
+      mergeFrom.push(i);
+      mergeTo.push(matchIdx);
+    }
+
+    // Always insert into the home bucket
+    const homeKey = hashKey(bx, by, bz);
+    const homeBucket = vertexMap.get(homeKey);
+    if (homeBucket) {
+      homeBucket.push(i);
+    } else {
+      vertexMap.set(homeKey, [i]);
+    }
+  }
+
+  dbg(`Mesh: ${triCount} triangles, ${vertCount} vertices, ${mergeFrom.length} merge pairs`);
+
+  const mesh = new Mesh({
+    numProp: 3,
+    vertProperties,
+    triVerts,
+    mergeFromVert: new Uint32Array(mergeFrom),
+    mergeToVert: new Uint32Array(mergeTo),
+  });
+
+  return Manifold.ofMesh(mesh);
+}
+
+/**
+ * Raised when a CSG operation collapses to an empty mesh. Caught and
+ * surfaced as a friendly error in the React layer (see App.tsx
+ * handleGenerate catch block). Carries a distinct name so callers can
+ * branch on it without string-matching the message.
+ */
 export class EmptyManifoldError extends Error {
   constructor(message: string) {
     super(message);
@@ -30,88 +149,47 @@ export class EmptyManifoldError extends Error {
   }
 }
 
-/**
- * Weld coincident vertices of a triangle soup. Returns, for every vertex, the
- * index of the first vertex found at the same spot (or itself). Uses a grid
- * of cell size = tolerance and checks the 27 surrounding cells.
- */
-function weldMap(pos: Float32Array, tol: number): Uint32Array {
-  const n = pos.length / 3;
-  const owner = new Uint32Array(n);
-  const cells = new Map<number, number[]>();
-  // Spatial hash (Teschner et al. 2003). Collisions only add candidates.
-  const key3 = (a: number, b: number, c: number) => ((a * 73856093) ^ (b * 19349663) ^ (c * 83492791)) | 0;
-  const tol2 = tol * tol;
-  for (let v = 0; v < n; v++) {
-    const x = pos[3 * v]!, y = pos[3 * v + 1]!, z = pos[3 * v + 2]!;
-    const cx = Math.round(x / tol), cy = Math.round(y / tol), cz = Math.round(z / tol);
-    let found = v;
-    search: for (let a = cx - 1; a <= cx + 1; a++) {
-      for (let b = cy - 1; b <= cy + 1; b++) {
-        for (let c = cz - 1; c <= cz + 1; c++) {
-          const list = cells.get(key3(a, b, c));
-          if (!list) continue;
-          for (const w of list) {
-            const dx = pos[3 * w]! - x, dy = pos[3 * w + 1]! - y, dz = pos[3 * w + 2]! - z;
-            if (dx * dx + dy * dy + dz * dz < tol2) { found = w; break search; }
-          }
-        }
-      }
-    }
-    owner[v] = found;
-    const key = key3(cx, cy, cz);
-    const list = cells.get(key);
-    if (list) list.push(v); else cells.set(key, [v]);
-  }
-  return owner;
-}
+/** Convert a Manifold back to THREE.BufferGeometry. */
+export function manifoldToGeometry(manifold: any): THREE.BufferGeometry {
+  const mesh = manifold.getMesh();
+  const { vertProperties, triVerts, numProp } = mesh;
 
-/** three.js geometry → Manifold solid (throws if not a closed solid). */
-export function geometryToManifold(wasm: ManifoldWasm, geometry: THREE.BufferGeometry): ManifoldSolid {
-  const soup = geometry.index ? geometry.toNonIndexed() : geometry;
-  const pos = Float32Array.from(soup.getAttribute('position').array as ArrayLike<number>);
-  const n = pos.length / 3;
-  const owner = weldMap(pos, MERGE_TOLERANCE);
-  const from: number[] = [], to: number[] = [];
-  for (let v = 0; v < n; v++) if (owner[v] !== v) { from.push(v); to.push(owner[v]!); }
-  dbg(`Mesh: ${n / 3} triangles, ${n} vertices, ${from.length} merge pairs`);
-  const mesh = new wasm.Mesh({
-    numProp: 3,
-    vertProperties: pos,
-    triVerts: Uint32Array.from({ length: n }, (_, i) => i),
-    mergeFromVert: Uint32Array.from(from),
-    mergeToVert: Uint32Array.from(to),
-  });
-  return wasm.Manifold.ofMesh(mesh);
-}
-
-/** Manifold solid → non-indexed three.js geometry with normals. */
-export function manifoldToGeometry(solid: ManifoldSolid): THREE.BufferGeometry {
-  const { vertProperties, triVerts, numProp } = solid.getMesh();
+  // An empty triVerts means the preceding CSG op fully collapsed the mesh —
+  // e.g. a sprue cylinder that extends past the mold's outer wall, or a
+  // parting plane positioned past the part's extent. Previously this
+  // silently produced a zero-vertex BufferGeometry that rendered as
+  // nothing, presenting as "regenerate nukes the mold" with no error.
+  // Throw a typed error so the caller can surface a useful message.
   if (triVerts.length === 0) {
     throw new EmptyManifoldError(
-      'Mold generation produced an empty mesh. The split may be outside the model, ' +
-      'the model may not be a closed solid, or the pour hole and vents may be too ' +
-      'large for the wall thickness.',
+      'Mold generation produced an empty mesh. The parting plane may be ' +
+      'past the part, the part may not be watertight, or the sprue/vent ' +
+      'channels may be too large for the mold wall thickness.',
     );
   }
-  const out = new Float32Array(triVerts.length * 3);
+
+  const positions = new Float32Array(triVerts.length * 3);
   for (let i = 0; i < triVerts.length; i++) {
-    const base = triVerts[i] * numProp;
-    out[3 * i] = vertProperties[base];
-    out[3 * i + 1] = vertProperties[base + 1];
-    out[3 * i + 2] = vertProperties[base + 2];
+    const vi = triVerts[i];
+    positions[i * 3] = vertProperties[vi * numProp];
+    positions[i * 3 + 1] = vertProperties[vi * numProp + 1];
+    positions[i * 3 + 2] = vertProperties[vi * numProp + 2];
   }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(out, 3));
-  g.computeVertexNormals();
-  g.computeBoundingBox();
-  return g;
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  return geometry;
 }
 
-/** Axis-aligned box with its minimum corner at (ox, oy, oz). */
+/** Create a box manifold with one corner at (offsetX, offsetY, offsetZ). */
 export function createBox(
-  wasm: ManifoldWasm, sx: number, sy: number, sz: number, ox = 0, oy = 0, oz = 0,
-): ManifoldSolid {
-  return wasm.Manifold.cube([sx, sy, sz], false).translate([ox, oy, oz]);
+  wasm: any,
+  sizeX: number, sizeY: number, sizeZ: number,
+  offsetX = 0, offsetY = 0, offsetZ = 0,
+): any {
+  const { Manifold } = wasm;
+  return Manifold.cube([sizeX, sizeY, sizeZ], false)
+    .translate([offsetX, offsetY, offsetZ]);
 }

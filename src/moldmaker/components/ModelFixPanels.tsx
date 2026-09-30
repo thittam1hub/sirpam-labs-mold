@@ -7,7 +7,6 @@ import { reserveFor } from '@/lib/credits';
 import { CASTING_MATERIALS, solidProps, type CastingMaterialId } from '../utils/tier2';
 import { leakGuide } from '../utils/shopAdvice';
 import { MATERIALS } from '../utils/costEstimate';
-import { buildFlashGuide } from '../utils/flashGuide';
 
 const s = {
   section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
@@ -196,8 +195,6 @@ export function MoldReportPanel(p: {
   siliconePricePerLiter: number;
   wallMm: number;
   printer: 'fdm' | 'resin';
-  planeOffset?: number;
-  cutAngle?: number;
 }) {
   const [err, setErr] = useState<string | null>(null);
   if (!p.geometry || p.pieces.length === 0) return null;
@@ -227,7 +224,6 @@ export function MoldReportPanel(p: {
     const printCost = totalCm3 * mat.densityGPerCm3 / 1000 * p.pricePerKg;
     const silCost = p.moldMode === 'silicone' ? p.siliconeVolumeCm3 / 1000 * p.siliconePricePerLiter : 0;
     const tips = leakGuide({ moldMode: p.moldMode, wallMm: p.wallMm, castingMaterial: p.castingMaterial, printer: p.printer });
-    const flash = buildFlashGuide(model, p.axis, p.planeOffset ?? 0.5, model.boundingBox!, p.cutAngle ?? 0, p.castingMaterial, p.moldMode);
     const img = renderPreview(p.pieces, null);
     const imgModel = renderPreview([], model);
     const date = new Date().toLocaleDateString();
@@ -255,7 +251,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <tr><td>Release agent</td><td>${esc(cast.release)}</td></tr><tr><td>Pour temperature</td><td>about ${cast.pourTempC} °C</td></tr>
 <tr><td>Demold after</td><td>${esc(cast.demold)}</td></tr><tr><td>Note</td><td>${esc(cast.notes)}</td></tr></table>
 ${p.notices && p.notices.length ? `<h2>Build notes</h2><ul>${p.notices.map(n => `<li class="warn">${esc(n)}</li>`).join('')}</ul>` : ''}
-<h2>Where to expect flash</h2><ul>${flash.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
 <h2>Pour tips</h2><ul>${tips.map(t => `<li class="${t.level === 'warn' ? 'warn' : ''}">${esc(t.text)}</li>`).join('')}</ul>
 <p class="muted">Made with Sirpam 3D Labs Mold.</p></body></html>`;
     win.document.open(); win.document.write(html); win.document.close();

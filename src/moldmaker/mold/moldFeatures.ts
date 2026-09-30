@@ -16,35 +16,33 @@ import type { Round6Extras } from './proFeatures';
 export interface MoldExtras extends Round6Extras, Round7Extras {
   /** How the two halves register and seal. 'pins' = legacy keyed pins,
    *  'tongueGroove' = continuous perimeter tongue + groove (leak-tight). */
-  seal?: SealType | undefined;
+  seal?: SealType;
   /** Cut screwdriver pry slots into the parting line on two sides. */
-  pryPockets?: boolean | undefined;
+  pryPockets?: boolean;
   /** Split every piece radially around the parting axis (3, 4 or 6). */
-  radialSegments?: 0 | 3 | 4 | 6 | undefined;
+  radialSegments?: 0 | 3 | 4 | 6;
   /** Silicone block molds: per-side silicone thickness (mm, 0 = use uniform). */
-  siliconeMargins?: { top: number; bottom: number; sides: number } | undefined;
+  siliconeMargins?: { top: number; bottom: number; sides: number };
   /** Multi-cavity tray: lateral (a,b) centre of every cavity (one sprue each). */
-  cavityCenters?: Array<{ a: number; b: number }> | undefined;
+  cavityCenters?: Array<{ a: number; b: number }>;
   /** Hollow casting: printable core that forms the inside of a vase/cup. */
-  hollowCore?: { wallMm: number; opening: 'top' | 'bottom' } | undefined;
+  hollowCore?: { wallMm: number; opening: 'top' | 'bottom' };
   /** Multi-cavity tray: one central sprue feeding every cavity via runners. */
-  runner?: boolean | undefined;
+  runner?: boolean;
   /** Round 8 — user sizes. Omitted = automatic (legacy). */
-  wallMm?: number | undefined;
-  ventDiameterMm?: number | undefined;
+  wallMm?: number;
+  ventDiameterMm?: number;
   /** 0 = no vents. */
-  ventCount?: number | undefined;
-  lockStyle?: LockStyle | undefined;
-  lockDiameterMm?: number | undefined;
-  lockCount?: 2 | 4 | undefined;
+  ventCount?: number;
+  lockStyle?: LockStyle;
+  lockDiameterMm?: number;
+  lockCount?: 2 | 4;
   /** Hug molds: flat parting flange width, mm. 0/omitted = none. */
-  flangeMm?: number | undefined;
+  flangeMm?: number;
   /** Clamp-bolt hole diameter through the flange, mm (4 holes). */
-  flangeBoltMm?: number | undefined;
+  flangeBoltMm?: number;
   /** Silicone two-part: add a printable parting board with key bumps. */
-  partingBoard?: boolean | undefined;
-  /** Silicone box molds: stiffening ribs on walls wider than ~120 mm. */
-  wallRibs?: boolean | undefined;
+  partingBoard?: boolean;
 }
 
 export type LockStyle = 'round' | 'cone' | 'square' | 'magnet';

@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { getCreditStatus, CREDITS_EVENT, LOW_BALANCE, EXPIRY_WARN_DAYS, daysUntilExpiry, type CreditStatus } from '@/lib/credits';
 import { useAppSession } from '@/components/AppSession';
 import { ChevronDown, Menu } from 'lucide-react';
-import { ReportIssue } from '@/components/ReportIssue';
 
 
 type Fmt = 'stl' | 'obj' | '3mf' | 'step';
@@ -37,7 +36,6 @@ const pill = (primary = false, disabled = false) => ({
 
 export default function TopBar(p: Props) {
   const [menu, setMenu] = useState<null | 'export' | 'more' | 'account'>(null);
-  const [reportOpen, setReportOpen] = useState(false);
   const { session, ready, signOut: appSignOut } = useAppSession();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -154,7 +152,6 @@ export default function TopBar(p: Props) {
               <Link role="menuitem" to="/account" search={{ tab: 'profile' }} style={linkItem}>Profile</Link>
               <Link role="menuitem" to="/pricing" style={linkItem}>Buy credits</Link>
               <Link role="menuitem" to="/gallery" search={{ sort: 'new' }} style={linkItem}>Gallery</Link>
-              <button role="menuitem" type="button" style={item} onClick={() => { setMenu(null); setReportOpen(true); }}>Report a problem</button>
               <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
             </div>
           )}
@@ -172,7 +169,6 @@ export default function TopBar(p: Props) {
             <button type="button" style={item} onClick={() => { setMenu(null); p.onSample(); }}>Try sample</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onProjects(); }}>Projects</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onHelp(); }}>Keyboard shortcuts</button>
-            <button type="button" style={item} onClick={() => { setMenu(null); setReportOpen(true); }}>Report a problem</button>
             <Link to="/shop" style={linkItem}>Shop</Link>
             <Link to="/gallery" search={{ sort: 'new' }} style={linkItem}>Gallery</Link>
             {session ? (
@@ -206,7 +202,6 @@ export default function TopBar(p: Props) {
           </div>
         )}
       </div>
-      <ReportIssue open={reportOpen} onOpenChange={setReportOpen} hideTrigger />
     </header>
   );
 }

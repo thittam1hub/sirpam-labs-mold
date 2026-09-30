@@ -13,8 +13,6 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppSessionProvider } from "@/components/AppSession";
-import { Analytics } from "@/components/Analytics";
-import { getAnalyticsConfig } from "@/lib/analytics.functions";
 
 function NotFoundComponent() {
   return (
@@ -110,19 +108,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
-  loader: async () => {
-    try {
-      return await getAnalyticsConfig();
-    } catch {
-      return { gaId: "", clarityId: "" };
-    }
-  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -141,12 +131,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const analytics = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
       <AppSessionProvider>
-        <Analytics gaId={analytics?.gaId} clarityId={analytics?.clarityId} />
         <Outlet />
       </AppSessionProvider>
     </QueryClientProvider>

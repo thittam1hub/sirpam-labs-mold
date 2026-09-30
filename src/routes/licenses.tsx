@@ -5,13 +5,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/licenses")({
   staticData: { sitemap: true },
   head: () => ({
-    links: [{ rel: "canonical", href: "/licenses" }],
     meta: [
       { title: "Open-source licenses — Sirpam 3D Labs Mold" },
       { name: "description", content: "The open-source projects and libraries that power Sirpam 3D Labs Mold." },
       { property: "og:title", content: "Open-source licenses — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Credits and licenses for the libraries we use." },
-      { property: "og:url", content: "/licenses" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -20,9 +18,9 @@ export const Route = createFileRoute("/licenses")({
 });
 
 const libs = [
+  { name: "mold-maker by matta174", url: "https://github.com/matta174/mold-maker", note: "The original open-source mold generator this app was built from." },
   { name: "Three.js", url: "https://threejs.org", note: "3D rendering in the browser (MIT)." },
   { name: "Manifold", url: "https://github.com/elalish/manifold", note: "Solid geometry engine used to build and validate molds (Apache-2.0)." },
-  { name: "OpenCascade.js", url: "https://ocjs.org", note: "STEP file export (LGPL-2.1, loaded unmodified)." },
   { name: "React", url: "https://react.dev", note: "User interface (MIT)." },
   { name: "TanStack Router / Start / Query", url: "https://tanstack.com", note: "Routing, server functions and data fetching (MIT)." },
   { name: "Tailwind CSS", url: "https://tailwindcss.com", note: "Styling (MIT)." },

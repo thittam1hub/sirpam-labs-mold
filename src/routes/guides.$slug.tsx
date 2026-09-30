@@ -2,7 +2,6 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { LegalFooter } from "@/components/LegalFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getGuide, GUIDES, type Guide } from "@/lib/guides";
-import { AuthorBio } from "@/components/AuthorBio";
 
 export const Route = createFileRoute("/guides/$slug")({
   staticData: { sitemap: false },
@@ -14,36 +13,19 @@ export const Route = createFileRoute("/guides/$slug")({
   head: ({ loaderData }) => {
     const g = loaderData?.guide;
     if (!g) return { meta: [{ title: "Guide not found — Sirpam 3D Labs Mold" }] };
-    const path = `/guides/${g.slug}`;
     return {
       meta: [
         { title: `${g.title} — Sirpam 3D Labs Mold` },
         { name: "description", content: g.description },
         { property: "og:title", content: g.title },
         { property: "og:description", content: g.description },
-        { property: "og:url", content: path },
         { property: "og:type", content: "article" },
         { name: "twitter:card", content: "summary" },
       ],
-      links: [{ rel: "canonical", href: path }],
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", headline: g.title, description: g.description, author: { "@type": "Organization", name: "Sirpam 3D Labs", url: "https://mold.sirpam3dlabs.in/about" } }),
-        },
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://mold.sirpam3dlabs.in/" },
-              { "@type": "ListItem", position: 2, name: "Guides", item: "https://mold.sirpam3dlabs.in/guides" },
-              { "@type": "ListItem", position: 3, name: g.title, item: `https://mold.sirpam3dlabs.in${path}` },
-            ],
-          }),
-        },
-      ],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", headline: g.title, description: g.description, author: { "@type": "Organization", name: "Sirpam 3D Labs" } }),
+      }],
     };
   },
   component: GuidePage,
@@ -56,13 +38,7 @@ function GuidePage() {
     <div className="neu-page min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 pb-16">
-        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
-          <ol className="flex flex-wrap gap-1">
-            <li><Link to="/" className="text-primary">Home</Link> /</li>
-            <li><Link to="/guides" className="text-primary">Guides</Link> /</li>
-            <li aria-current="page">{guide.title}</li>
-          </ol>
-        </nav>
+        <Link to="/guides" className="text-sm text-primary">All guides</Link>
         <h1 className="mt-2 text-3xl font-bold">{guide.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{guide.minutes} min read</p>
         {guide.sections.map(s => (
@@ -81,7 +57,6 @@ function GuidePage() {
           <p className="mt-1 text-sm text-muted-foreground">Designing is free, with 10 welcome credits and 3 free exports every month.</p>
           <Link to="/studio" className="mt-3 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">Open the Studio</Link>
         </div>
-        <AuthorBio />
         <h2 className="mt-10 text-lg font-semibold">More guides</h2>
         <ul className="mt-2 space-y-1">
           {others.map(g => (
