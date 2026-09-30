@@ -31,3 +31,8 @@
 
 ## Final upstream-code scan (done)
 - [x] No code or references from the original project remain
+
+## New (07:11)
+- [ ] Google Drive per-user connect (App User Connector) — client setup card pending user
+- [ ] In-app issue report form (no WhatsApp) — save to DB + notify
+- [ ] NOTE: this project is a REMIX of the main project — do NOT publish from here without confirming with user
