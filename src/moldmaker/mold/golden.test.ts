@@ -45,7 +45,7 @@ const MODES: Record<string, (g: THREE.BufferGeometry) => Promise<{ pieces: THREE
   hug: g => generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true } as never),
   siliconeBlock: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockTwoPart' } as never),
   siliconeOpen: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'openPourBox' } as never),
-  siliconeSkin: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinMother' } as never),
+  siliconeSkin: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore' } as never),
 };
 
 describe('golden mold baseline', () => {
