@@ -1,10 +1,12 @@
 # Roadmap
 
 ## In progress
-- (none — awaiting user's pick from pain-point feature ideas)
+- [ ] Google Drive per-user connect — client linked (auc_01m3rnt5mnf2fr28xqh35pphsm); user must add gateway callback URL to their Google OAuth client: https://connector-gateway.lovable.dev/api/v1/app-users/oauth2/callback
+- [ ] In-app issue report form — code done; DB replayed (feedback_reports table live); needs browser re-verify of admin view
 
 ## Blocked / waiting
-- (none)
+- [ ] Google Drive end-to-end connect test — waits on user adding the callback URL in Google Cloud Console
+- [ ] NOTE: this project is a REMIX of the main project — do NOT publish from here without confirming with user
 
 ## Done this round
 - [x] Reddit pain-point research (sub_dertspg4) — top issues: trapped air bubbles, misaligned seams, leaking molds, demolding tears (undercuts), key misalignment, mold deformation, layer-line transfer, cure inhibition, over-mixed silicone waste, clamping pressure
@@ -32,7 +34,9 @@
 ## Final upstream-code scan (done)
 - [x] No code or references from the original project remain
 
-## New (07:11)
-- [ ] Google Drive per-user connect (App User Connector) — client setup card pending user
-- [ ] In-app issue report form (no WhatsApp) — save to DB + notify
-- [ ] NOTE: this project is a REMIX of the main project — do NOT publish from here without confirming with user
+## New (08:00–08:30)
+- [x] Remix backend rebuilt: all 22 original migrations replayed + storage buckets (mold-photos, avatars, project-files) recreated — typecheck clean, 55 tests pass
+- [x] feedback_reports + app_user_connections tables created
+- [x] Feedback form verified in browser (submit works, no console errors)
+- [x] Google Drive client linked to project; server fns + DriveCard + OAuth return page written
+- [ ] Drive: user adds gateway callback URL in Google Cloud Console, then end-to-end connect test
