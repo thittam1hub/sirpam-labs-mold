@@ -1,3 +1,4 @@
+import { createFileRoute } from '@tanstack/react-router'
 // OAuth return landing for the Google Drive connection (popup).
 // Inline parser only — never import server-only modules here.
 import { useEffect, useState } from "react";
