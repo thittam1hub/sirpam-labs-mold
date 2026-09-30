@@ -46,7 +46,7 @@ export function isDimensionsAtDefaults(state: AppState): boolean {
   return (
     state.wallThicknessRatio === WALL_THICKNESS_RATIO &&
     state.clearanceMm === CLEARANCE_MM &&
-    state.sprueDiameterMm === SPRUE_DIAMETER_MM &&
+    state.sprueDiameterMm === 0 && // 0 = auto (sized to the model)
     state.moldBoxShape === 'rect' &&
     state.formFit === false
   );

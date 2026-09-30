@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import type { Tier2Settings } from '../components/AdvancedMoldPanel';
 import { DEFAULT_TIER2, tier2GeomKey } from '../components/AdvancedMoldPanel';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
-import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from '../mold/constants';
+import { WALL_THICKNESS_RATIO, CLEARANCE_MM } from '../mold/constants';
 
 /**
  * Snapshot of the parameters a given mold was generated with. When the
@@ -85,7 +85,7 @@ export const initialAppState: AppState = {
   cutAngle: 0,
   wallThicknessRatio: WALL_THICKNESS_RATIO,
   clearanceMm: CLEARANCE_MM,
-  sprueDiameterMm: SPRUE_DIAMETER_MM,
+  sprueDiameterMm: 0, // 0 = auto: sized to the model at generation time
   moldBoxShape: 'rect',
   sprueOverride: { enabled: false, a: 0, b: 0 },
   autoDetecting: false,

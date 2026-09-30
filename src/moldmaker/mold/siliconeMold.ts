@@ -13,7 +13,8 @@
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape, SiliconeMoldType } from '../types';
 import {
-  WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, PIN_RADIUS_RATIO, PIN_HEIGHT_RATIO, ENABLE_OBLIQUE_PLANES,
+  WALL_THICKNESS_RATIO, CLEARANCE_MM, PIN_RADIUS_RATIO, PIN_HEIGHT_RATIO, ENABLE_OBLIQUE_PLANES,
+  suggestedSprueDiameterMm,
 } from './constants';
 import { clampCutAngle, getPlaneEquation } from './planeGeometry';
 import { getManifold, geometryToManifold, manifoldToGeometry } from './manifoldBridge';
@@ -80,7 +81,10 @@ export async function generateSiliconeMold(
   const longest = Math.max(size.x, size.y, size.z);
   const wall = longest * (options.wallThicknessRatio ?? WALL_THICKNESS_RATIO);
   const clearance = options.clearanceMm ?? CLEARANCE_MM;
-  const sprueR = Math.max((options.sprueDiameterMm ?? SPRUE_DIAMETER_MM) / 2, 1.5);
+  const sprueR = Math.max(
+    (options.sprueDiameterMm && options.sprueDiameterMm > 0 ? options.sprueDiameterMm : suggestedSprueDiameterMm(longest)) / 2,
+    1.5,
+  );
   const shape: MoldBoxShape = options.moldBoxShape ?? 'rect';
   const cutAngle = ENABLE_OBLIQUE_PLANES ? clampCutAngle(options.cutAngle ?? 0) : 0;
   const extras: MoldExtras = options.extras ?? {};
