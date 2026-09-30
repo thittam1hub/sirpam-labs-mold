@@ -146,6 +146,11 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
       </select>
       <div style={s.hint}>Used everywhere: shrink compensation, cast weight, advisor and report.</div>
 
+      <div style={s.sub}>Copies per mold</div>
+      <Slider label="Copies" value={t.cavityCount} min={1} max={9} step={1} unit="×"
+        onChange={v => onChange({ cavityCount: v })} />
+      <div style={s.hint}>The mold box grows to fit all copies. {isRigid ? 'Copies share one pour hole through a runner channel.' : 'Each copy gets its own pour hole.'}</div>
+
       {isRigid && (<>
         <div style={s.sub}>Printed mold type</div>
         <div style={s.row}>
