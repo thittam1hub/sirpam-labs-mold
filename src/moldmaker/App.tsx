@@ -20,7 +20,7 @@ import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import { getPresetById } from './utils/printerPresets';
 
-import { initialAppState, tier2GeomKeyGuard, moldIsStale, type AppState } from './studio/state';
+import { initialAppState, moldIsStale, type AppState } from './studio/state';
 import { useStudioState } from './studio/useStudioState';
 import { useModelIngestion } from './studio/useModelIngestion';
 import { useMoldGeneration } from './studio/useMoldGeneration';
@@ -366,7 +366,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         </div>
         <StatusBar
           size={state.boundingBox ? (() => { const v = state.boundingBox!.getSize(new THREE.Vector3()); return { x: v.x, y: v.y, z: v.z }; })() : null}
-          triangles={state.originalGeometry ? Math.round((state.originalGeometry.index ? state.originalGeometry.index.count : state.originalGeometry.attributes.position.count) / 3) : 0}
+          triangles={state.originalGeometry ? Math.round((state.originalGeometry.index ? state.originalGeometry.index.count : state.originalGeometry.getAttribute('position').count) / 3) : 0}
           scale={state.scale}
           hasMold={state.moldGenerated}
           notes={state.moldGenerated ? state.buildNotices : []}

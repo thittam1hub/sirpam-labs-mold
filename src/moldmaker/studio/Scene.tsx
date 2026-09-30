@@ -60,7 +60,7 @@ const PIECE_COLORS = [
 ] as const;
 
 export function getPieceColor(index: number): string {
-  return PIECE_COLORS[index % PIECE_COLORS.length];
+  return PIECE_COLORS[index % PIECE_COLORS.length]!;
 }
 
 /**
@@ -130,7 +130,6 @@ export default function StudioScene({
             offset={state.planeOffset}
             boundingBox={state.boundingBox}
             cutAngle={state.cutAngle}
-            onOffsetChange={(offset: number) => setState(prev => ({ ...prev, planeOffset: offset }))}
           />
         )}
 

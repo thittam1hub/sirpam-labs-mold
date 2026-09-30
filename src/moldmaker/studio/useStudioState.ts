@@ -15,6 +15,8 @@ export interface StudioState {
   /** Undo the last replaceModel call, if any. */
   undoModel: () => void;
   canUndo: boolean;
+  undoGeoRef: React.MutableRefObject<THREE.BufferGeometry | null>;
+  setCanUndo: (v: boolean) => void;
 }
 
 /**
@@ -95,5 +97,5 @@ export function useStudioState(): StudioState {
     }));
   }, []);
 
-  return { state, setState, modelFitSize, commitGeometry, replaceModel, undoModel, canUndo };
+  return { state, setState, modelFitSize, commitGeometry, replaceModel, undoModel, canUndo, undoGeoRef: undoGeo, setCanUndo };
 }
