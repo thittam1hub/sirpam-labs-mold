@@ -99,6 +99,13 @@
       "when": 1790753999499,
       "tag": "0013_replay_record_purchase_perms",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790754098456,
+      "tag": "0014_replay_referrals",
+      "breakpoints": true
     }
   ]
 }
