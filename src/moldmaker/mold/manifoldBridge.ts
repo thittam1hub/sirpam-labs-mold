@@ -38,7 +38,9 @@ export class EmptyManifoldError extends Error {
 function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
   const n = pos.length / 3;
   const owner = new Uint32Array(n);
-  const cells = new Map<string, number[]>();
+  const cells = new Map<number, number[]>();
+  // Spatial hash (Teschner et al. 2003). Collisions only add candidates.
+  const key3 = (a: number, b: number, c: number) => ((a * 73856093) ^ (b * 19349663) ^ (c * 83492791)) | 0;
   const tol2 = tol * tol;
   for (let v = 0; v < n; v++) {
     const x = pos[3 * v], y = pos[3 * v + 1], z = pos[3 * v + 2];
@@ -47,7 +49,7 @@ function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
     search: for (let a = cx - 1; a <= cx + 1; a++) {
       for (let b = cy - 1; b <= cy + 1; b++) {
         for (let c = cz - 1; c <= cz + 1; c++) {
-          const list = cells.get(`${a},${b},${c}`);
+          const list = cells.get(key3(a, b, c));
           if (!list) continue;
           for (const w of list) {
             const dx = pos[3 * w] - x, dy = pos[3 * w + 1] - y, dz = pos[3 * w + 2] - z;
@@ -57,7 +59,7 @@ function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
       }
     }
     owner[v] = found;
-    const key = `${cx},${cy},${cz}`;
+    const key = key3(cx, cy, cz);
     const list = cells.get(key);
     if (list) list.push(v); else cells.set(key, [v]);
   }
