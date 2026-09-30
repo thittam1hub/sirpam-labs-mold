@@ -1,14 +1,14 @@
 # Roadmap
 
 ## In progress
-- [ ] Material calculator — grams of silicone/resin/wax/chocolate per cast shown in Studio (Finish step + Mold step)
-- [ ] Material presets — one-click Chocolate/Candle/Soap/Concrete/Resin auto-tune of sprue, vents, shell, split
-- [ ] Send-to-Sirpam link — prefilled WhatsApp message with model specs + INR print estimate
-- [ ] Multi-cavity molds — 2–6 copies of a part in one block (engine + UI, off by default)
-- [ ] Reddit pain-point research → propose unique features afterwards
+- [ ] Reddit pain-point research → propose unique features afterwards (background agent running, results awaited)
 
 ## Blocked / waiting
 - (none)
 
 ## Done this round
-- (pending)
+- [x] Material calculator — "What one cast uses" panel in Finish step: ml + grams per cast (model volume × cavities × 5% waste), silicone amount for silicone molds, ₹ cost per cast with editable ₹/kg price; cost rows now ₹-formatted
+- [x] Material presets — already built (Pour presets chips in Mold step); verified visible in preview
+- [x] Send-to-Sirpam — order panel now lists casting material + copies; WhatsApp pre-quote includes project name, mold type, size, material, casting material, copies, silicone needed; sheet order rows unchanged
+- [x] Multi-cavity molds — Copies slider (1–9) surfaced in Mold step under MOLD DETAILS with copy-layout hint
+- [x] Verified: typecheck clean, 33 engine tests pass, build OK, Studio preview check of Mold + Finish steps (no console errors)
