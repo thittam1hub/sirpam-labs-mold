@@ -74,7 +74,7 @@ export const DEFAULT_TIER2: Tier2Settings = {
   flangeMm: 0,
   flangeBoltMm: 0,
   partingBoard: false,
-  wallRibs: true,
+  wallRibs: false,
 };
 
 interface Props {
