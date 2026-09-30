@@ -10,13 +10,12 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
       contact_messages: {
         Row: {
-          age_confirmed: boolean
           created_at: string
           email: string
           id: string
@@ -24,7 +23,6 @@ export type Database = {
           name: string
         }
         Insert: {
-          age_confirmed?: boolean
           created_at?: string
           email: string
           id?: string
@@ -32,7 +30,6 @@ export type Database = {
           name: string
         }
         Update: {
-          age_confirmed?: boolean
           created_at?: string
           email?: string
           id?: string
@@ -59,168 +56,30 @@ export type Database = {
         }
         Relationships: []
       }
-      credit_holds: {
-        Row: {
-          action: string
-          allocations: Json
-          cost: number
-          created_at: string
-          free_month: string | null
-          from_free: number
-          id: string
-          settled_at: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          action: string
-          allocations?: Json
-          cost: number
-          created_at?: string
-          free_month?: string | null
-          from_free?: number
-          id?: string
-          settled_at?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          action?: string
-          allocations?: Json
-          cost?: number
-          created_at?: string
-          free_month?: string | null
-          from_free?: number
-          id?: string
-          settled_at?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       credit_ledger: {
         Row: {
           created_at: string
           delta: number
-          expires_at: string | null
           id: string
-          kind: string | null
           reason: string
           reference: string | null
-          status: string
           user_id: string
         }
         Insert: {
           created_at?: string
           delta: number
-          expires_at?: string | null
           id?: string
-          kind?: string | null
           reason: string
           reference?: string | null
-          status?: string
           user_id: string
         }
         Update: {
           created_at?: string
           delta?: number
-          expires_at?: string | null
           id?: string
-          kind?: string | null
           reason?: string
           reference?: string | null
-          status?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      credit_lots: {
-        Row: {
-          amount: number
-          created_at: string
-          expires_at: string | null
-          id: string
-          kind: string
-          reference: string | null
-          remaining: number
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          kind: string
-          reference?: string | null
-          remaining: number
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          kind?: string
-          reference?: string | null
-          remaining?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      credit_packs: {
-        Row: {
-          active: boolean
-          best: boolean
-          created_at: string
-          credits: number
-          id: string
-          inr: number
-          name: string
-          sort: number
-          usd_emerging: number
-          usd_standard: number
-          usd_value: number
-        }
-        Insert: {
-          active?: boolean
-          best?: boolean
-          created_at?: string
-          credits: number
-          id: string
-          inr: number
-          name: string
-          sort?: number
-          usd_emerging: number
-          usd_standard: number
-          usd_value: number
-        }
-        Update: {
-          active?: boolean
-          best?: boolean
-          created_at?: string
-          credits?: number
-          id?: string
-          inr?: number
-          name?: string
-          sort?: number
-          usd_emerging?: number
-          usd_standard?: number
-          usd_value?: number
-        }
-        Relationships: []
-      }
-      deleted_referral_emails: {
-        Row: {
-          created_at: string
-          email_hash: string
-        }
-        Insert: {
-          created_at?: string
-          email_hash: string
-        }
-        Update: {
-          created_at?: string
-          email_hash?: string
         }
         Relationships: []
       }
@@ -304,21 +163,18 @@ export type Database = {
       }
       profiles: {
         Row: {
-          age_confirmed_at: string | null
           avatar_url: string | null
           display_name: string
           id: string
           updated_at: string
         }
         Insert: {
-          age_confirmed_at?: string | null
           avatar_url?: string | null
           display_name?: string
           id: string
           updated_at?: string
         }
         Update: {
-          age_confirmed_at?: string | null
           avatar_url?: string | null
           display_name?: string
           id?: string
@@ -326,187 +182,44 @@ export type Database = {
         }
         Relationships: []
       }
-      promo_attempts: {
+      quote_requests: {
         Row: {
-          attempted_at: string
-          user_id: string
-        }
-        Insert: {
-          attempted_at?: string
-          user_id: string
-        }
-        Update: {
-          attempted_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      promo_codes: {
-        Row: {
-          active: boolean
-          code: string
+          casting_material: string | null
+          contact_email: string
+          contact_name: string
           created_at: string
-          credit_valid_days: number
-          credits: number
-          expires_at: string | null
-          max_redemptions: number | null
-          redeemed_count: number
-        }
-        Insert: {
-          active?: boolean
-          code: string
-          created_at?: string
-          credit_valid_days?: number
-          credits: number
-          expires_at?: string | null
-          max_redemptions?: number | null
-          redeemed_count?: number
-        }
-        Update: {
-          active?: boolean
-          code?: string
-          created_at?: string
-          credit_valid_days?: number
-          credits?: number
-          expires_at?: string | null
-          max_redemptions?: number | null
-          redeemed_count?: number
-        }
-        Relationships: []
-      }
-      promo_redemptions: {
-        Row: {
-          code: string
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "promo_redemptions_code_fkey"
-            columns: ["code"]
-            isOneToOne: false
-            referencedRelation: "promo_codes"
-            referencedColumns: ["code"]
-          },
-        ]
-      }
-      purchases: {
-        Row: {
-          created_at: string
-          credits: number
-          currency: string
           id: string
-          pack_id: string
-          pack_name: string
-          payment_ref: string | null
-          price: number
-          provider: string
-          refunded_at: string | null
-          region: string | null
-          status: string
+          maker: string
+          notes: string | null
+          project_path: string | null
+          quantity: number
+          size_class: string | null
           user_id: string
         }
         Insert: {
+          casting_material?: string | null
+          contact_email: string
+          contact_name: string
           created_at?: string
-          credits: number
-          currency?: string
           id?: string
-          pack_id: string
-          pack_name: string
-          payment_ref?: string | null
-          price: number
-          provider?: string
-          refunded_at?: string | null
-          region?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          credits?: number
-          currency?: string
-          id?: string
-          pack_id?: string
-          pack_name?: string
-          payment_ref?: string | null
-          price?: number
-          provider?: string
-          refunded_at?: string | null
-          region?: string | null
-          status?: string
+          maker: string
+          notes?: string | null
+          project_path?: string | null
+          quantity?: number
+          size_class?: string | null
           user_id?: string
         }
-        Relationships: []
-      }
-      referral_codes: {
-        Row: {
-          code: string
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          user_id: string
-        }
         Update: {
-          code?: string
+          casting_material?: string | null
+          contact_email?: string
+          contact_name?: string
           created_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      referrals: {
-        Row: {
-          created_at: string
-          purchase_bonus_at: string | null
-          referee_id: string
-          referrer_id: string
-          rewarded_at: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          purchase_bonus_at?: string | null
-          referee_id: string
-          referrer_id: string
-          rewarded_at?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          purchase_bonus_at?: string | null
-          referee_id?: string
-          referrer_id?: string
-          rewarded_at?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          maker?: string
+          notes?: string | null
+          project_path?: string | null
+          quantity?: number
+          size_class?: string | null
           user_id?: string
         }
         Relationships: []
@@ -516,85 +229,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      _action_cost: { Args: { _action: string }; Returns: number }
-      _expire_lots: { Args: { _uid: string }; Returns: undefined }
-      _refresh_balance: { Args: { _uid: string }; Returns: number }
-      _release_hold: { Args: { _id: string; _uid: string }; Returns: boolean }
-      _release_stale: { Args: { _uid: string }; Returns: undefined }
-      _require_admin: { Args: never; Returns: undefined }
-      _reward_referral: { Args: { _uid: string }; Returns: undefined }
-      admin_adjust_credits: {
-        Args: { _amount: number; _reason: string; _user: string }
-        Returns: Json
-      }
-      admin_create_promo: {
-        Args: {
-          _code: string
-          _credits: number
-          _expires: string
-          _max: number
-          _valid_days: number
-        }
-        Returns: undefined
-      }
-      admin_find_user: { Args: { _email: string }; Returns: Json }
-      admin_list_purchases: { Args: { _email: string }; Returns: Json }
-      admin_overview: { Args: never; Returns: Json }
-      admin_refund_purchase: {
-        Args: { _purchase: string; _reason: string }
-        Returns: Json
-      }
-      admin_set_promo_active: {
-        Args: { _active: boolean; _code: string }
-        Returns: undefined
-      }
-      apply_referral: { Args: { _code: string }; Returns: Json }
-      capture_hold: { Args: { _id: string }; Returns: boolean }
-      delete_my_account_data: { Args: never; Returns: undefined }
       ensure_credit_account: { Args: never; Returns: undefined }
       get_credit_status: { Args: never; Returns: Json }
-      get_referral_info: { Args: never; Returns: Json }
       grant_credits: {
         Args: {
           _amount: number
-          _kind?: string
           _reason: string
           _reference: string
           _user: string
-          _valid_days?: number
         }
         Returns: undefined
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      hold_credits: { Args: { _action: string }; Returns: Json }
-      record_purchase: {
-        Args: {
-          _currency: string
-          _pack_id: string
-          _payment_ref: string
-          _price: number
-          _provider: string
-          _region: string
-          _user: string
-        }
-        Returns: Json
-      }
-      redeem_promo: { Args: { _code: string }; Returns: Json }
-      release_hold: { Args: { _id: string }; Returns: boolean }
-      reverse_purchase: {
-        Args: { _payment_ref: string; _provider: string; _reason: string }
-        Returns: Json
       }
       spend_credits: { Args: { _action: string }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -721,8 +370,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "moderator", "user"],
-    },
+    Enums: {},
   },
 } as const
