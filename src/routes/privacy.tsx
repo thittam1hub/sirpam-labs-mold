@@ -8,7 +8,7 @@ export const Route = createFileRoute("/privacy")({
     links: [{ rel: "canonical", href: "/privacy" }],
     meta: [
       { title: "Privacy Policy — Sirpam 3D Labs Mold" },
-      { name: "description", content: "What Sirpam 3D Labs Mold stores about you and why." },
+      { name: "description", content: "What Sirpam 3D Labs Mold stores about you, why we keep it, who we share it with, and how to download or delete your data under India's DPDP Act." },
       { property: "og:title", content: "Privacy Policy — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "What Sirpam 3D Labs Mold stores about you and why." },
       { property: "og:url", content: "/privacy" },

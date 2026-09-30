@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Browser-based mold maker: upload an STL or OBJ, get a suggested parting plane, auto sprues, vents and pins, and export print-ready two-part mold halves — designed right in your browser.",
+          "Upload an STL or OBJ, get a suggested parting plane with auto sprues, vents and pins, and export print-ready two-part mold halves — all in your browser.",
       },
       { property: "og:title", content: "Sirpam 3D Labs Mold — turn any 3D model into a print-ready mold" },
       {
