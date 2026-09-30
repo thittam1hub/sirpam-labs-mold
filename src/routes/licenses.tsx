@@ -20,9 +20,9 @@ export const Route = createFileRoute("/licenses")({
 });
 
 const libs = [
-  { name: "mold-maker by matta174", url: "https://github.com/matta174/mold-maker", note: "The original open-source mold generator this app was built from." },
   { name: "Three.js", url: "https://threejs.org", note: "3D rendering in the browser (MIT)." },
   { name: "Manifold", url: "https://github.com/elalish/manifold", note: "Solid geometry engine used to build and validate molds (Apache-2.0)." },
+  { name: "OpenCascade.js", url: "https://ocjs.org", note: "STEP file export (LGPL-2.1, loaded unmodified)." },
   { name: "React", url: "https://react.dev", note: "User interface (MIT)." },
   { name: "TanStack Router / Start / Query", url: "https://tanstack.com", note: "Routing, server functions and data fetching (MIT)." },
   { name: "Tailwind CSS", url: "https://tailwindcss.com", note: "Styling (MIT)." },
