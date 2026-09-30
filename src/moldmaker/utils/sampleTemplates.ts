@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { createSampleModel } from './sampleModel';
 
-export type SampleTemplateId = 'mushroom' | 'pawn' | 'vase' | 'heart';
+export type SampleTemplateId = 'mushroom' | 'pawn' | 'vase' | 'heart' | 'candle' | 'soap';
 
 export interface SampleTemplate {
   id: SampleTemplateId;
@@ -19,6 +19,8 @@ export const SAMPLE_TEMPLATES: SampleTemplate[] = [
   { id: 'pawn', label: 'Chess pawn', hint: 'Classic turned shape' },
   { id: 'vase', label: 'Vase', hint: 'Wide base, narrow neck' },
   { id: 'heart', label: 'Heart', hint: 'Flat shape with curves' },
+  { id: 'candle', label: 'Pillar candle', hint: 'Sets wax + a 3 mm wick pin' },
+  { id: 'soap', label: 'Soap bar', hint: 'Sets melt & pour soap' },
 ];
 
 function finish(geometry: THREE.BufferGeometry, fileName: string) {
@@ -95,6 +97,31 @@ function buildHeart(): { geometry: THREE.BufferGeometry; fileName: string } {
   return finish(geometry, 'sample-heart.stl');
 }
 
+function buildCandle(): { geometry: THREE.BufferGeometry; fileName: string } {
+  // 60 mm pillar, 1° draft, softened top edge; the wick hole comes from the core pin.
+  const profile = [
+    new THREE.Vector2(0, 0), new THREE.Vector2(25, 0), new THREE.Vector2(24, 57),
+    new THREE.Vector2(23, 59), new THREE.Vector2(21, 60), new THREE.Vector2(0, 60),
+  ];
+  return finish(new THREE.LatheGeometry(profile, 64), 'sample-candle.stl');
+}
+
+function buildSoap(): { geometry: THREE.BufferGeometry; fileName: string } {
+  // 90 x 60 x 25 mm rounded bar (about 100 g), lying flat.
+  const w = 90, d = 60, r = 12;
+  const shape = new THREE.Shape();
+  shape.moveTo(-w / 2 + r, -d / 2);
+  shape.lineTo(w / 2 - r, -d / 2); shape.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r);
+  shape.lineTo(w / 2, d / 2 - r); shape.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2);
+  shape.lineTo(-w / 2 + r, d / 2); shape.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r);
+  shape.lineTo(-w / 2, -d / 2 + r); shape.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2);
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: 19, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 4, curveSegments: 16,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  return finish(geometry, 'sample-soap.stl');
+}
+
 export function buildSampleTemplate(id: SampleTemplateId): { geometry: THREE.BufferGeometry; fileName: string } {
   switch (id) {
     case 'mushroom':
@@ -105,5 +132,9 @@ export function buildSampleTemplate(id: SampleTemplateId): { geometry: THREE.Buf
       return buildVase();
     case 'heart':
       return buildHeart();
+    case 'candle':
+      return buildCandle();
+    case 'soap':
+      return buildSoap();
   }
 }

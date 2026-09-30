@@ -109,6 +109,8 @@ export function useMoldGeneration(
         clampBoltMm: t2.clampBoltMm || undefined,
         clampLands: (t2.clampBoltMm && t2.clampLands) || undefined,
         corePinMm: t2.corePinMm || undefined,
+        pourFunnel: t2.pourFunnel || undefined,
+        clampJig: t2.clampJig || undefined,
         autoVents: t2.autoVents || undefined,
         standFins: t2.standFins || undefined,
         volumeLabel: t2.volumeLabel && castMl ? `${castMl} ML` : undefined,

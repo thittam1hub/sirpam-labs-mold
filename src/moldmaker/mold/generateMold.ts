@@ -36,6 +36,7 @@ import {
   type Round6Extras, buildCurvedSplit, applyClampWings, buildStandFins, trappedAirPoints,
   axialCylinder, buildStyleMold,
 } from './proFeatures';
+import { buildPourFunnel, buildClampJig } from './v3Features';
 import { buildGapFiller, buildFeet, engraveText, splitIntoParts, type Round7Extras } from './round7';
 
 export interface GenerateMoldOptions {
@@ -403,6 +404,17 @@ export async function generateMold(
   pieces = pieces.filter(s => !s.isEmpty());
   if (hollow) pieces.push(hollow.core);
   if (corePin) pieces.push(corePin);
+  if (extras.pourFunnel) {
+    const f = buildPourFunnel(wasm, { axis, a: lateralCentre.a, b: lateralCentre.b, base: envMax.getComponent(p), mouthR, clearance });
+    if (f) pieces.push(f); else notices.push('The pour funnel could not be built for this mold, so it was left off.');
+  }
+  if (extras.clampJig) {
+    const j = !options.formFit && flat
+      ? buildClampJig(wasm, { axis, shape: env.shape, envMin: env.moldMin, envMax, splitPos, clearance })
+      : null;
+    if (j) pieces.push(j);
+    else notices.push('The clamp sleeve needs a box or cylinder mold with a flat split near the middle, so it was left off.');
+  }
 
   const out = pieces.map(s => manifoldToGeometry(s));
   return notices.length ? { pieces: out, repairs, notices } : { pieces: out, repairs };
