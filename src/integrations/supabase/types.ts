@@ -511,6 +511,7 @@ export type Database = {
       referrals: {
         Row: {
           created_at: string
+          purchase_bonus_at: string | null
           referee_id: string
           referrer_id: string
           rewarded_at: string | null
@@ -518,6 +519,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          purchase_bonus_at?: string | null
           referee_id: string
           referrer_id: string
           rewarded_at?: string | null
@@ -525,6 +527,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          purchase_bonus_at?: string | null
           referee_id?: string
           referrer_id?: string
           rewarded_at?: string | null
@@ -626,6 +629,10 @@ export type Database = {
       }
       redeem_promo: { Args: { _code: string }; Returns: Json }
       release_hold: { Args: { _id: string }; Returns: boolean }
+      reverse_purchase: {
+        Args: { _payment_ref: string; _provider: string; _reason: string }
+        Returns: Json
+      }
       spend_credits: { Args: { _action: string }; Returns: Json }
     }
     Enums: {

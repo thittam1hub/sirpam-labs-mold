@@ -134,6 +134,13 @@
       "when": 1790754189386,
       "tag": "0018_replay_contact_rate_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790754212974,
+      "tag": "0019_replay_purchase_bonus_reverse",
+      "breakpoints": true
     }
   ]
 }
