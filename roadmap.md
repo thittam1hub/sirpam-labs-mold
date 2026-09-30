@@ -58,8 +58,8 @@
 - [x] Original usage-sharing popup + sender removed (5 files)
 - [x] 2 New engine core: constants, manifoldBridge, planeGeometry, moldBox, channelPlacement, draftAnalysis, capOpenBoundaries, validateMesh, moldOffset, splitLine, suggestParting, generateMold, siliconeMold
 - [x] 3 Worker + files: workerProtocol, moldWorker, useMoldGenerator, exporters, minizip, fileLoader, STEP export
-- [ ] 4 Screens: App, ControlPanel (split up), ModelViewer, PartingPlane, HeatmapOverlay, SplitLineOverlay, theme, types
-- [ ] 5 Helpers: printerFit, printerPresets, costEstimate, projectStorage, sampleModel
-- [ ] 6 Re-point our own features, drop @ts-nocheck
+- [x] 4 Screens: App, ControlPanel (split up), ModelViewer, PartingPlane, HeatmapOverlay, SplitLineOverlay, theme, types
+- [x] 5 Helpers: printerFit, printerPresets, costEstimate, projectStorage, sampleModel
+- [x] 6 Re-point our own features, drop @ts-nocheck
 - [ ] 7 Licenses/About pages + AGENTS.md note
 - [ ] 8 Final scan: no original file or phrase left

@@ -3,7 +3,7 @@ import type { AppState } from '../App';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from '../types';
 import type { ProjectMeta } from '../services/projectStorage';
 import { styles } from './panel/tokens';
-import { StepRail, StepFooter, STEP_NAMES } from './panel/NavFooter';
+import { StepFooter, STEP_NAMES } from './panel/NavFooter';
 import { ModelStep } from './panel/ModelStep';
 import { SplitStep } from './panel/SplitStep';
 import { MoldStep } from './panel/MoldStep';
@@ -79,7 +79,6 @@ export default function ControlPanel(props: ControlPanelProps) {
 
   return (
     <aside className="sirpam-panel" style={styles.panel} aria-label="Controls">
-      <StepRail step={step} onStep={onStepChange} hasModel={hasModel} hasMold={hasMold} />
 
       <div style={styles.scrollArea}>
         {!hasModel && (
