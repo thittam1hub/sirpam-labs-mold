@@ -13,7 +13,7 @@ function additionalPlanesChanged(state: AppState): boolean {
   if (generated.length !== state.additionalPlanes.length) return true;
   return generated.some((p, i) => {
     const cur = state.additionalPlanes[i];
-    return p.axis !== cur.axis || p.offset !== cur.offset || p.cutAngle !== cur.cutAngle;
+    return !cur || p.axis !== cur.axis || p.offset !== cur.offset || p.cutAngle !== cur.cutAngle;
   });
 }
 
