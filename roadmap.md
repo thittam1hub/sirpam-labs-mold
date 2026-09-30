@@ -54,3 +54,7 @@
 - [ ] B7 pour funnel + clamp jig
 - [ ] B8 candle & soap presets
 - [x] B5 core pin (through-hole) — rigid molds, optional, tested
+- [x] A3 split advisor also tries the widest-outline split on each axis
+- [x] B7 printable pour funnel + clamp sleeve (optional extras, v3Features.ts)
+- [x] B8 pillar candle (wax + 3 mm wick pin) and soap bar samples
+- [ ] A1 second background thread — deferred: cache + warm-up already give instant repeats; splitting one Manifold build across threads adds risk for little gain

@@ -30,3 +30,4 @@
 
 - All customer-facing contact details (phone, email, country, legal name) come from `BUSINESS` in `src/lib/business.ts` — components never hardcode them (why: one edit changes every page, footer and WhatsApp link).
 - Mold engine is a completed clean-room rewrite from spec (never copy from matta174/mold-maker, PolyForm NC); every rewrite must pass src/moldmaker/mold/golden.test.ts (why: commercial use needs code we own).
+- Mold engine v3 extras (core pin, pour funnel, clamp sleeve) live in src/moldmaker/mold/v3Features.ts + generateMold as optional extras; off = byte-identical (why: golden tests must keep passing).
