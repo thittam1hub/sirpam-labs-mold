@@ -8,6 +8,11 @@ import { Droplet, Factory, FlaskConical, RotateCw, Scissors, Wrench } from "luci
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "Sirpam 3D Labs", url: "https://mold.sirpam3dlabs.in/", logo: "https://mold.sirpam3dlabs.in/logo.svg", sameAs: ["https://sirpam3dlabs.in"] }),
+    }],
     meta: [
       { title: "Sirpam 3D Labs Mold — turn any 3D model into a print-ready mold" },
       {
@@ -21,12 +26,12 @@ export const Route = createFileRoute("/")({
         content:
           "Upload an STL, get a print-ready two-part mold with auto sprues, vents and pins — designed in your browser.",
       },
+      { property: "og:url", content: "/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
       { name: "twitter:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
     ],
-    links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
   component: LandingPage,
 });

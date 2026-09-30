@@ -5,11 +5,13 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/licenses")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/licenses" }],
     meta: [
       { title: "Open-source licenses — Sirpam 3D Labs Mold" },
       { name: "description", content: "The open-source projects and libraries that power Sirpam 3D Labs Mold." },
       { property: "og:title", content: "Open-source licenses — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Credits and licenses for the libraries we use." },
+      { property: "og:url", content: "/licenses" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
