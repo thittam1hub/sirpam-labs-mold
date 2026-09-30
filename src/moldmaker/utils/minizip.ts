@@ -48,6 +48,6 @@ export function createZip(files: Record<string, string>): ArrayBuffer {
     bytes(f.name);
   }
   u32(0x06054b50); u16(0); u16(0); u16(items.length); u16(items.length);
-  u32(o - dirStart - 0 - 0 === centralSize ? centralSize : o - dirStart); u32(dirStart); u16(0);
+  u32(centralSize); u32(dirStart); u16(0);
   return out.buffer;
 }
