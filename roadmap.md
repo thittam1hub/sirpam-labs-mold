@@ -45,7 +45,7 @@
 - [x] Step 0: 3d-print-modeling skill installed
 - [x] C10 cost per piece, C11 mold life, C12 print settings card (Finish step, 4 tests)
 - [x] B6 runner system — already existed (extras.runner)
-- [ ] A1 faster builds (2 threads + cache)
+- [x] A1 faster builds (result cache + engine warm-up; 2nd thread deferred)
 - [ ] A2 auto draft angle
 - [ ] A4 repair summary + build block
 - [x] C9 clamp-wing pressure lands (optional "Clamp seats", test added)
