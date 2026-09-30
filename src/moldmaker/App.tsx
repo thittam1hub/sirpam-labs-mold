@@ -372,6 +372,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                   canUndo={canUndo}
                   onUndo={undoModel}
                   onReplaceModel={replaceModel}
+                  split={{ axis: state.axis, offset: state.planeOffset, box: state.boundingBox }}
                 />
               }
               tier2Slot={
