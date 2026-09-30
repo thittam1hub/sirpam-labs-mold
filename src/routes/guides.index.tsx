@@ -6,11 +6,13 @@ import { GUIDES } from "@/lib/guides";
 export const Route = createFileRoute("/guides/")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/guides" }],
     meta: [
       { title: "Mold making guides — Sirpam 3D Labs Mold" },
       { name: "description", content: "Free guides on making silicone molds, 3D printed molds and turning STL files into molds." },
       { property: "og:title", content: "Mold making guides — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Learn silicone mold making and 3D printed molds, step by step." },
+      { property: "og:url", content: "/guides" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

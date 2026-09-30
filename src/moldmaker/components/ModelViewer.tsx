@@ -1,33 +1,22 @@
-// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
-import { useEffect, useMemo, useRef } from 'react';
+// Sirpam 3D Labs Mold — renders one mesh (model or mold piece) with a faint edge outline.
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
-interface ModelViewerProps {
+type Props = {
   geometry: THREE.BufferGeometry;
   color?: string;
   opacity?: number;
   position?: [number, number, number];
   wireframe?: boolean;
-}
+};
 
-export default function ModelViewer({
-  geometry,
-  color = '#6c9bcf',
-  opacity = 0.9,
-  position = [0, 0, 0],
-  wireframe = false,
-}: ModelViewerProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  // EdgesGeometry is O(triangles) to compute. Previously it was built inline on
-  // every render — now memoized against the source geometry, and disposed when
-  // the source changes or the component unmounts so GPU buffers don't leak.
-  const edges = useMemo(() => new THREE.EdgesGeometry(geometry, 30), [geometry]);
-  useEffect(() => () => edges.dispose(), [edges]);
-
+export default function ModelViewer({ geometry, color = '#6c9bcf', opacity = 0.9, position = [0, 0, 0], wireframe = false }: Props) {
+  // Only draw creases sharper than 30° so smooth surfaces stay clean.
+  const creases = useMemo(() => new THREE.EdgesGeometry(geometry, 30), [geometry]);
+  useEffect(() => () => creases.dispose(), [creases]);
   return (
     <group position={position}>
-      <mesh ref={meshRef} geometry={geometry}>
+      <mesh geometry={geometry}>
         <meshPhysicalMaterial
           color={color}
           transparent={opacity < 1}
@@ -39,8 +28,7 @@ export default function ModelViewer({
           wireframe={wireframe}
         />
       </mesh>
-      {/* Edge highlight */}
-      <lineSegments geometry={edges}>
+      <lineSegments geometry={creases}>
         <lineBasicMaterial color={color} transparent opacity={0.15} />
       </lineSegments>
     </group>

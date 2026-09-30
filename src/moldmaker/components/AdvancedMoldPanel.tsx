@@ -4,6 +4,7 @@ import type { Axis, MoldMode, SiliconeMoldType } from '../types';
 import type { SealType, LockStyle } from '../mold/moldFeatures';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { CASTING_MATERIALS, adviseGate, solidProps, type CastingMaterialId, type GateAdvice } from '../utils/tier2';
+import { CompatCard } from './CompatCard';
 
 export interface Tier2Settings {
   seal: SealType;
@@ -40,6 +41,7 @@ export interface Tier2Settings {
   flangeMm?: number;
   flangeBoltMm?: number;
   partingBoard?: boolean;
+  wallRibs?: boolean;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -72,6 +74,7 @@ export const DEFAULT_TIER2: Tier2Settings = {
   flangeMm: 0,
   flangeBoltMm: 0,
   partingBoard: false,
+  wallRibs: false,
 };
 
 interface Props {
@@ -131,7 +134,7 @@ const MOLD_STYLES = [
 ] as const;
 
 /** Mold-step settings. Single source of truth for mold type, casting material, vents and silicone thickness per side. */
-export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch: Partial<Tier2Settings>) => void; moldMode: MoldMode; siliconeType: SiliconeMoldType; formFit: boolean }) {
+export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch: Partial<Tier2Settings>) => void; moldMode: MoldMode; siliconeType: SiliconeMoldType; formFit: boolean; printMaterial?: 'pla' | 'resin' }) {
   const { settings: t, onChange } = p;
   const isRigid = p.moldMode === 'rigid';
   const blockSilicone = p.moldMode === 'silicone' && p.siliconeType !== 'skinCore';
@@ -145,6 +148,12 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
         {CASTING_MATERIALS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
       </select>
       <div style={s.hint}>Used everywhere: shrink compensation, cast weight, advisor and report.</div>
+      <CompatCard input={{ castingMaterial: t.castingMaterial, moldMode: p.moldMode, siliconeType: p.siliconeType, printMaterial: p.printMaterial ?? 'pla' }} />
+
+      <div style={s.sub}>Copies per mold</div>
+      <Slider label="Copies" value={t.cavityCount} min={1} max={9} step={1} unit="×"
+        onChange={v => onChange({ cavityCount: v })} />
+      <div style={s.hint}>The mold box grows to fit all copies. {isRigid ? 'Copies share one pour hole through a runner channel.' : 'Each copy gets its own pour hole.'}</div>
 
       {isRigid && (<>
         <div style={s.sub}>Printed mold type</div>
@@ -156,14 +165,12 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
         <div style={s.hint}>{MOLD_STYLES.find(x => x[0] === style)![2]}{style !== 'standard' && ' The model’s top faces up — use Turn 90° in the Model step if needed.'}</div>
 
         <div style={s.sub}>Air vents</div>
-        <Slider label="Air vent size" value={t.ventDiameterMm ?? 0} min={0} max={5} step={0.5}
-          unit={(t.ventDiameterMm ?? 0) === 0 ? ' (auto)' : ' mm'} onChange={v => onChange({ ventDiameterMm: v })} />
         <div style={s.row}>
           {([-1, 0, 1, 2, 3, 4] as const).map(n => (
             <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
           ))}
         </div>
-        <div style={s.hint}>Typical: 1.5–3 mm vents. Auto = worked out from your pour hole.</div>
+        <div style={s.hint}>Vent size lives in the Mold step next to the pour hole. Typical: 1.5–3 mm vents.</div>
       </>)}
 
       {blockSilicone && (<>
@@ -346,6 +353,15 @@ export default function AdvancedMoldPanel(p: Props) {
               Printable parting board with silicone keys
             </label>
           )}
+          {p.moldMode === 'silicone' && !p.formFit && (
+            <>
+              <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                <input type="checkbox" checked={!!t.wallRibs} onChange={e => onChange({ wallRibs: e.target.checked })} />
+                Stiffening ribs on wide walls
+              </label>
+              <div style={s.hint}>Ribs on the outside of any wall wider than 120 mm so the box does not bulge under the silicone's weight.</div>
+            </>
+          )}
 
           <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
             <input type="checkbox" checked={t.pryPockets} onChange={e => onChange({ pryPockets: e.target.checked })} />
@@ -474,5 +490,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
 }

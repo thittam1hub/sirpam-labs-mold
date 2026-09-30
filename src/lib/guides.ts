@@ -1,5 +1,20 @@
 export type GuideSection = { h: string; p: string[]; steps?: string[] };
-export type Guide = { slug: string; title: string; description: string; minutes: number; sections: GuideSection[] };
+export type Guide = {
+  slug: string;
+  title: string;
+  description: string;
+  minutes: number;
+  /** ISO 8601 date the guide was first published. */
+  published: string;
+  /** ISO 8601 date of the last meaningful edit. */
+  updated: string;
+  /** Absolute URL of the cover image used for search rich results. */
+  image: string;
+  sections: GuideSection[];
+};
+
+/** Shared cover photo (1200x675) served from /public. */
+export const GUIDE_IMAGE = "https://mold.sirpam3dlabs.in/guide-cover.jpg";
 
 export const GUIDES: Guide[] = [
   {
@@ -7,6 +22,9 @@ export const GUIDES: Guide[] = [
     title: "How to make silicone molds at home",
     description: "A step-by-step beginner guide to making silicone molds: choosing silicone, building a mold box, mixing, degassing, pouring and demolding.",
     minutes: 7,
+    published: "2026-09-27",
+    updated: "2026-09-30",
+    image: GUIDE_IMAGE,
     sections: [
       { h: "What you need", p: ["A master (the object you want to copy), platinum-cure or tin-cure silicone, a mold box, mold release, mixing cups, a scale, and a stir stick. Platinum silicone is best for food, resin and long life; tin-cure is cheaper and more forgiving."] },
       { h: "Step by step", p: [], steps: [
@@ -28,6 +46,9 @@ export const GUIDES: Guide[] = [
     title: "3D printed molds: a practical guide",
     description: "How to design and print rigid two-part molds on FDM or resin printers — parting lines, locks, vents, wall thickness, fit gap and release.",
     minutes: 6,
+    published: "2026-09-27",
+    updated: "2026-09-30",
+    image: GUIDE_IMAGE,
     sections: [
       { h: "When a printed mold makes sense", p: ["Printed rigid molds are great for wax, soap, plaster, concrete, chocolate (with food-safe coating) and short resin runs. For many casts, or for very detailed parts, print a master and make a silicone mold instead."] },
       { h: "Design rules that work", p: [], steps: [
@@ -47,6 +68,9 @@ export const GUIDES: Guide[] = [
     title: "How to turn an STL into a mold",
     description: "Convert any STL or OBJ file into a printable two-part mold in your browser: load, repair, split, choose a mold type and export.",
     minutes: 4,
+    published: "2026-09-28",
+    updated: "2026-09-30",
+    image: GUIDE_IMAGE,
     sections: [
       { h: "The quick version", p: [], steps: [
         "Open the Studio and drop in your STL or OBJ file.",

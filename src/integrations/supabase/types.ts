@@ -10,10 +10,37 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
+      app_user_connections: {
+        Row: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connection_key_ciphertext?: string
+          connector_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           age_confirmed: boolean
@@ -221,6 +248,42 @@ export type Database = {
         Update: {
           created_at?: string
           email_hash?: string
+        }
+        Relationships: []
+      }
+      feedback_reports: {
+        Row: {
+          category: string
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          page_url: string | null
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          page_url?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          page_url?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -444,6 +507,48 @@ export type Database = {
           refunded_at?: string | null
           region?: string | null
           status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quote_requests: {
+        Row: {
+          casting_material: string | null
+          contact_email: string
+          contact_name: string
+          created_at: string
+          id: string
+          maker: string
+          notes: string | null
+          project_path: string | null
+          quantity: number
+          size_class: string | null
+          user_id: string
+        }
+        Insert: {
+          casting_material?: string | null
+          contact_email: string
+          contact_name: string
+          created_at?: string
+          id?: string
+          maker: string
+          notes?: string | null
+          project_path?: string | null
+          quantity?: number
+          size_class?: string | null
+          user_id?: string
+        }
+        Update: {
+          casting_material?: string | null
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          id?: string
+          maker?: string
+          notes?: string | null
+          project_path?: string | null
+          quantity?: number
+          size_class?: string | null
           user_id?: string
         }
         Relationships: []

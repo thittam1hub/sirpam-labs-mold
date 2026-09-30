@@ -5,11 +5,13 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/privacy")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/privacy" }],
     meta: [
       { title: "Privacy Policy — Sirpam 3D Labs Mold" },
       { name: "description", content: "What Sirpam 3D Labs Mold stores about you and why." },
       { property: "og:title", content: "Privacy Policy — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "What Sirpam 3D Labs Mold stores about you and why." },
+      { property: "og:url", content: "/privacy" },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,10 +38,12 @@ function PrivacyPage() {
           <li><strong>Google</strong> (only if you choose "Continue with Google"): Google confirms your identity and shares your email and name with us.</li>
           <li><strong>Lovable AI</strong> (only when you use the AI Model Maker): the description and any photo you submit, to generate the shape.</li>
           <li><strong>Usage statistics</strong> (only if you opt in inside the Studio): a few anonymous events such as "mold generated", with no email, name or model files. Off by default; you can turn it off at any time.</li>
+          <li><strong>Google Analytics</strong>: anonymous counts of which pages are visited and which tools are used. It never receives your name, email or model files.</li>
+          <li><strong>Microsoft Clarity</strong>: anonymised session recordings and heatmaps used to find confusing parts of the app. Anything you type into a form (phone numbers, addresses, notes) is masked and never recorded.</li>
         </ul>
-        <p className="mt-2 text-muted-foreground">Fonts and all other page files are served from our own site, so no third party receives your visit.</p>
+        <p className="mt-2 text-muted-foreground">Fonts and all other page files are served from our own site. The only third-party services that receive your visit are the two analytics services listed above.</p>
         <h2 className="mt-8 text-xl font-semibold">What is stored in your browser</h2>
-        <p className="mt-2 text-muted-foreground">Only what the app needs to work: your sign-in session, your light/dark theme choice, your usage-statistics choice, and Studio preferences. We use no advertising or tracking cookies.</p>
+        <p className="mt-2 text-muted-foreground">Only what the app needs to work: your sign-in session, your light/dark theme choice, your usage-statistics choice, and Studio preferences. We use no advertising cookies. Google Analytics sets one small analytics cookie; Microsoft Clarity sets none.</p>
         <h2 className="mt-8 text-xl font-semibold">Age requirement</h2>
         <p className="mt-2 text-muted-foreground">You must be 13 or older to create an account or send us a message. If you tell us you are under 13, your account and its data are deleted immediately. If you believe a child under 13 has given us information, email <a href="mailto:sirpam3dlabs@gmail.com" className="text-primary">sirpam3dlabs@gmail.com</a> and we will delete it.</p>
         <h2 className="mt-8 text-xl font-semibold">Payments</h2>

@@ -1,41 +1,42 @@
-# Roadmap — credit system
-- [x] Phase 1: charge-on-success holds, server checks, credit types + expiry, single price list, legal pages
-- [x] Phase 2: low-balance warnings, history filters + CSV, usage summary, promo codes
-- [x] Phase 2: referral credits
-- [x] Production-readiness: purchase records, receipts, admin refund path, expiry warnings, promo rate limit, packs in database
-- [x] Phase 3: Paddle (international) + Razorpay (India) checkout, verified crediting, refunds remove unused credits
-- [x] Phase 4: admin page (user lookup, adjust credits, promo codes, usage stats, purchase refunds)
-- [x] Phase 5: server-only balance changes, duplicate-proof references, live checks run
+# Roadmap
 
-# Roadmap — hug and silicone molds
-- [x] Silicone form-fit locks placed in the real wall (no floating pins)
-- [x] Parting flange for rigid and silicone hug molds
-- [x] Silicone hug molds: pour hole and vents at the model's high points
-- [x] Hug mother mold + skin registration rim (skin molds)
-- [x] Silicone parting-board keys piece
-- [x] Printer-type lock/fit-gap presets and thin-wall warning
-- [x] Bolt holes through the parting flange
+## In progress
+- [ ] Google Drive per-user connect — client linked (auc_01m3rnt5mnf2fr28xqh35pphsm); user must add gateway callback URL to their Google OAuth client: https://connector-gateway.lovable.dev/api/v1/app-users/oauth2/callback
+- [ ] In-app issue report form — code done; DB replayed (feedback_reports table live); needs browser re-verify of admin view
 
-# Roadmap — production launch checklist
-- [x] 11 Test data cleanup (TESTONCE removed; only your account is admin; no test purchases)
-- [x] 13 Friendly error + missing-page screens (site-wide, all pages covered)
-- [x] 9 AI generation + handoff tested (works; new models now framed to fit the view)
-- [x] 10 Reviewed 20 database warnings — all intentional and safe
-- [x] 14 Dark mode checked on Studio + AI page (desktop and phone)
-- [x] 15 Phone tour moved under the top bar, compact
-- [x] 16 Credit tests (10 passing: price prompt, expiry, CSV, hold/release, no self-granting)
-- [x] 17 Browser check: Chrome + Safari build molds; no-3D browsers get a clear message
-- [x] 18 Large-file limits: 200 MB, 2M triangles, empty/shapeless files explained
-- [x] 19 Rate limits: AI maker 20/hour per person; contact 3/hour per email, 60/hour total
-- [x] 20 Backups: daily automatic, ~14 days kept (photos in storage not included)
-- [ ] 23 Share images — needs the published web address (do at publish)
-- [x] 24 Visitor stats: built-in hosting stats, no cookies, no banner needed
-- [ ] 25 Page speed — measure on the published site
-- [x] 22 Guide pages: /guides + silicone molds, 3D printed molds, STL to mold
-- [ ] 21 publish + Search Console; crash tracking after publish
-- [x] 1–3 payments, webhook, inviter purchase bonus (10 credits)
-- [ ] 7 branded email — needs your own domain
-- [ ] Going live with payments — verification in the Payments tab + publish
-- [ ] 4, 5, 6, 8 — your actions (lawyer, grievance officer, domain, print test)
+## Blocked / waiting
+- [ ] Google Drive end-to-end connect test — waits on user adding the callback URL in Google Cloud Console
+- [ ] NOTE: this project is a REMIX of the main project — do NOT publish from here without confirming with user
 
-- [x] Razorpay webhook setup
+## Done this round
+- [x] Reddit pain-point research (sub_dertspg4) — top issues: trapped air bubbles, misaligned seams, leaking molds, demolding tears (undercuts), key misalignment, mold deformation, layer-line transfer, cure inhibition, over-mixed silicone waste, clamping pressure
+
+## Proposed next features (from research; existing-engine overlaps noted)
+- [ ] Air-trap preview + auto vents at "dead air" pockets for the chosen orientation (extends existing auto vents + heatmap overlay) — big engineering
+- [ ] Undercut / tear-risk highlighter before generating (extends draft-analysis overlay) — big engineering
+- [ ] Material compatibility advisor: warn when print resin inhibits silicone cure (quick win)
+- [ ] Structural ribs for large silicone molds (stand-fins exist; ribs are new) — quick win
+- [ ] Flash/seam trim guide in the mold report — quick win
+- [ ] Clamp-wing pressure lands (clamp wings exist; add seating flats) — quick win
+
+## Reddit pain-point plan — Phase 1 (done, awaiting user review)
+- [x] Material compatibility advisor (rules table + card in Mold step and Finish report)
+- [x] Seam/flash trim guide in mold report (split-line length + per-material trimming advice)
+- [x] Structural ribs for wide silicone box walls (optional extra, >120 mm walls)
+- Verified: tsgo clean, 48 tests pass, build OK, browser smoke (caution card + finish report) clean
+## Phase 2 (done)
+- [x] Air-trap preview with one-click vent placement
+- [x] Demolding risk score (undercut + draft, 0–100)
+## Phase 3 (done)
+- [x] Leak check (parting-plane contact validation)
+- [x] Cure-time & pour planner card
+
+## Final upstream-code scan (done)
+- [x] No code or references from the original project remain
+
+## New (08:00–08:30)
+- [x] Remix backend rebuilt: all 22 original migrations replayed + storage buckets (mold-photos, avatars, project-files) recreated — typecheck clean, 55 tests pass
+- [x] feedback_reports + app_user_connections tables created
+- [x] Feedback form verified in browser (submit works, no console errors)
+- [x] Google Drive client linked to project; server fns + DriveCard + OAuth return page written
+- [ ] Drive: user adds gateway callback URL in Google Cloud Console, then end-to-end connect test

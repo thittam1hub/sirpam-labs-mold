@@ -1,6 +1,6 @@
 # Sirpam 3D Labs Mold
 
-https://github.com/matta174/mold-maker.git import this app
+Browser-based mold maker: turn a 3D model into printable two-part molds. The mold engine is Sirpam 3D Labs' own implementation, built on commercially permissive libraries (Three.js, Manifold, OpenCascade.js).
 
 This project was built with [Lovable](https://lovable.dev).
 

@@ -1,12 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { BrandLink } from "@/components/BrandLink";
-import showcase from "@/assets/real-mold-workbench.jpg";
+import { BUSINESS } from "@/lib/business";
+import showcase from "@/assets/real-mold-workbench.webp";
 import { Droplet, Factory, FlaskConical, RotateCw, Scissors, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({
+    links: [{ rel: "canonical", href: "/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "Sirpam 3D Labs", url: "https://mold.sirpam3dlabs.in/", logo: "https://mold.sirpam3dlabs.in/logo.svg", sameAs: ["https://sirpam3dlabs.in"] }),
+    }],
     meta: [
       { title: "Sirpam 3D Labs Mold — turn any 3D model into a print-ready mold" },
       {
@@ -20,10 +26,12 @@ export const Route = createFileRoute("/")({
         content:
           "Upload an STL, get a print-ready two-part mold with auto sprues, vents and pins — designed in your browser.",
       },
+      { property: "og:url", content: "/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
+      { name: "twitter:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
     ],
-    links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
   component: LandingPage,
 });
@@ -104,9 +112,9 @@ function LandingPage() {
           </div>
           <img
             src={showcase}
-            alt="A real two-part 3D-printed mold with registration pins, vents and its orange cast part"
+            alt="An open two-part 3D-printed duck mold with registration pins, pour spout and vents, beside the finished yellow cast duck"
             width={1600}
-            height={1000}
+            height={1008}
             fetchPriority="high"
             className="mx-auto mt-10 aspect-[8/5] w-full max-w-4xl rounded-2xl border border-border object-cover shadow-lg"
           />
@@ -178,6 +186,15 @@ function LandingPage() {
           <Link to="/shop">Shop</Link>
           <Link to="/gallery">Gallery</Link>
           <Link to="/auth" search={{ redirect: "/studio" }}>Sign in</Link>
+        </div>
+        <div className="mx-auto mt-3 flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {BUSINESS.whatsapp && (
+            <a href={`https://wa.me/${BUSINESS.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-primary">
+              WhatsApp +91 {BUSINESS.whatsapp.slice(2)}
+            </a>
+          )}
+          <a href={`mailto:${BUSINESS.email}`} className="text-primary">{BUSINESS.email}</a>
+          <span>Prints and dispatches within India only.</span>
         </div>
       </footer>
     </div>

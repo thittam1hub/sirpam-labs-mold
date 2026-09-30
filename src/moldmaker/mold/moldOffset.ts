@@ -1,18 +1,9 @@
-// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
+// Sirpam 3D Labs Mold — grow a solid outward by a fixed distance (hug shells, skin molds).
+/* eslint-disable @typescript-eslint/no-explicit-any -- Manifold wasm handles */
 import * as THREE from 'three';
 import type { Axis } from '../types';
 import type { MoldEnvelope } from './moldBox';
 import { windingVotes } from './meshFix';
-
-/**
- * Shared outward-offset helper for "form fit" shells and skin molds.
- *
- * Why this module exists: siliconeMold.ts grew a private `offsetOutward`
- * for its skin/glove mold path, and the form-fit shell feature (rigid +
- * silicone block molds whose outer wall hugs the model instead of being a
- * box) needs the exact same operation. Keeping it here avoids a copy-paste
- * fork of a numerically delicate helper.
- */
 
 export type OffsetMethod = 'exact' | 'distanceField' | 'simplified' | 'scaled';
 
@@ -71,16 +62,11 @@ export function offsetOutwardEx(wasm: any, m: any, t: number, bbox: THREE.Box3):
     }
   }
 
-  const size = new THREE.Vector3();
-  bbox.getSize(size);
-  const center = new THREE.Vector3();
-  bbox.getCenter(center);
-  const minExtent = Math.max(Math.min(size.x, size.y, size.z), 1e-6);
-  const k = 1 + (2 * t) / minExtent;
-  const solid = m
-    .translate([-center.x, -center.y, -center.z])
-    .scale([k, k, k])
-    .translate([center.x, center.y, center.z]);
+  // Last resort: stretch about the centre so the thinnest side grows by 2t.
+  const c = bbox.getCenter(new THREE.Vector3());
+  const s = bbox.getSize(new THREE.Vector3());
+  const k = 1 + (2 * t) / Math.max(1e-6, Math.min(s.x, s.y, s.z));
+  const solid = m.translate([-c.x, -c.y, -c.z]).scale([k, k, k]).translate([c.x, c.y, c.z]);
   return { solid, method: 'scaled' };
 }
 
@@ -190,21 +176,9 @@ function distanceFieldOffset(wasm: any, m: any, t: number, bbox: THREE.Box3): an
  * the offset solid's actual bounds. Nothing should call
  * `createMoldBoxManifold` on the result — the shell solid already exists.
  */
-export function envelopeAroundManifold(
-  m: any,
-  axis: Axis,
-  wallThickness: number,
-): MoldEnvelope {
-  const bb = m.boundingBox();
-  return {
-    shape: 'rect',
-    axis,
-    wallThickness,
-    moldMin: new THREE.Vector3(bb.min[0], bb.min[1], bb.min[2]),
-    moldSize: new THREE.Vector3(
-      bb.max[0] - bb.min[0],
-      bb.max[1] - bb.min[1],
-      bb.max[2] - bb.min[2],
-    ),
-  };
+/** Box envelope that exactly wraps a solid (used for hug shells). */
+export function envelopeAroundManifold(m: any, axis: Axis, wallThickness: number): MoldEnvelope {
+  const { min, max } = m.boundingBox();
+  const lo = new THREE.Vector3(min[0], min[1], min[2]);
+  return { shape: 'rect', axis, wallThickness, moldMin: lo, moldSize: new THREE.Vector3(max[0], max[1], max[2]).sub(lo) };
 }
