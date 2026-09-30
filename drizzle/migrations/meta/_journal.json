@@ -8,6 +8,13 @@
       "when": 1790752499049,
       "tag": "0000_replay_gallery_items",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790752522082,
+      "tag": "0001_replay_gallery_columns",
+      "breakpoints": true
     }
   ]
 }
