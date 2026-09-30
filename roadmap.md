@@ -61,5 +61,5 @@
 - [x] 4 Screens: App, ControlPanel (split up), ModelViewer, PartingPlane, HeatmapOverlay, SplitLineOverlay, theme, types
 - [x] 5 Helpers: printerFit, printerPresets, costEstimate, projectStorage, sampleModel
 - [x] 6 Re-point our own features, drop @ts-nocheck
-- [ ] 7 Licenses/About pages + AGENTS.md note
-- [ ] 8 Final scan: no original file or phrase left
+- [x] 7 Licenses/About pages + AGENTS.md note
+- [x] 8 Final scan: no original file or phrase left (README, About, Licenses cleaned; 33 tests pass)
