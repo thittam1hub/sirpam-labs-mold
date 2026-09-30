@@ -13,11 +13,11 @@ import { lateralAxisIndices, primaryAxisIndex } from './moldBox';
 export type MoldStyle = 'standard' | 'reliefTray' | 'pressMold' | 'slipCast';
 
 export interface Round6Extras {
-  curvedSplit?: boolean;
-  clampBoltMm?: 0 | 3 | 4 | 5;
-  autoVents?: boolean;
-  standFins?: boolean;
-  style?: MoldStyle;
+  curvedSplit?: boolean | undefined;
+  clampBoltMm?: 0 | 3 | 4 | 5 | undefined;
+  autoVents?: boolean | undefined;
+  standFins?: boolean | undefined;
+  style?: MoldStyle | undefined;
 }
 
 type V3 = [number, number, number];
