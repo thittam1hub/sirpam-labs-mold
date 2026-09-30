@@ -43,6 +43,14 @@ function LicensesPage() {
             </section>
           ))}
         </div>
+        <section className="mt-8 rounded-3xl bg-card p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">Our own code</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            The mold engine — split-line generation, mold-box building, cavity offsetting, vents, keys and the STEP/STL
+            export pipeline — is written and owned by Sirpam 3D Labs. It is not derived from any other mold-making
+            project, so molds you design here can be used commercially without extra attribution.
+          </p>
+        </section>
       </main>
       <LegalFooter />
     </div>

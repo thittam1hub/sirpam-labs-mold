@@ -97,6 +97,28 @@ function PricingPage() {
           <p className="mt-4 text-xs text-muted-foreground">The displayed amount is a local estimate. Final currency and sales tax are worked out from your billing country at checkout.</p>
         </section>
 
+        <section className="mt-12 rounded-3xl bg-card p-6 shadow-sm">
+          <h2 className="text-2xl font-semibold">Common questions</h2>
+          <div className="mt-4 space-y-4 text-sm">
+            <div>
+              <h3 className="font-semibold">Do credits expire?</h3>
+              <p className="mt-1 text-muted-foreground">Bought credits are valid for 24 months. The 3 free monthly credits refresh each month and don't carry over.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">What happens if a mold generation fails?</h3>
+              <p className="mt-1 text-muted-foreground">You're only charged when an action succeeds. If generation fails, the credit is released back to your balance automatically.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">How do I pay from India?</h3>
+              <p className="mt-1 text-muted-foreground">Indian customers pay in rupees through Razorpay (UPI, cards, net banking). Customers outside India pay in US dollars through Paddle.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Can I get a refund?</h3>
+              <p className="mt-1 text-muted-foreground">Unused credits from a pack can be refunded within 7 days of purchase. See the <Link to="/refunds" className="text-primary">refund policy</Link> for details.</p>
+            </div>
+          </div>
+        </section>
+
         <p className="mt-8 text-sm text-muted-foreground">
           <Link to="/terms">Terms</Link> · <Link to="/refunds">Refund policy</Link> · <Link to="/privacy">Privacy</Link>
         </p>
