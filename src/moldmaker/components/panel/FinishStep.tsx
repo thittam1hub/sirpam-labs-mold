@@ -49,6 +49,7 @@ export function FinishStep(props: FinishStepProps) {
 
       <div style={styles.section}>
         <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Material & Cost</h2>
+        {hasMold && <CastMaterialPanel state={state} estimator={props.estimator} onEstimatorChange={props.onEstimatorChange} />}
         {!hasMold ? (
           <div style={styles.hint}>Generate a mold to see material and cost estimates.</div>
         ) : state.moldMode === 'silicone' ? (
@@ -150,7 +151,7 @@ function SiliconeCostEstimate({ volumeCm3, estimator, onEstimatorChange }: {
       />
       <div style={styles.statRow}><span>Silicone volume</span><span>{volumeCm3.toFixed(0)} cm³</span></div>
       <div style={styles.statRow}><span>Weight</span><span>{est.grams.toFixed(0)} g</span></div>
-      <div style={{ ...styles.statRow, color: colors.textPrimary }}><span>Est. material cost</span><span>{est.cost.toFixed(2)}</span></div>
+      <div style={{ ...styles.statRow, color: colors.textPrimary }}><span>Est. material cost</span><span>{inr(est.cost)}</span></div>
     </>
   );
 }
@@ -194,7 +195,7 @@ function RigidCostEstimate({ state, estimator, onEstimatorChange }: {
       <div style={styles.statRow}><span>Mold volume</span><span>{cm3.toFixed(0)} cm³</span></div>
       <div style={styles.statRow}><span>Material weight</span><span>{grams.toFixed(0)} g</span></div>
       <div style={styles.statRow}><span>Est. print time</span><span>{hours >= 1 ? `${hours.toFixed(1)} h` : `${Math.round(hours * 60)} min`}</span></div>
-      <div style={{ ...styles.statRow, color: colors.textPrimary }}><span>Est. material cost</span><span>{cost.toFixed(2)}</span></div>
+      <div style={{ ...styles.statRow, color: colors.textPrimary }}><span>Est. material cost</span><span>{inr(cost)}</span></div>
     </>
   );
 }
