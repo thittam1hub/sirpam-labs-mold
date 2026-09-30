@@ -22,6 +22,13 @@
       "when": 1790752544306,
       "tag": "0002_replay_quotes_and_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790752573626,
+      "tag": "0003_replay_credit_tables",
+      "breakpoints": true
     }
   ]
 }

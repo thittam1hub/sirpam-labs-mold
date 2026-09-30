@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_balances: {
+        Row: {
+          balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_ledger: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          reference: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          reference?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          reference?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gallery_items: {
         Row: {
           best_settings: string | null
@@ -74,6 +119,24 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_usage: {
+        Row: {
+          free_exports: number
+          month: string
+          user_id: string
+        }
+        Insert: {
+          free_exports?: number
+          month: string
+          user_id: string
+        }
+        Update: {
+          free_exports?: number
+          month?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quote_requests: {
         Row: {
           casting_material: string | null
@@ -121,7 +184,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ensure_credit_account: { Args: never; Returns: undefined }
+      get_credit_status: { Args: never; Returns: Json }
+      grant_credits: {
+        Args: {
+          _amount: number
+          _reason: string
+          _reference: string
+          _user: string
+        }
+        Returns: undefined
+      }
+      spend_credits: { Args: { _action: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
