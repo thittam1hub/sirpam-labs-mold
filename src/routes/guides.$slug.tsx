@@ -29,7 +29,23 @@ export const Route = createFileRoute("/guides/$slug")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", headline: g.title, description: g.description, author: { "@type": "Organization", name: "Sirpam 3D Labs", url: "https://mold.sirpam3dlabs.in/about" } }),
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: g.title,
+            description: g.description,
+            image: [g.image],
+            datePublished: g.published,
+            dateModified: g.updated,
+            mainEntityOfPage: { "@type": "WebPage", "@id": `https://mold.sirpam3dlabs.in${path}` },
+            author: { "@type": "Organization", name: "Sirpam 3D Labs", url: "https://mold.sirpam3dlabs.in/about" },
+            publisher: {
+              "@type": "Organization",
+              name: "Sirpam 3D Labs",
+              url: "https://mold.sirpam3dlabs.in/",
+              logo: { "@type": "ImageObject", url: "https://mold.sirpam3dlabs.in/logo.svg" },
+            },
+          }),
         },
         {
           type: "application/ld+json",
