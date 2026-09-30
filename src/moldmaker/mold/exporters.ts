@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 
 /** Triangle-soup positions (and normals, if present) for any geometry. */
-function soup(g: THREE.BufferGeometry): { pos: ArrayLike<number>; nrm?: ArrayLike<number> } {
+function soup(g: THREE.BufferGeometry): { pos: ArrayLike<number>; nrm: ArrayLike<number> | undefined } {
   const s = g.index ? g.toNonIndexed() : g;
   return { pos: s.getAttribute('position').array as ArrayLike<number>, nrm: s.getAttribute('normal')?.array as ArrayLike<number> | undefined };
 }
