@@ -58,7 +58,7 @@ export function useProjectActions(
       // Overwrite an existing project of the same name instead of piling up
       // duplicates — the library stays one-row-per-project.
       const existing = projects.find(p => p.name === name);
-      const positionAttr = geo.attributes.position;
+      const positionAttr = geo.attributes["position"];
       if (!positionAttr) throw new Error('Model has no geometry to save.');
       const positions = new Float32Array(positionAttr.array as Float32Array);
       const index = geo.index
