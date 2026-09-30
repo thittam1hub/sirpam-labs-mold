@@ -38,6 +38,19 @@ function GuidesPage() {
             </li>
           ))}
         </ul>
+        <section className="mt-10 rounded-3xl bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold">New to mold making?</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Start with the silicone hardness guide to pick the right material for your master, then follow the
+            bubble-free pouring guide before your first cast. Every guide is written for makers in India — the
+            materials named are ones you can actually buy here, and temperatures assume a warm workshop, not an
+            air-conditioned lab.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Have a topic you'd like covered, or a problem these guides didn't solve?{" "}
+            <Link to="/contact" className="text-primary">Tell us</Link> — we write new guides from real reader questions.
+          </p>
+        </section>
       </main>
       <LegalFooter />
     </div>

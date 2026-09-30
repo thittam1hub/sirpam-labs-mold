@@ -82,6 +82,32 @@ function ContactPage() {
             {errorMessage && <p role="alert" className="text-sm text-destructive">{errorMessage}</p>}
           </form>
         )}
+
+        <section className="mt-10 space-y-4">
+          <h2 className="text-xl font-semibold">Before you write</h2>
+          <div className="rounded-3xl bg-card p-5 shadow-sm">
+            <h3 className="font-semibold">Problem with a mold or export?</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Use the "Report a problem" button inside the app — it attaches the page you were on and your browser details,
+              so we can find the issue faster. Include the model name and what you expected to happen.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-card p-5 shadow-sm">
+            <h3 className="font-semibold">Want us to print and ship a mold?</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              We 3D print and deliver within India only. Send your STL or a screenshot of your mold design on WhatsApp
+              with your city and PIN code, and we'll reply with a price within 1 working day.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-card p-5 shadow-sm">
+            <h3 className="font-semibold">Credits, payments and refunds</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Credits are added the moment a payment succeeds. If a charge succeeded but credits didn't arrive, send the
+              payment receipt or order ID and we'll fix it the same day. See the{" "}
+              <a href="/refunds" className="text-primary">refund policy</a> for what we refund.
+            </p>
+          </div>
+        </section>
       </main>
       <LegalFooter />
     </div>
