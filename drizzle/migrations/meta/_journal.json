@@ -57,6 +57,104 @@
       "when": 1790752661663,
       "tag": "0007_replay_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790753836780,
+      "tag": "0008_replay_drop_project_file_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790753853070,
+      "tag": "0009_replay_contact_message_validation",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790753931761,
+      "tag": "0010_replay_credit_lots_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790753951608,
+      "tag": "0011_replay_has_role_perms",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790753982155,
+      "tag": "0012_replay_purchases_packs",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790753999499,
+      "tag": "0013_replay_record_purchase_perms",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790754098456,
+      "tag": "0014_replay_referrals",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790754130148,
+      "tag": "0015_replay_account_deletion",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790754151360,
+      "tag": "0016_replay_search_path_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790754168601,
+      "tag": "0017_replay_age_confirm",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790754189386,
+      "tag": "0018_replay_contact_rate_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790754212974,
+      "tag": "0019_replay_purchase_bonus_reverse",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790754236951,
+      "tag": "0020_feedback_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790754254006,
+      "tag": "0021_app_user_connections",
+      "breakpoints": true
     }
   ]
 }
