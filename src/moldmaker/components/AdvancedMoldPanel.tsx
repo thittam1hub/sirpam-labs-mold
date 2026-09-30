@@ -41,6 +41,7 @@ export interface Tier2Settings {
   flangeMm?: number;
   flangeBoltMm?: number;
   partingBoard?: boolean;
+  wallRibs?: boolean;
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -73,6 +74,7 @@ export const DEFAULT_TIER2: Tier2Settings = {
   flangeMm: 0,
   flangeBoltMm: 0,
   partingBoard: false,
+  wallRibs: true,
 };
 
 interface Props {
@@ -351,6 +353,15 @@ export default function AdvancedMoldPanel(p: Props) {
               Printable parting board with silicone keys
             </label>
           )}
+          {p.moldMode === 'silicone' && !p.formFit && (
+            <>
+              <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                <input type="checkbox" checked={!!t.wallRibs} onChange={e => onChange({ wallRibs: e.target.checked })} />
+                Stiffening ribs on wide walls
+              </label>
+              <div style={s.hint}>Ribs on the outside of any wall wider than 120 mm so the box does not bulge under the silicone's weight.</div>
+            </>
+          )}
 
           <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
             <input type="checkbox" checked={t.pryPockets} onChange={e => onChange({ pryPockets: e.target.checked })} />
@@ -479,5 +490,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
 }
