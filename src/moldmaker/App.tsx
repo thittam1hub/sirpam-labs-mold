@@ -18,6 +18,7 @@ import StatusBar from './components/layout/StatusBar';
 import { Link } from '@tanstack/react-router';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
+import { CastRiskCard } from './components/CastRiskCard';
 import { getPresetById } from './utils/printerPresets';
 
 import { initialAppState, moldIsStale, type AppState } from './studio/state';
@@ -265,6 +266,16 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                     siliconeType={state.siliconeType}
                     formFit={state.formFit}
                     printMaterial={state.estimator.material}
+                  />
+                  <CastRiskCard
+                    geometry={state.originalGeometry}
+                    boundingBox={state.boundingBox}
+                    axis={state.axis}
+                    offset={state.planeOffset}
+                    cutAngle={state.cutAngle}
+                    autoVents={!!state.tier2.autoVents}
+                    onAxisChange={axis => setState(prev => ({ ...prev, axis, planeOffset: 0.5, cutAngle: 0 }))}
+                    onEnableAutoVents={() => setState(prev => ({ ...prev, tier2: { ...prev.tier2, autoVents: true } }))}
                   />
                   <MoldPrepPanel
                     castingMaterial={state.tier2.castingMaterial}
