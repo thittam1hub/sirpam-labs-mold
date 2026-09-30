@@ -30,8 +30,8 @@ export const Route = createFileRoute("/studio_/ai")({
 function AiMaker() {
   const { prompt } = Route.useSearch();
   return (
-    <ClientOnly fallback={<StudioLoader />}>
-      <Suspense fallback={<StudioLoader />}>
+    <ClientOnly fallback={<StudioLoader heading="AI Model Maker" />}>
+      <Suspense fallback={<StudioLoader heading="AI Model Maker" />}>
         <AiMakerPage {...(prompt ? { initialPrompt: prompt } : {})} />
       </Suspense>
     </ClientOnly>

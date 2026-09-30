@@ -7,7 +7,7 @@ const stages = [
   "Almost ready",
 ];
 
-export function StudioLoader() {
+export function StudioLoader({ heading }: { heading?: string } = {}) {
   const [progress, setProgress] = useState(6);
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -47,6 +47,7 @@ export function StudioLoader() {
         </span>
       </div>
       <div className="mt-4 text-center">
+        {heading && <h1 className="mb-1 font-display text-xl font-semibold">{heading}</h1>}
         <p className="font-medium">{stage}…</p>
         <p className="text-sm text-muted-foreground">The mold engine runs in your browser — your model stays on your computer.</p>
       </div>

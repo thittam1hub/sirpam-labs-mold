@@ -38,6 +38,19 @@ export const Route = createFileRoute("/studio")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        name: "Sirpam 3D Labs Mold Maker Studio",
+        url: "https://mold.sirpam3dlabs.in/studio",
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Any (web browser)",
+        browserRequirements: "Requires WebGL and JavaScript",
+        publisher: { "@type": "Organization", name: "Sirpam 3D Labs", url: "https://sirpam3dlabs.in" },
+      }),
+    }],
   }),
   validateSearch: (search: Record<string, unknown>): { step?: number; tool?: StudioTool } => {
     const step = Number(search["step"]);
@@ -61,7 +74,7 @@ function Studio() {
   const search = Route.useSearch();
   return (
     <ClientOnly
-      fallback={<StudioLoader />}
+      fallback={<StudioLoader heading="Mold Maker Studio" />}
     >
       <Suspense
         fallback={
