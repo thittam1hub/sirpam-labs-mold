@@ -29,6 +29,13 @@
       "when": 1790752573626,
       "tag": "0003_replay_credit_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790752604251,
+      "tag": "0004_replay_credit_status_v2",
+      "breakpoints": true
     }
   ]
 }
