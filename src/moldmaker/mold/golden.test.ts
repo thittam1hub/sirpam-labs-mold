@@ -44,7 +44,7 @@ const MODES: Record<string, (g: THREE.BufferGeometry) => Promise<{ pieces: THREE
   angled: g => generateMold(g, g.boundingBox!, 'z', 0.5, { cutAngle: 10 } as never),
   hug: g => generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true } as never),
   siliconeBlock: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockTwoPart' } as never),
-  siliconeOpen: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'openPourBox' } as never),
+  siliconeOpen: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockOneWay' } as never),
   siliconeSkin: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore' } as never),
 };
 
