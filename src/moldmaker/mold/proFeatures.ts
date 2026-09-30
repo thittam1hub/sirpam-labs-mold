@@ -15,6 +15,8 @@ export type MoldStyle = 'standard' | 'reliefTray' | 'pressMold' | 'slipCast';
 export interface Round6Extras {
   curvedSplit?: boolean | undefined;
   clampBoltMm?: 0 | 3 | 4 | 5 | undefined;
+  /** Raised round seats around each clamp bolt so washers/clamps press evenly. */
+  clampLands?: boolean | undefined;
   autoVents?: boolean | undefined;
   standFins?: boolean | undefined;
   style?: MoldStyle | undefined;
@@ -201,9 +203,9 @@ export function buildCurvedSplit(
 /** Bolt-on flanges on two opposite sides of the split, with through holes. */
 export function applyClampWings(
   wasm: any, top: any, bottom: any,
-  o: { axis: Axis; envMin: THREE.Vector3; envMax: THREE.Vector3; splitPos: number; wall: number; boltMm: number; cavityCut: any },
+  o: { axis: Axis; envMin: THREE.Vector3; envMax: THREE.Vector3; splitPos: number; wall: number; boltMm: number; cavityCut: any; lands?: boolean },
 ): [any, any] {
-  const { axis, envMin, envMax, splitPos, wall, boltMm, cavityCut } = o;
+  const { axis, envMin, envMax, splitPos, wall, boltMm, cavityCut, lands } = o;
   const [la, lb] = lateralAxisIndices(axis);
   // Wings stick out of the two long sides.
   const sa = envMax.getComponent(la) - envMin.getComponent(la), sb = envMax.getComponent(lb) - envMin.getComponent(lb);
@@ -231,6 +233,13 @@ export function applyClampWings(
       const [ha, hb] = mapAB(edge + side * (out / 2 + 1), y);
       const hole = axialCylinder(wasm, axis, ha, hb, splitPos - T - 1, splitPos + T + 1, boltMm / 2 + 0.2, boltMm / 2 + 0.2, 20);
       if (hole) holes.push(hole);
+      if (lands) {
+        const lr = boltMm * 1.6 + 1, lh = Math.max(1.2, T * 0.4);
+        const su = axialCylinder(wasm, axis, ha, hb, splitPos + T - 0.01, splitPos + T + lh, lr, lr, 28);
+        const sd = axialCylinder(wasm, axis, ha, hb, splitPos - T - lh, splitPos - T + 0.01, lr, lr, 28);
+        if (su) t = t.add(su);
+        if (sd) b = b.add(sd);
+      }
     }
   }
   for (const hole of holes) { t = t.subtract(hole); b = b.subtract(hole); }

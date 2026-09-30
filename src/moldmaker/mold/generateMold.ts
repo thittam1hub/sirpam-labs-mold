@@ -270,6 +270,7 @@ export async function generateMold(
   if (flat && r6.clampBoltMm) {
     [top, bottom] = applyClampWings(wasm, top, bottom, {
       axis, envMin: env.moldMin, envMax, splitPos, wall, boltMm: r6.clampBoltMm, cavityCut,
+      ...(r6.clampLands ? { lands: true } : {}),
     });
   }
   if (flat && r6.standFins) {

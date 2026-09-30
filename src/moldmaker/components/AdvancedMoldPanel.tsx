@@ -22,6 +22,7 @@ export interface Tier2Settings {
   moldStyle?: 'standard' | 'reliefTray' | 'pressMold' | 'slipCast';
   curvedSplit?: boolean;
   clampBoltMm?: 0 | 3 | 4 | 5;
+  clampLands?: boolean;
   autoVents?: boolean;
   standFins?: boolean;
   /** Round 7. Optional so older projects still load. */
@@ -234,6 +235,13 @@ export default function AdvancedMoldPanel(p: Props) {
                   ))}
                 </div>
                 <div style={s.hint}>{t.curvedSplit ? 'Not available with the curved split.' : 'Flanges with bolt holes on two sides — bolt the halves tight so nothing leaks.'}</div>
+                {!!t.clampBoltMm && !t.curvedSplit && (
+                  <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.xs }}>
+                    <input type="checkbox" checked={!!t.clampLands} onChange={e => onChange({ clampLands: e.target.checked })} />
+                    Clamp seats
+                  </label>
+                )}
+                {!!t.clampBoltMm && !t.curvedSplit && <div style={s.hint}>Raised flat rings around each bolt so washers and spring clamps press evenly without cracking the wing.</div>}
 
                 <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
                   <input type="checkbox" checked={!!t.autoVents} onChange={e => onChange({ autoVents: e.target.checked })} />
@@ -490,5 +498,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.clampLands, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
 }
