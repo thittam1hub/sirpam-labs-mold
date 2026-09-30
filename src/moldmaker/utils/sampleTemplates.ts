@@ -98,12 +98,9 @@ function buildHeart(): { geometry: THREE.BufferGeometry; fileName: string } {
 }
 
 function buildCandle(): { geometry: THREE.BufferGeometry; fileName: string } {
-  // 60 mm pillar, 1° draft, softened top edge; the wick hole comes from the core pin.
-  const profile = [
-    new THREE.Vector2(0, 0), new THREE.Vector2(25, 0), new THREE.Vector2(24, 57),
-    new THREE.Vector2(23, 59), new THREE.Vector2(21, 60), new THREE.Vector2(0, 60),
-  ];
-  return finish(new THREE.LatheGeometry(profile, 64), 'sample-candle.stl');
+  // 60 mm pillar with about 1° draft (top narrower) so it slides out; the wick hole comes from the core pin.
+  const geometry = new THREE.CylinderGeometry(24, 25, 60, 64, 1, false);
+  return finish(geometry, 'sample-candle.stl');
 }
 
 function buildSoap(): { geometry: THREE.BufferGeometry; fileName: string } {
