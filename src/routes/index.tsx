@@ -9,6 +9,10 @@ export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({
     links: [{ rel: "canonical", href: "/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "Sirpam 3D Labs", url: "https://mold.sirpam3dlabs.in/", logo: "https://mold.sirpam3dlabs.in/logo.svg", sameAs: ["https://sirpam3dlabs.in"] }),
+    }],
     meta: [
       { title: "Sirpam 3D Labs Mold — turn any 3D model into a print-ready mold" },
       {

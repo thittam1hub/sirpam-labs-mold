@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LegalFooter } from "@/components/LegalFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { AuthorBio } from "@/components/AuthorBio";
 
 export const Route = createFileRoute("/about")({
   staticData: { sitemap: true },
@@ -43,6 +44,7 @@ function AboutPage() {
           . We've rebuilt and extended it with repair tools, lock systems, vent controls, a credit
           system and much more — while keeping credit to the original author.
         </p>
+        <AuthorBio />
         <p className="mt-6 text-sm text-muted-foreground">
           Questions? <Link to="/contact" className="text-primary">Contact us</Link>.
         </p>
