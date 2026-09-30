@@ -9,7 +9,7 @@ import { loadFile as _loadFile } from './utils/fileLoader';
 import { trackEvent } from '@/components/Analytics';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
 import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts, sceneColors } from './theme';
-import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
+import { WALL_THICKNESS_RATIO, CLEARANCE_MM } from './mold/constants';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
 import { PrintQueuePanel } from './components/PrintQueuePanel';
