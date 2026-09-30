@@ -25,6 +25,6 @@
 ## Phase 2 (done)
 - [x] Air-trap preview with one-click vent placement
 - [x] Demolding risk score (undercut + draft, 0–100)
-## Phase 3
-- [ ] Leak check (parting-plane contact validation)
-- [ ] Cure-time & pour planner card
+## Phase 3 (done)
+- [x] Leak check (parting-plane contact validation)
+- [x] Cure-time & pour planner card
