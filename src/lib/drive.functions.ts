@@ -72,7 +72,7 @@ export const startDriveConnect = createServerFn({ method: "POST" })
       appUserId: context.userId,
       clientAPIKey,
       returnUrl,
-      connectionAPIKey: connectionAPIKey ?? undefined,
+      ...(connectionAPIKey ? { connectionAPIKey } : {}),
       credentialsConfiguration: { scopes: DRIVE_SCOPES },
     });
     return { authorizationUrl };
@@ -111,7 +111,8 @@ async function getAppFolderId(connectionAPIKey: string): Promise<string> {
   });
   if (search.ok) {
     const body = (await search.json()) as { files?: { id: string }[] };
-    if (body.files?.length) return body.files[0].id;
+    const found = body.files?.[0];
+    if (found) return found.id;
   }
   const create = await callAsAppUser({
     gatewayBaseUrl: GATEWAY_BASE_URL,
