@@ -92,6 +92,13 @@
       "when": 1790753982155,
       "tag": "0012_replay_purchases_packs",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790753999499,
+      "tag": "0013_replay_record_purchase_perms",
+      "breakpoints": true
     }
   ]
 }
