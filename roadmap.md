@@ -5,6 +5,7 @@
 - [ ] Material presets — one-click Chocolate/Candle/Soap/Concrete/Resin auto-tune of sprue, vents, shell, split
 - [ ] Send-to-Sirpam link — prefilled WhatsApp message with model specs + INR print estimate
 - [ ] Multi-cavity molds — 2–6 copies of a part in one block (engine + UI, off by default)
+- [ ] Reddit pain-point research → propose unique features afterwards
 
 ## Blocked / waiting
 - (none)
