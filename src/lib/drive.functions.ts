@@ -94,7 +94,7 @@ export const disconnectDrive = createServerFn({ method: "POST" })
     const key = await getConnectionKeyForUser(context.userId, CONNECTOR_ID);
     if (key) {
       await disconnectAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: CONNECTOR_ID });
-ag    }
+    }
     await deleteConnectionKeyForUser(context.userId, CONNECTOR_ID);
     return { ok: true };
   });
