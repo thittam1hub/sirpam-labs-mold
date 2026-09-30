@@ -19,6 +19,8 @@ export interface MoldExtras extends Round6Extras, Round7Extras {
   seal?: SealType | undefined;
   /** Cut screwdriver pry slots into the parting line on two sides. */
   pryPockets?: boolean | undefined;
+  /** Removable core pin through the model centre along the split axis (cast gets a through-hole). */
+  corePinMm?: number | undefined;
   /** Split every piece radially around the parting axis (3, 4 or 6). */
   radialSegments?: 0 | 3 | 4 | 6 | undefined;
   /** Silicone block molds: per-side silicone thickness (mm, 0 = use uniform). */

@@ -339,6 +339,17 @@ export async function generateMold(
     if (runners) { top = top.subtract(runners); bottom = bottom.subtract(runners); }
   }
   if (hollow) { top = top.subtract(hollow.column); bottom = bottom.subtract(hollow.column); }
+  let corePin: Solid | null = null;
+  if ((extras.corePinMm ?? 0) > 0) {
+    const r = extras.corePinMm! / 2;
+    const lo = env.moldMin.getComponent(p) - 1, hi = envMax.getComponent(p) + 1;
+    const hole = axialCylinder(wasm, axis, lateralCentre.a, lateralCentre.b, lo, hi, r + clearance, r + clearance, 32);
+    const pin = axialCylinder(wasm, axis, lateralCentre.a, lateralCentre.b, lo - 2, hi + 2, r, r, 32);
+    if (hole && pin) {
+      top = top.subtract(hole); bottom = bottom.subtract(hole); corePin = pin;
+      notices.push(`A ${extras.corePinMm} mm core pin was added as its own piece. Push it through both halves before pouring and pull it out after — the cast gets a through-hole.`);
+    }
+  }
 
   // ── 6. Extras ──
   if (cutAngle === 0 && (r7.moldFeet || r7.volumeLabel || r7.watermark)) {
@@ -391,6 +402,7 @@ export async function generateMold(
   }
   pieces = pieces.filter(s => !s.isEmpty());
   if (hollow) pieces.push(hollow.core);
+  if (corePin) pieces.push(corePin);
 
   const out = pieces.map(s => manifoldToGeometry(s));
   return notices.length ? { pieces: out, repairs, notices } : { pieces: out, repairs };

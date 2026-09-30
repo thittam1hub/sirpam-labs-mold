@@ -53,3 +53,4 @@
 - [ ] A3 smart split surface
 - [ ] B7 pour funnel + clamp jig
 - [ ] B8 candle & soap presets
+- [x] B5 core pin (through-hole) — rigid molds, optional, tested
