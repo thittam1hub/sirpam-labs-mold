@@ -22,9 +22,9 @@
 - [x] Seam/flash trim guide in mold report (split-line length + per-material trimming advice)
 - [x] Structural ribs for wide silicone box walls (optional extra, >120 mm walls)
 - Verified: tsgo clean, 48 tests pass, build OK, browser smoke (caution card + finish report) clean
-## Phase 2 (not started — waits on user go-ahead)
-- [ ] Air-trap preview with one-click vent placement
-- [ ] Demolding risk score (undercut + draft, 0–100)
+## Phase 2 (done)
+- [x] Air-trap preview with one-click vent placement
+- [x] Demolding risk score (undercut + draft, 0–100)
 ## Phase 3
 - [ ] Leak check (parting-plane contact validation)
 - [ ] Cure-time & pour planner card

@@ -46,7 +46,7 @@ export function CastRiskCard(p: Props) {
       <div style={{ fontWeight: 700, marginBottom: 4 }}>Before you pour</div>
       <div>
         Demolding risk: <strong style={{ color: st.color }}>{risk.score}/100</strong>
-        <div style={{ height: 6, borderRadius: 3, background: colors.border ?? '#444', margin: '4px 0' }}>
+        <div style={{ height: 6, borderRadius: 3, background: colors.borderSection, margin: '4px 0' }}>
           <div style={{ width: `${Math.max(3, risk.score)}%`, height: '100%', borderRadius: 3, background: st.color }} />
         </div>
         <div style={{ color: st.color, fontSize: fontSizes.xs }}>{st.text}</div>
