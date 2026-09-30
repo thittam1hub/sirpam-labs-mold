@@ -1,9 +1,10 @@
 // Sirpam 3D Labs Mold — Mold step: mold type, box shape and the dimension
-// sliders (wall thickness, clearance, sprue diameter) that shape the cast.
+// sliders (wall thickness, clearance, sprue diameter, vent size) that shape the cast.
 import type { AppState } from '../../App';
 import type { MoldBoxShape, MoldMode, SiliconeMoldType } from '../../types';
 import { isDimensionsAtDefaults } from './staleness';
 import { boundingBoxSize, computeWallThicknessInfo } from './geometry';
+import { suggestedSprueDiameterMm, VENT_RADIUS_RATIO, SPRUE_TOP_MULTIPLIER } from '../../mold/constants';
 import {
   CLEARANCE_MIN_MM, CLEARANCE_MAX_MM, CLEARANCE_STEP_MM,
   SPRUE_DIAMETER_MIN_MM, SPRUE_DIAMETER_MAX_MM, SPRUE_DIAMETER_STEP_MM,
@@ -23,6 +24,7 @@ interface MoldStepProps {
   onWallThicknessChange: (ratio: number) => void;
   onClearanceChange: (clearanceMm: number) => void;
   onSprueDiameterChange: (sprueDiameterMm: number) => void;
+  onVentDiameterChange: (ventDiameterMm: number) => void;
   onResetDimensions: () => void;
   moldSlot?: React.ReactNode;
 }
@@ -191,15 +193,42 @@ export function MoldStep(props: MoldStepProps) {
           </div>
         </div>
 
-        <div>
+        <div style={{ marginBottom: spacing.md }}>
           <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
-            Sprue diameter: {state.sprueDiameterMm.toFixed(1)} mm
+            Sprue diameter: {state.sprueDiameterMm === 0
+              ? `Auto (${suggestedSprueDiameterMm(partBbox ? Math.max(partBbox.x, partBbox.y, partBbox.z) : 0).toFixed(1)} mm)`
+              : `${state.sprueDiameterMm.toFixed(1)} mm`}
           </label>
           <input
-            type="range" min={SPRUE_DIAMETER_MIN_MM} max={SPRUE_DIAMETER_MAX_MM} step={SPRUE_DIAMETER_STEP_MM} value={state.sprueDiameterMm}
-            onChange={e => props.onSprueDiameterChange(parseFloat(e.target.value))}
-            style={styles.slider} aria-label="Sprue pour-opening diameter in millimetres" aria-valuetext={`${state.sprueDiameterMm.toFixed(1)} millimetres`}
+            type="range" min={0} max={SPRUE_DIAMETER_MAX_MM} step={SPRUE_DIAMETER_STEP_MM} value={state.sprueDiameterMm}
+            onChange={e => {
+              const v = parseFloat(e.target.value);
+              // Below the manual minimum, snap back to Auto.
+              props.onSprueDiameterChange(v < SPRUE_DIAMETER_MIN_MM ? 0 : v);
+            }}
+            style={styles.slider} aria-label="Sprue pour-opening diameter in millimetres, zero for automatic"
+            aria-valuetext={state.sprueDiameterMm === 0 ? 'Automatic, sized to the model' : `${state.sprueDiameterMm.toFixed(1)} millimetres`}
           />
+          <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
+            Auto sizes the pour hole to the model (about 15% of its largest side, 4–12 mm).
+          </p>
+        </div>
+
+        <div>
+          <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
+            Air vent size: {(state.tier2.ventDiameterMm ?? 0) === 0
+              ? `Auto (${autoVentMm(state).toFixed(1)} mm)`
+              : `${(state.tier2.ventDiameterMm ?? 0).toFixed(1)} mm`}
+          </label>
+          <input
+            type="range" min={0} max={8} step={0.5} value={state.tier2.ventDiameterMm ?? 0}
+            onChange={e => props.onVentDiameterChange(parseFloat(e.target.value))}
+            style={styles.slider} aria-label="Air vent diameter in millimetres, zero for automatic"
+            aria-valuetext={(state.tier2.ventDiameterMm ?? 0) === 0 ? 'Automatic, follows the sprue size' : `${(state.tier2.ventDiameterMm ?? 0).toFixed(1)} millimetres`}
+          />
+          <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
+            Auto keeps vents proportional to the pour hole so air escapes as fast as the mold fills.
+          </p>
         </div>
       </div>
 
