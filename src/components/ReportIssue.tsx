@@ -23,8 +23,20 @@ import {
 } from "@/components/ui/select";
 import { submitFeedback } from "@/lib/feedback.functions";
 
-export function ReportIssue({ triggerClassName }: { triggerClassName?: string }) {
-  const [open, setOpen] = useState(false);
+export function ReportIssue({
+  triggerClassName,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+}: {
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [category, setCategory] = useState<"bug" | "idea" | "other">("bug");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
@@ -58,11 +70,13 @@ export function ReportIssue({ triggerClassName }: { triggerClassName?: string })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={triggerClassName}>
-          <Flag className="mr-1 h-4 w-4" /> Report a problem
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="sm" className={triggerClassName}>
+            <Flag className="mr-1 h-4 w-4" /> Report a problem
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Report a problem</DialogTitle>
