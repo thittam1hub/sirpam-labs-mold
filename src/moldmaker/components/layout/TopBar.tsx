@@ -206,6 +206,7 @@ export default function TopBar(p: Props) {
           </div>
         )}
       </div>
+      <ReportIssue open={reportOpen} onOpenChange={setReportOpen} hideTrigger />
     </header>
   );
 }
