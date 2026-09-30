@@ -1,16 +1,26 @@
 // Sirpam 3D Labs Mold — Finish step: cost estimate, project save/load,
 // mesh export (STL/OBJ/3MF/STEP) and Start Over.
+import { useState } from 'react';
 import type { AppState } from '../../App';
 import type { ProjectMeta } from '../../services/projectStorage';
 import { meshVolumeCm3, estimatePieceCost, estimateSiliconeCost } from '../../utils/costEstimate';
+import { solidProps, CASTING_MATERIALS, type CastingMaterialId } from '../../utils/tier2';
 import { styles, colors, spacing, fontSizes } from './tokens';
+
+/** Typical Indian retail price ₹/kg per casting material — editable in the panel. */
+const CAST_PRICE_DEFAULT_INR: Record<CastingMaterialId, number> = {
+  pu_resin: 450, epoxy: 600, plaster: 40, concrete: 15, wax: 300,
+  soap: 250, chocolate: 800, silicone_cast: 1200,
+};
+
+const inr = (v: number) => `₹${v.toLocaleString('en-IN', { maximumFractionDigits: v < 100 ? 2 : 0 })}`;
 
 interface FinishStepProps {
   state: AppState;
   hasModel: boolean;
   hasMold: boolean;
-  estimator: { material: 'pla' | 'resin'; pricePerKg: number; siliconePricePerLiter: number };
-  onEstimatorChange: (patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number }) => void;
+  estimator: { material: 'pla' | 'resin'; pricePerKg: number; siliconePricePerLiter: number; castingPricePerKg: number };
+  onEstimatorChange: (patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number; castingPricePerKg?: number }) => void;
   projects: ProjectMeta[];
   projectBusy: boolean;
   onSaveProject: () => void;
