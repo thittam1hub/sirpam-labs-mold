@@ -7,6 +7,7 @@ import { meshVolumeCm3, estimatePieceCost, estimateSiliconeCost } from '../../ut
 import { solidProps, CASTING_MATERIALS, type CastingMaterialId } from '../../utils/tier2';
 import { styles, colors, spacing, fontSizes } from './tokens';
 import { CompatCard } from '../CompatCard';
+import { MoldLifeCard } from '../MoldLifeCard';
 
 /** Typical Indian retail price ₹/kg per casting material — editable in the panel. */
 const CAST_PRICE_DEFAULT_INR: Record<CastingMaterialId, number> = {
@@ -70,6 +71,13 @@ export function FinishStep(props: FinishStepProps) {
           Rough estimate from mesh volume — not a slicer. Print time varies with layer height, supports and infill.
         </div>
       </div>
+
+      {hasMold && (
+        <MoldLifeCard state={state} estimator={props.estimator}
+          castPriceDefault={CAST_PRICE_DEFAULT_INR[state.tier2.castingMaterial as CastingMaterialId] ?? 300} />
+      )}
+
+
 
       <div id="sirpam-projects" style={styles.section}>
         <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Projects</h2>
