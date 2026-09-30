@@ -111,7 +111,7 @@ export const initialAppState: AppState = {
   showHeatmap: false,
   showSplitLine: true,
   suggesting: false,
-  estimator: { material: 'pla', pricePerKg: 20, siliconePricePerLiter: 30 },
+  estimator: { material: 'pla', pricePerKg: 20, siliconePricePerLiter: 30, castingPricePerKg: 0 },
   wireframe: false,
   generating: false,
   boundingBox: null,
