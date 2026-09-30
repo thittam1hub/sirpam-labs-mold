@@ -9,6 +9,7 @@ import {
 } from '../utils/shopAdvice';
 import { embossModel, splitForBed, buildWaxTree, addModelBase, type Side } from '../mold/modelTools';
 import { exportSTL } from '../mold/exporters';
+import { addDraft } from '../mold/draftTool';
 import { undercutFraction } from '../mold/draftAnalysis';
 import { orientForPrint, solidProps } from '../utils/tier2';
 import { packPlates } from '../utils/shopAdvice';
@@ -131,10 +132,11 @@ export function MoldPrepPanel({ castingMaterial, scale, onScaleChange, onSetClea
 
 /* ═════════════ Step 3 (Pro): model tools ═════════════ */
 
-type Tool = 'emboss' | 'split' | 'tree' | 'base';
+type Tool = 'emboss' | 'split' | 'tree' | 'base' | 'draft';
 
-export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onReplaceModel }: {
+export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onReplaceModel, split }: {
   geometry: THREE.BufferGeometry | null; fileName: string | null;
+  split?: { axis: Axis; offset: number; box: THREE.Box3 | null } | undefined;
   bed: { x: number; y: number; z: number } | null;
   canUndo: boolean; onUndo: () => void;
   onReplaceModel: (g: THREE.BufferGeometry, note: string) => void;
@@ -160,6 +162,8 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
   const [trim, setTrim] = useState(0);
   const [baseMm, setBaseMm] = useState(5);
   const [style, setStyle] = useState<'solid' | 'ring'>('solid');
+  // Draft
+  const [draftDeg, setDraftDeg] = useState(2);
 
   const baseName = (fileName ?? 'model').replace(/\.[^.]+$/, '');
   const run = async (fn: () => Promise<void>) => {
@@ -173,7 +177,7 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
     <div style={s.section} id="sirpam-model-tools">
       <div style={s.title}>Model Tools</div>
       <div style={s.row}>
-        {([['emboss', 'Logo / text'], ['split', 'Big-prop split'], ['tree', 'Wax tree'], ['base', 'Model base']] as const).map(([k, l]) => (
+        {([['emboss', 'Logo / text'], ['split', 'Big-prop split'], ['tree', 'Wax tree'], ['base', 'Model base'], ['draft', 'Add draft']] as const).map(([k, l]) => (
           <button key={k} type="button" style={s.chip(tool === k)} aria-pressed={tool === k} onClick={() => setTool(k)}>{l}</button>
         ))}
       </div>
@@ -251,6 +255,16 @@ export function ModelToolsPanel({ geometry, fileName, bed, canUndo, onUndo, onRe
         <button type="button" style={s.btn} disabled={busy} onClick={() => run(async () => {
           onReplaceModel(await addModelBase(geometry, { trimPct: trim, baseMm, marginMm: 2, style, wallMm: 2.5 }), 'Added model base');
         })}>{busy ? 'Working…' : 'Add base'}</button>
+      </>)}
+
+      {tool === 'draft' && (<>
+        <div style={s.hint}>Tapers the model slightly away from the split line so casts slide out without tearing. 1–3° is typical; the model narrows by about 0.5 mm per 15 mm of height at 2°.</div>
+        <Slider label="Draft angle" value={draftDeg} min={0.5} max={3} step={0.5} unit="°" onChange={setDraftDeg} />
+        <button type="button" style={s.btn} disabled={busy || !split?.box} onClick={() => run(async () => {
+          if (!split?.box) throw new Error('Load a model first.');
+          onReplaceModel(addDraft(geometry, split.box, split.axis, split.offset, draftDeg), `Added ${draftDeg}° draft`);
+        })}>{busy ? 'Working…' : 'Add draft'}</button>
+        <div style={s.hint}>Best for simple shapes (cups, soaps, candles, plaques). Fine surface detail changes size slightly, so check the model after. Undo is below.</div>
       </>)}
 
       {err && <div role="alert" style={{ ...s.hint, color: colors.primary, fontWeight: 600 }}>{err}</div>}
