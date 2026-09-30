@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditPacks, getCreditStatus, type CreditPack, type CreditStatus, type RegionTier } from "@/lib/credits";
+import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditPacks, getCreditStatus, type CreditPack, type CreditStatus } from "@/lib/credits";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Info } from "lucide-react";
 
@@ -10,9 +10,9 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — Sirpam 3D Labs Mold" },
-      { name: "description", content: "10 welcome credits and 3 free credits every month. Credit packs with fair regional prices, valid for 24 months." },
+      { name: "description", content: "10 welcome credits and 3 free credits every month. One-time credit packs in rupees or US dollars, valid for 24 months." },
       { property: "og:title", content: "Pricing — Sirpam 3D Labs Mold" },
-      { property: "og:description", content: "Design molds free. Pay per export with credit packs priced for your region." },
+      { property: "og:description", content: "Design molds free. Pay per export with one-time credit packs in rupees or US dollars." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -22,13 +22,10 @@ export const Route = createFileRoute("/pricing")({
 
 function PricingPage() {
   const { data: status = null } = useQuery({ queryKey: ["credits", "status"], queryFn: getCreditStatus, retry: false });
-  const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
   const { data: packs = CREDIT_PACKS } = useQuery({ queryKey: ["credit-packs"], queryFn: getCreditPacks, staleTime: 10 * 60_000 });
   useEffect(() => {
-    const g = guessRegion();
-    setTier(g.tier);
-    setIndia(g.india);
+    setIndia(guessRegion().india);
   }, []);
 
   const price = (p: CreditPack) =>
@@ -55,7 +52,7 @@ function PricingPage() {
 
         <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
           <Info aria-hidden size={16} />
-          Local pricing has been applied automatically. Final currency and tax follow your billing country.
+          Prices are in rupees for India and US dollars everywhere else. Checkout may show your local currency and add sales tax for your billing country.
         </div>
 
         <section className="mt-6 grid gap-6 md:grid-cols-3">
