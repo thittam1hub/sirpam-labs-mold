@@ -109,12 +109,12 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
   };
 
   const waMsg = ref
-    ? `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${copies} set(s). Delivery PIN ${pin}.`
+    ? `Hi Sirpam 3D Labs, my mold order ${ref}: ${pieces.length} pieces, ${specs.size} mm, ${matLabel}, ${castCopies} set(s). Delivery PIN ${pin}.`
     : `Hi Sirpam 3D Labs, I designed a mold in your studio and would like it printed:\n` +
       `• Project: ${fileName.replace(/\.[^.]+$/, '') || 'Untitled model'}\n` +
       `• Mold: ${moldMode === 'silicone' ? 'Silicone mold + printed box' : 'Printed rigid mold'}, ${pieces.length} piece(s)\n` +
       `• Size: ${specs.size} mm · about ${specs.volume.toFixed(1)} cm³ of print material\n` +
-      (castMat ? `• Casting: ${castMat.label}${copies > 1 ? ` × ${copies} copies per mold` : ''}\n` : '') +
+      (castMat ? `• Casting: ${castMat.label}${copies > 1 ? ` × ${castCopies} copies per mold` : ''}\n` : '') +
       (siliconeVolumeCm3 ? `• Silicone needed: ~${(siliconeVolumeCm3 / 1000).toFixed(2)} L\n` : '') +
       `\nCould you tell me the price and delivery time?`;
   const waText = encodeURIComponent(waMsg);
@@ -128,7 +128,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
       <div style={s.kv}><span>Pieces</span><span>{pieces.length}</span></div>
       <div style={s.kv}><span>Overall size</span><span>{specs.size} mm</span></div>
       <div style={s.kv}><span>Material per set</span><span>{specs.volume.toFixed(1)} cm3</span></div>
-      {castMat && <div style={s.kv}><span>Casting</span><span>{castMat.label}{copies > 1 ? ` × ${copies}` : ''}</span></div>}
+      {castMat && <div style={s.kv}><span>Casting</span><span>{castMat.label}{castCopies > 1 ? ` × ${castCopies}` : ''}</span></div>}
       {estimate > 0 && <div style={s.kv}><span>Material estimate</span><span>Rs {estimate.toLocaleString("en-IN")}</span></div>}
       <div style={s.hint}>{estimate > 0
         ? "Guide only — excludes GST, labour and delivery. We confirm the final price before printing. Nothing is charged here."
