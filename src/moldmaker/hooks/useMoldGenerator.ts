@@ -52,6 +52,21 @@ function ask<Res extends { id: number }>(worker: Worker, id: number, msg: unknow
   });
 }
 
+/** Fingerprint of a request: model data hash + every setting. */
+function requestKey(req: WorkerRequest): string {
+  const { positions, index, ...rest } = (req as { payload: { positions: Float32Array; index?: Uint32Array } }).payload;
+  let h = 2166136261 >>> 0;
+  const mix = (arr: ArrayLike<number>) => { for (let i = 0; i < arr.length; i++) { h ^= arr[i]!; h = Math.imul(h, 16777619) >>> 0; } };
+  mix(new Uint32Array(positions.buffer, positions.byteOffset, positions.length));
+  if (index) mix(index);
+  return `${req.type}|${positions.length}|${index?.length ?? 0}|${h}|${JSON.stringify(rest)}`;
+}
+
+/** Deep copy (buffers get transferred / reused, so cached entries stay intact). */
+function cloneResponse(res: WorkerResponse, id: number): WorkerResponse {
+  return { ...structuredClone(res), id } as WorkerResponse;
+}
+
 export function useMoldGenerator() {
   const moldWorker = useRef<Worker | null>(null);
   const stepWorker = useRef<Worker | null>(null);
@@ -66,9 +81,26 @@ export function useMoldGenerator() {
     stepWorker.current?.terminate(); stepWorker.current = null;
   }, []);
 
+  // Warm the engine up in the background so the first build doesn't pay the load cost.
+  useEffect(() => {
+    const t = setTimeout(() => { try { getMoldWorker(); } catch { /* ignore */ } }, 1500);
+    return () => clearTimeout(t);
+  }, [getMoldWorker]);
+
+  // Small result cache: flipping a setting back to a value already built is instant.
+  const cache = useRef(new Map<string, WorkerResponse>());
+
   const runMold = useCallback(async (req: WorkerRequest) => {
+    const key = requestKey(req);
+    const hit = cache.current.get(key);
+    if (hit) {
+      cache.current.delete(key); cache.current.set(key, hit);
+      return cloneResponse(hit, req.id);
+    }
     const res = await ask<WorkerResponse>(getMoldWorker(), req.id, req, collectTransferables(req) as Transferable[], 'Mold worker crashed');
     if (res.type === 'error') throw new Error(res.message);
+    cache.current.set(key, cloneResponse(res, res.id));
+    while (cache.current.size > 6) cache.current.delete(cache.current.keys().next().value!);
     return res;
   }, [getMoldWorker]);
 
