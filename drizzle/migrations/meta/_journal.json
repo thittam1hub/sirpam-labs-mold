@@ -78,6 +78,13 @@
       "when": 1790753931761,
       "tag": "0010_replay_credit_lots_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790753951608,
+      "tag": "0011_replay_has_role_perms",
+      "breakpoints": true
     }
   ]
 }
