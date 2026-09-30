@@ -1,5 +1,20 @@
 export type GuideSection = { h: string; p: string[]; steps?: string[] };
-export type Guide = { slug: string; title: string; description: string; minutes: number; sections: GuideSection[] };
+export type Guide = {
+  slug: string;
+  title: string;
+  description: string;
+  minutes: number;
+  /** ISO 8601 date the guide was first published. */
+  published: string;
+  /** ISO 8601 date of the last meaningful edit. */
+  updated: string;
+  /** Absolute URL of the cover image used for search rich results. */
+  image: string;
+  sections: GuideSection[];
+};
+
+/** Shared cover photo (1200x675) served from /public. */
+export const GUIDE_IMAGE = "https://mold.sirpam3dlabs.in/guide-cover.jpg";
 
 export const GUIDES: Guide[] = [
   {
