@@ -13,8 +13,9 @@
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape } from '../types';
 import {
-  WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM, PIN_RADIUS_RATIO, PIN_HEIGHT_RATIO,
+  WALL_THICKNESS_RATIO, CLEARANCE_MM, PIN_RADIUS_RATIO, PIN_HEIGHT_RATIO,
   SPRUE_TOP_MULTIPLIER, VENT_RADIUS_RATIO, VENT_TAPER_RATIO, ENABLE_OBLIQUE_PLANES,
+  suggestedSprueDiameterMm,
 } from './constants';
 import { clampCutAngle, getPlaneEquation } from './planeGeometry';
 import { getManifold, geometryToManifold, manifoldToGeometry } from './manifoldBridge';
@@ -93,12 +94,15 @@ export async function generateMold(
   const notices: string[] = [];
 
   const clearance = options.clearanceMm ?? CLEARANCE_MM;
-  const sprueDiameter = options.sprueDiameterMm ?? SPRUE_DIAMETER_MM;
   const cutAngle = ENABLE_OBLIQUE_PLANES ? clampCutAngle(options.cutAngle ?? 0) : 0;
   const size = boundingBox.getSize(new THREE.Vector3());
   if (!(size.x > 0 && size.y > 0 && size.z > 0)) {
     throw new Error(`This model is flat in at least one direction (${size.x} × ${size.y} × ${size.z}), so it can't be molded.`);
   }
+  // 0/omitted = auto: size the pour hole to the model, like a shop would.
+  const sprueDiameter = options.sprueDiameterMm && options.sprueDiameterMm > 0
+    ? options.sprueDiameterMm
+    : suggestedSprueDiameterMm(Math.max(size.x, size.y, size.z));
   const p = primaryAxisIndex(axis);
   const [la, lb] = lateralAxisIndices(axis);
   const lo = boundingBox.min.getComponent(p);

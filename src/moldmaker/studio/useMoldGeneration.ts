@@ -137,7 +137,7 @@ export function useMoldGeneration(
               includeCore: params.includeCore,
               wallThicknessRatio: params.wallThicknessRatio,
               clearanceMm: params.clearanceMm,
-              sprueDiameterMm: params.sprueDiameterMm,
+              sprueDiameterMm: params.sprueDiameterMm > 0 ? params.sprueDiameterMm : undefined,
               moldBoxShape: params.moldBoxShape,
               cutAngle: params.cutAngle,
               isHollow: params.isHollow,
@@ -150,7 +150,7 @@ export function useMoldGeneration(
             {
               wallThicknessRatio: params.wallThicknessRatio,
               clearanceMm: params.clearanceMm,
-              sprueDiameterMm: params.sprueDiameterMm,
+              sprueDiameterMm: params.sprueDiameterMm > 0 ? params.sprueDiameterMm : undefined,
               moldBoxShape: params.moldBoxShape,
               cutAngle: params.cutAngle,
               sprueOverride: params.sprueOverride ?? undefined,

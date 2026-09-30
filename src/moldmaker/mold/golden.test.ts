@@ -39,13 +39,16 @@ function metrics(pieces: THREE.BufferGeometry[]): Metrics {
 }
 
 const MODELS: SampleTemplateId[] = ['mushroom', 'pawn', 'vase', 'heart'];
+// Golden references were recorded with an explicit 10 mm sprue, so pin it
+// here — the engine default is now "auto, sized to the model" and would
+// legitimately change volumes per sample.
 const MODES: Record<string, (g: THREE.BufferGeometry) => Promise<{ pieces: THREE.BufferGeometry[] }>> = {
-  rigid: g => generateMold(g, g.boundingBox!, 'z', 0.5, {} as never),
-  angled: g => generateMold(g, g.boundingBox!, 'z', 0.5, { cutAngle: 10 } as never),
-  hug: g => generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true } as never),
-  siliconeBlock: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockTwoPart' } as never),
-  siliconeOpen: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockOneWay' } as never),
-  siliconeSkin: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore' } as never),
+  rigid: g => generateMold(g, g.boundingBox!, 'z', 0.5, { sprueDiameterMm: 10 } as never),
+  angled: g => generateMold(g, g.boundingBox!, 'z', 0.5, { cutAngle: 10, sprueDiameterMm: 10 } as never),
+  hug: g => generateMold(g, g.boundingBox!, 'z', 0.5, { formFit: true, sprueDiameterMm: 10 } as never),
+  siliconeBlock: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockTwoPart', sprueDiameterMm: 10 } as never),
+  siliconeOpen: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'blockOneWay', sprueDiameterMm: 10 } as never),
+  siliconeSkin: g => generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', sprueDiameterMm: 10 } as never),
 };
 
 describe('golden mold baseline', () => {

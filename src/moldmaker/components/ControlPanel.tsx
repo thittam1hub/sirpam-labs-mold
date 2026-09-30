@@ -38,6 +38,7 @@ interface ControlPanelProps {
   onWallThicknessChange: (ratio: number) => void;
   onClearanceChange: (clearanceMm: number) => void;
   onSprueDiameterChange: (sprueDiameterMm: number) => void;
+  onVentDiameterChange: (ventDiameterMm: number) => void;
   onMoldBoxShapeChange: (shape: MoldBoxShape) => void;
   onMoldModeChange: (mode: MoldMode) => void;
   onSiliconeTypeChange: (type: SiliconeMoldType) => void;
@@ -134,6 +135,7 @@ export default function ControlPanel(props: ControlPanelProps) {
             onWallThicknessChange={props.onWallThicknessChange}
             onClearanceChange={props.onClearanceChange}
             onSprueDiameterChange={props.onSprueDiameterChange}
+            onVentDiameterChange={props.onVentDiameterChange}
             onResetDimensions={props.onResetDimensions}
             moldSlot={props.moldSlot}
           />

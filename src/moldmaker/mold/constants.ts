@@ -6,8 +6,18 @@
 export const WALL_THICKNESS_RATIO = 0.08;
 /** Gap between model and cavity so the cast releases (mm). */
 export const CLEARANCE_MM = 0.2;
-/** Pour hole diameter (mm). */
+/** Pour hole diameter (mm) — fallback when no model size is known. */
 export const SPRUE_DIAMETER_MM = 10;
+
+/**
+ * Shop-rule default pour hole for a model of a given size: about 15% of the
+ * model's largest side, clamped to 4–12 mm and rounded to 0.5 mm. Small
+ * jewelry pieces get 4–5 mm; big castings top out at 12 mm.
+ */
+export function suggestedSprueDiameterMm(maxExtentMm: number): number {
+  if (!(maxExtentMm > 0)) return SPRUE_DIAMETER_MM;
+  return Math.min(12, Math.max(4, Math.round(maxExtentMm * 0.15 * 2) / 2));
+}
 
 /** Alignment pins, as fractions of the wall thickness. */
 export const PIN_RADIUS_RATIO = 0.2;

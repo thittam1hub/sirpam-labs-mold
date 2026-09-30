@@ -9,7 +9,7 @@ import { loadFile as _loadFile } from './utils/fileLoader';
 import { trackEvent } from '@/components/Analytics';
 import type { Axis, MoldBoxShape, MoldMode, SiliconeMoldType } from './types';
 import { colors, radii, spacing, fontSizes, focusVisibleCss, shadows, fonts, sceneColors } from './theme';
-import { WALL_THICKNESS_RATIO, CLEARANCE_MM, SPRUE_DIAMETER_MM } from './mold/constants';
+import { WALL_THICKNESS_RATIO, CLEARANCE_MM } from './mold/constants';
 import TopBar from './components/layout/TopBar';
 import { MoldPrepPanel, ModelToolsPanel, FinishAdvisorPanel, PlatePackerPanel } from './components/ShopPanels';
 import { PrintQueuePanel } from './components/PrintQueuePanel';
@@ -219,6 +219,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               onWallThicknessChange={(wallThicknessRatio: number) => setState(prev => ({ ...prev, wallThicknessRatio }))}
               onClearanceChange={(clearanceMm: number) => setState(prev => ({ ...prev, clearanceMm }))}
               onSprueDiameterChange={(sprueDiameterMm: number) => setState(prev => ({ ...prev, sprueDiameterMm }))}
+              onVentDiameterChange={(ventDiameterMm: number) => setState(prev => ({ ...prev, tier2: { ...prev.tier2, ventDiameterMm } }))}
               onMoldBoxShapeChange={(moldBoxShape: MoldBoxShape) => setState(prev => ({ ...prev, moldBoxShape }))}
               onMoldModeChange={(moldMode: MoldMode) => setState(prev => ({ ...prev, moldMode }))}
               onSiliconeTypeChange={(siliconeType: SiliconeMoldType) => setState(prev => ({ ...prev, siliconeType }))}
@@ -228,7 +229,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               onFormFitChange={(formFit: boolean) => setState(prev => ({ ...prev, formFit }))}
               onResetDimensions={() => setState(prev => ({
                 ...prev, wallThicknessRatio: WALL_THICKNESS_RATIO, clearanceMm: CLEARANCE_MM,
-                sprueDiameterMm: SPRUE_DIAMETER_MM, moldBoxShape: 'rect', formFit: false,
+                sprueDiameterMm: 0, moldBoxShape: 'rect', formFit: false,
               }))}
               onGenerate={handleGenerate}
               onAutoDetect={handleAutoDetect}
