@@ -35,14 +35,13 @@ function AboutPage() {
           The mold engine runs on your device, so your models stay on your computer. Only the optional AI helper sends your description or photo to our AI service. Credits are
           only spent when you export finished files or use the AI helper.
         </p>
-        <h2 className="mt-8 text-xl font-semibold">Open source roots</h2>
+        <h2 className="mt-8 text-xl font-semibold">How it is built</h2>
         <p className="mt-2 text-muted-foreground">
-          The mold maker began as the open-source project{" "}
-          <a href="https://github.com/matta174/mold-maker" className="text-primary" target="_blank" rel="noreferrer">
-            mold-maker by matta174
-          </a>
-          . We've rebuilt and extended it with repair tools, lock systems, vent controls, a credit
-          system and much more — while keeping credit to the original author.
+          The mold engine is written in-house by Sirpam 3D Labs, from our own specification, and is
+          ours to run commercially. It is built on open libraries that allow business use — Three.js
+          for the 3D view, Manifold for solid geometry and OpenCascade.js for STEP export. Every
+          mold it produces is checked against our own test set before release. See our{" "}
+          <Link to="/licenses" className="text-primary">open-source credits</Link>.
         </p>
         <AuthorBio />
         <p className="mt-6 text-sm text-muted-foreground">
