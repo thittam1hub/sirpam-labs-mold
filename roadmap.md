@@ -28,3 +28,6 @@
 ## Phase 3 (done)
 - [x] Leak check (parting-plane contact validation)
 - [x] Cure-time & pour planner card
+
+## Final upstream-code scan (done)
+- [x] No code or references from the original project remain
