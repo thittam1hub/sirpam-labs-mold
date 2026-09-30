@@ -385,17 +385,6 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
   }, []);
   useEffect(() => { refreshProjects(); }, [refreshProjects]);
 
-  // ── Telemetry: session_started ──
-  // Fires once per mount. Empty dep array is intentional — React 18's
-  // strict-mode double-invoke in dev will double-fire; production builds
-  // won't. The send call itself is safely no-op when disabled/unconfigured,
-  // so double-fire in dev is a cosmetic dashboard issue, not a correctness one.
-  useEffect(() => {
-    
-    // telemetry.send is a stable useCallback — but listing it would tangle
-    // the lint dep array with first-render semantics. Disable is localized.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── Geometry disposal effects ──
   // Three.js BufferGeometry holds GPU-side vertex buffers that are NOT reclaimed
@@ -452,7 +441,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
     // size, not triangle count, not filename. "Did a load succeed" is the
     // entire question this event answers.
     
-  }, [telemetry]);
+  }, []);
 
   // Model handed over from the AI Model Maker page.
   useEffect(() => {
