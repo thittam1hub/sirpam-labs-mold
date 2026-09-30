@@ -75,8 +75,8 @@ export function useMoldGenerator() {
   const generateMold = useCallback(async (
     geometry: THREE.BufferGeometry, boundingBox: THREE.Box3, axis: Axis, offset: number,
     options: CommonOptions & {
-      sprueOverride?: { a: number | undefined; b: number };
-      additionalPlanes?: Array<{ axis: Axis | undefined; offset: number; cutAngle?: number }> | undefined;
+      sprueOverride?: { a: number; b: number } | undefined;
+      additionalPlanes?: Array<{ axis: Axis; offset: number; cutAngle?: number | undefined }> | undefined;
     } = {},
   ): Promise<{ pieces: THREE.BufferGeometry[]; repairs: MeshRepairLog; notices?: string[] | undefined }> => {
     const req = { type: 'generate', id: ++nextId.current, payload: { ...meshPayload(geometry, boundingBox), axis, offset, ...options } } as WorkerRequest;
