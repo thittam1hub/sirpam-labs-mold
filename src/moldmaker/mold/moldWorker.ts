@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { generateMold } from './generateMold';
 import { generateSiliconeMold } from './siliconeMold';
 import { suggestBestParting } from './suggestParting';
+import type { MeshRepairLog } from './validateMesh';
 import { serializeGeometry, collectResultTransferables, type WorkerRequest, type WorkerResponse, type MoldJob } from './workerProtocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -46,7 +47,7 @@ scope.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
       formFit: job.formFit,
       extras: job.extras,
     };
-    const result: { pieces: THREE.BufferGeometry[]; repairs: WorkerResponse extends never ? never : any; labels?: string[]; notices?: string[]; siliconeVolumeCm3?: number } =
+    const result: { pieces: THREE.BufferGeometry[]; repairs: MeshRepairLog; labels?: string[]; notices?: string[]; siliconeVolumeCm3?: number } =
       req.type === 'silicone'
         ? await generateSiliconeMold(geo, bbox, job.axis, job.offset, {
             ...shared,
