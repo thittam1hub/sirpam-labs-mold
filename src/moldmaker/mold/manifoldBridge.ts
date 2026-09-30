@@ -35,7 +35,7 @@ export class EmptyManifoldError extends Error {
  * index of the first vertex found at the same spot (or itself). Uses a grid
  * of cell size = tolerance and checks the 27 surrounding cells.
  */
-function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
+function weldMap(pos: Float32Array, tol: number): Uint32Array {
   const n = pos.length / 3;
   const owner = new Uint32Array(n);
   const cells = new Map<number, number[]>();
@@ -43,7 +43,7 @@ function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
   const key3 = (a: number, b: number, c: number) => ((a * 73856093) ^ (b * 19349663) ^ (c * 83492791)) | 0;
   const tol2 = tol * tol;
   for (let v = 0; v < n; v++) {
-    const x = pos[3 * v], y = pos[3 * v + 1], z = pos[3 * v + 2];
+    const x = pos[3 * v]!, y = pos[3 * v + 1]!, z = pos[3 * v + 2]!;
     const cx = Math.round(x / tol), cy = Math.round(y / tol), cz = Math.round(z / tol);
     let found = v;
     search: for (let a = cx - 1; a <= cx + 1; a++) {
@@ -52,7 +52,7 @@ function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
           const list = cells.get(key3(a, b, c));
           if (!list) continue;
           for (const w of list) {
-            const dx = pos[3 * w] - x, dy = pos[3 * w + 1] - y, dz = pos[3 * w + 2] - z;
+            const dx = pos[3 * w]! - x, dy = pos[3 * w + 1]! - y, dz = pos[3 * w + 2]! - z;
             if (dx * dx + dy * dy + dz * dz < tol2) { found = w; break search; }
           }
         }
@@ -69,15 +69,15 @@ function weldMap(pos: ArrayLike<number>, tol: number): Uint32Array {
 /** three.js geometry → Manifold solid (throws if not a closed solid). */
 export function geometryToManifold(wasm: ManifoldWasm, geometry: THREE.BufferGeometry): ManifoldSolid {
   const soup = geometry.index ? geometry.toNonIndexed() : geometry;
-  const pos = soup.attributes['position'].array as ArrayLike<number>;
+  const pos = Float32Array.from(soup.getAttribute('position').array as ArrayLike<number>);
   const n = pos.length / 3;
   const owner = weldMap(pos, MERGE_TOLERANCE);
   const from: number[] = [], to: number[] = [];
-  for (let v = 0; v < n; v++) if (owner[v] !== v) { from.push(v); to.push(owner[v]); }
+  for (let v = 0; v < n; v++) if (owner[v] !== v) { from.push(v); to.push(owner[v]!); }
   dbg(`Mesh: ${n / 3} triangles, ${n} vertices, ${from.length} merge pairs`);
   const mesh = new wasm.Mesh({
     numProp: 3,
-    vertProperties: Float32Array.from(pos),
+    vertProperties: pos,
     triVerts: Uint32Array.from({ length: n }, (_, i) => i),
     mergeFromVert: Uint32Array.from(from),
     mergeToVert: Uint32Array.from(to),

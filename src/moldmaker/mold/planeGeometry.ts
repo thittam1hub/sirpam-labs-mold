@@ -65,10 +65,12 @@ export function getPlaneEquation(
 ): PlaneEquation {
   const i = AXIS_INDEX[axis];
   // The plane pivots about the box centre, moved along the axis to `offset`.
-  const pivot = [0, 1, 2].map(k => (bboxMin[k] + bboxMax[k]) / 2);
+  const pivot: [number, number, number] = [
+    (bboxMin[0] + bboxMax[0]) / 2, (bboxMin[1] + bboxMax[1]) / 2, (bboxMin[2] + bboxMax[2]) / 2,
+  ];
   pivot[i] = bboxMin[i] + (bboxMax[i] - bboxMin[i]) * offset;
   const normal = getPlaneNormal(axis, clampCutAngle(tiltAngle));
-  return { normal, originOffset: dot(normal, pivot as unknown as Vec3) };
+  return { normal, originOffset: dot(normal, pivot) };
 }
 
 export function planeFromBox(bbox: BboxLike, axis: Axis, offset: number, tiltAngle = 0): PlaneEquation {
@@ -94,7 +96,7 @@ export function primaryAxisValueOnPlane(plane: PlaneEquation, axis: Axis, latera
   const ni = plane.normal[i];
   if (Math.abs(ni) < 1e-9) return 0;
   let rest = 0;
-  for (let k = 0; k < 3; k++) if (k !== i) rest += plane.normal[k] * lateralPoint[k];
+  for (let k = 0; k < 3; k++) if (k !== i) rest += plane.normal[k]! * lateralPoint[k]!;
   return (plane.originOffset - rest) / ni;
 }
 
