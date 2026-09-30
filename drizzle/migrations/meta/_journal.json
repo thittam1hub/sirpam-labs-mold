@@ -71,6 +71,13 @@
       "when": 1790753853070,
       "tag": "0009_replay_contact_message_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790753931761,
+      "tag": "0010_replay_credit_lots_roles",
+      "breakpoints": true
     }
   ]
 }
