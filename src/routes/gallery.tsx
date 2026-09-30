@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
+import { DriveCard } from "@/components/DriveCard";
 import { useAppSession } from "@/components/AppSession";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,7 @@ function GalleryPage() {
       <main className="mx-auto max-w-5xl p-6">
         <h1 className="text-3xl font-bold">My printed molds</h1>
         <p className="mt-1 text-muted-foreground">Photos and notes of the real molds you've printed and cast. Only you can see them.</p>
+        {ready && session && <DriveCard />}
 
         {!ready ? <div className="mt-8 grid gap-4 sm:grid-cols-2"><Skeleton className="h-48" /><Skeleton className="h-48" /></div> : !session ? (
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
