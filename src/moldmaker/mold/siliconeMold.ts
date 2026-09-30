@@ -173,7 +173,7 @@ export async function generateSiliconeMold(
         notices.push('Locks on a form-fit shell need a flat, untilted split, so this mold has none. Set the tilt to 0 or use a box shell.');
       } else {
         const plan = planHugLocks(wasm, solid, axis, splitPos, lateralCentre, pinR, clearance, 4, pinH);
-        pins = plan.positions; pinR = plan.lockR; pads = plan.pads; notices.push(...plan.notices);
+        pins = plan.positions as P3[]; pinR = plan.lockR; pads = plan.pads; notices.push(...plan.notices);
         if (flangeT > 0 && (extras.flangeBoltMm ?? 0) > 0) {
           bolts = flangeBoltCutters(wasm, solid, axis, splitPos, lateralCentre, extras.flangeBoltMm!, flangeT, 4);
           if (bolts.length < 4) notices.push(`Only ${bolts.length} of 4 bolt holes fit in the flange. Make the flange wider for more.`);
@@ -329,7 +329,7 @@ export async function generateSiliconeMold(
     const cut = pieces.map((_, i) => i).filter(i => labels[i] !== 'core');
     const r = applyRadialSplit(cut.map(i => pieces[i]), { axis, center, segments: extras.radialSegments! });
     outPieces = r.pieces;
-    outLabels = r.pieces.map((_: Solid, k: number) => `${labels[cut[r.sourceIndex[k]]!]}_r${r.segmentIndex[k] + 1}`);
+    outLabels = r.pieces.map((_: Solid, k: number) => `${labels[cut[r.sourceIndex[k]!]!]}_r${r.segmentIndex[k]! + 1}`);
     pieces.forEach((s, i) => { if (labels[i] === 'core') { outPieces.push(s); outLabels.push('core'); } });
   }
 
