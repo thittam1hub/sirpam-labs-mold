@@ -127,6 +127,13 @@
       "when": 1790754168601,
       "tag": "0017_replay_age_confirm",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790754189386,
+      "tag": "0018_replay_contact_rate_limit",
+      "breakpoints": true
     }
   ]
 }
