@@ -19,7 +19,7 @@ import type { AppState } from './state';
  * Preserves the user's current zoom distance so switching axis doesn't
  * snap the view back to a default distance.
  */
-function CameraRig({ axis, fitSize }: { axis: Axis; fitSize?: number }) {
+function CameraRig({ axis, fitSize }: { axis: Axis; fitSize?: number | undefined }) {
   const camera = useThree(s => s.camera);
   const controls = useThree(s => s.controls) as { target?: THREE.Vector3; update?: () => void } | null;
   const prevAxis = useRef<Axis | null>(null);
