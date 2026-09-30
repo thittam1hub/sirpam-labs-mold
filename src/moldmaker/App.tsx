@@ -290,21 +290,33 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                   />
                 </>
               }
-              finishSlot={
-                <FinishAdvisorPanel
-                  geometry={state.originalGeometry}
-                  boundingBox={state.boundingBox}
-                  axis={state.axis}
-                  offset={state.planeOffset}
-                  cutAngle={state.cutAngle}
-                  moldMode={state.moldMode}
-                  wallMm={state.moldMode === 'silicone'
-                    ? (state.siliconeMarginMm || 10)
-                    : (state.boundingBox ? state.boundingBox.getSize(new THREE.Vector3()).length() * state.wallThicknessRatio : 5)}
-                  castingMaterial={state.tier2.castingMaterial}
-                  printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
-                />
-              }
+              finishSlot={(() => {
+                const wallMm = state.moldMode === 'silicone'
+                  ? (state.siliconeMarginMm || 10)
+                  : (state.boundingBox ? state.boundingBox.getSize(new THREE.Vector3()).length() * state.wallThicknessRatio : 5);
+                return <>
+                  <FinishAdvisorPanel
+                    geometry={state.originalGeometry}
+                    boundingBox={state.boundingBox}
+                    axis={state.axis}
+                    offset={state.planeOffset}
+                    cutAngle={state.cutAngle}
+                    moldMode={state.moldMode}
+                    wallMm={wallMm}
+                    castingMaterial={state.tier2.castingMaterial}
+                    printer={getPresetById(state.selectedPrinterId)?.category ?? (state.estimator.material === 'resin' ? 'resin' : 'fdm')}
+                  />
+                  <PourPlanCard
+                    geometry={state.originalGeometry}
+                    boundingBox={state.boundingBox}
+                    axis={state.axis}
+                    offset={state.planeOffset}
+                    cutAngle={state.cutAngle}
+                    wallMm={wallMm}
+                    castingMaterial={state.tier2.castingMaterial}
+                  />
+                </>;
+              })()}
               modelSlot={<>
                 <ModelFixPanel geometry={state.originalGeometry} onReplaceModel={replaceModel} scale={state.scale} onSetScale={sc => setState(prev => ({ ...prev, scale: sc }))} />
                 <Link to="/studio/ai" style={{ display: 'block', textDecoration: 'none', padding: spacing.lg, borderRadius: radii.lg, background: colors.sectionBg, boxShadow: shadows.raisedSm, color: colors.textBody }}>
