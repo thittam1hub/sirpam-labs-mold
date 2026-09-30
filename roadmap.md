@@ -48,7 +48,7 @@
 - [ ] A1 faster builds (2 threads + cache)
 - [ ] A2 auto draft angle
 - [ ] A4 repair summary + build block
-- [ ] C9 clamp-wing pressure lands
+- [x] C9 clamp-wing pressure lands (optional "Clamp seats", test added)
 - [ ] B5 core pins / inserts
 - [ ] A3 smart split surface
 - [ ] B7 pour funnel + clamp jig

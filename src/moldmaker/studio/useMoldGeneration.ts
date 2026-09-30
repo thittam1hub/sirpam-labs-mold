@@ -107,6 +107,7 @@ export function useMoldGeneration(
         style: t2.moldStyle && t2.moldStyle !== 'standard' ? t2.moldStyle : undefined,
         curvedSplit: t2.curvedSplit || undefined,
         clampBoltMm: t2.clampBoltMm || undefined,
+        clampLands: (t2.clampBoltMm && t2.clampLands) || undefined,
         autoVents: t2.autoVents || undefined,
         standFins: t2.standFins || undefined,
         volumeLabel: t2.volumeLabel && castMl ? `${castMl} ML` : undefined,
