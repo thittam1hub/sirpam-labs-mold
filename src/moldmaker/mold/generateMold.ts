@@ -224,7 +224,7 @@ export async function generateMold(
         if (dn) bottom = bottom.add(dn.subtract(cavityCut));
       }
       notices.push(...plan.notices);
-      locks = plan.positions;
+      locks = plan.positions as P3[];
       if (flangeBuilt && (extras.flangeBoltMm ?? 0) > 0) {
         const holes = flangeBoltCutters(wasm, shell, axis, splitPos, lateralCentre, extras.flangeBoltMm!, Math.max(6, wall * 2), 4);
         for (const h of holes) { top = top.subtract(h); bottom = bottom.subtract(h); }
