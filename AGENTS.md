@@ -29,3 +29,4 @@
 - Print farm queue: src/lib/printQueue.functions.ts (auth-required server fn) appends one row to the Google Sheets connector gateway sheet named by PRINT_QUEUE_SHEET_ID, sheet tab "Queue" columns A:N; the Studio panel is src/moldmaker/components/PrintQueuePanel.tsx in step 4 (why: workshop orders land in a spreadsheet the shop already edits, no admin UI needed).
 
 - All customer-facing contact details (phone, email, country, legal name) come from `BUSINESS` in `src/lib/business.ts` — components never hardcode them (why: one edit changes every page, footer and WhatsApp link).
+- Mold engine is being clean-room rewritten from spec (never edited from matta174/mold-maker, PolyForm NC); every rewrite must pass src/moldmaker/mold/golden.test.ts (why: commercial use needs code we own).
