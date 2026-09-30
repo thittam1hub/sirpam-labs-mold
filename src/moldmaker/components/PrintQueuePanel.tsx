@@ -114,7 +114,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
       `• Project: ${fileName.replace(/\.[^.]+$/, '') || 'Untitled model'}\n` +
       `• Mold: ${moldMode === 'silicone' ? 'Silicone mold + printed box' : 'Printed rigid mold'}, ${pieces.length} piece(s)\n` +
       `• Size: ${specs.size} mm · about ${specs.volume.toFixed(1)} cm³ of print material\n` +
-      (castMat ? `• Casting: ${castMat.label}${copies > 1 ? ` × ${castCopies} copies per mold` : ''}\n` : '') +
+      (castMat ? `• Casting: ${castMat.label}${castCopies > 1 ? ` × ${castCopies} copies per mold` : ''}\n` : '') +
       (siliconeVolumeCm3 ? `• Silicone needed: ~${(siliconeVolumeCm3 / 1000).toFixed(2)} L\n` : '') +
       `\nCould you tell me the price and delivery time?`;
   const waText = encodeURIComponent(waMsg);
