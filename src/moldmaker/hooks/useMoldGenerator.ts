@@ -78,7 +78,7 @@ export function useMoldGenerator() {
       sprueOverride?: { a: number; b: number };
       additionalPlanes?: Array<{ axis: Axis; offset: number; cutAngle?: number }>;
     } = {},
-  ): Promise<{ pieces: THREE.BufferGeometry[]; repairs: MeshRepairLog; notices?: string[] }> => {
+  ): Promise<{ pieces: THREE.BufferGeometry[]; repairs: MeshRepairLog; notices?: string[] | undefined }> => {
     const req = { type: 'generate', id: ++nextId.current, payload: { ...meshPayload(geometry, boundingBox), axis, offset, ...options } } as WorkerRequest;
     const res = await runMold(req);
     if (res.type !== 'result') throw new Error('Unexpected reply from mold worker');
