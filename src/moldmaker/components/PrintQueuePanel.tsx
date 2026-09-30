@@ -74,7 +74,7 @@ export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePer
   const cost = specs.volume * density * pricePerKg / 1000;
   const matLabel = moldMode === 'silicone' ? `${material === 'resin' ? 'Resin' : 'PLA'} box + silicone` : material === 'resin' ? 'Resin' : 'PLA';
   const castMat = CASTING_MATERIALS.find(m => m.id === castingMaterial);
-  const copies = Math.max(1, cavities ?? 1);
+  const castCopies = Math.max(1, cavities ?? 1);
 
   // Indian mobile: optional +91/0 prefix, then 10 digits starting 6-9. PIN: 6 digits, not starting with 0.
   const mobile = phone.replace(/[\s-]/g, '').replace(/^(\+?91|0)/, '');
