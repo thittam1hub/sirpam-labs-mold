@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       gallery_items: {
         Row: {
+          best_settings: string | null
           created_at: string
           currency: string | null
           id: string
@@ -23,14 +24,18 @@ export type Database = {
           notes: string | null
           photo_paths: string[]
           price_paid: number | null
+          rating: number | null
           size_x_mm: number | null
           size_y_mm: number | null
           size_z_mm: number | null
           source: string | null
+          stl_name: string | null
+          stl_size: string | null
           title: string
           user_id: string
         }
         Insert: {
+          best_settings?: string | null
           created_at?: string
           currency?: string | null
           id?: string
@@ -38,14 +43,18 @@ export type Database = {
           notes?: string | null
           photo_paths?: string[]
           price_paid?: number | null
+          rating?: number | null
           size_x_mm?: number | null
           size_y_mm?: number | null
           size_z_mm?: number | null
           source?: string | null
+          stl_name?: string | null
+          stl_size?: string | null
           title: string
           user_id?: string
         }
         Update: {
+          best_settings?: string | null
           created_at?: string
           currency?: string | null
           id?: string
@@ -53,11 +62,56 @@ export type Database = {
           notes?: string | null
           photo_paths?: string[]
           price_paid?: number | null
+          rating?: number | null
           size_x_mm?: number | null
           size_y_mm?: number | null
           size_z_mm?: number | null
           source?: string | null
+          stl_name?: string | null
+          stl_size?: string | null
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quote_requests: {
+        Row: {
+          casting_material: string | null
+          contact_email: string
+          contact_name: string
+          created_at: string
+          id: string
+          maker: string
+          notes: string | null
+          project_path: string | null
+          quantity: number
+          size_class: string | null
+          user_id: string
+        }
+        Insert: {
+          casting_material?: string | null
+          contact_email: string
+          contact_name: string
+          created_at?: string
+          id?: string
+          maker: string
+          notes?: string | null
+          project_path?: string | null
+          quantity?: number
+          size_class?: string | null
+          user_id?: string
+        }
+        Update: {
+          casting_material?: string | null
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          id?: string
+          maker?: string
+          notes?: string | null
+          project_path?: string | null
+          quantity?: number
+          size_class?: string | null
           user_id?: string
         }
         Relationships: []
