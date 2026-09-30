@@ -177,7 +177,10 @@ function GalleryPage() {
                   </button>
                 ))}
               </div>
-              <input id="photos" type="file" accept="image/*" multiple onChange={(e) => setFiles(e.target.files)} className="text-sm" />
+              <div className="md:col-span-2">
+                <label htmlFor="photos" className="block text-sm font-medium">Photos of the printed mold or cast</label>
+                <input id="photos" type="file" accept="image/*" multiple aria-label="Photos of the printed mold or cast" onChange={(e) => setFiles(e.target.files)} className="mt-1 text-sm" />
+              </div>
               <button disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                 {busy ? "Uploading…" : "Add to gallery"}
               </button>
