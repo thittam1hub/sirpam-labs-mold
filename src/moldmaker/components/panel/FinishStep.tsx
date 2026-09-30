@@ -151,7 +151,7 @@ function RigidCostEstimate({ state, estimator, onEstimatorChange }: {
   onEstimatorChange: FinishStepProps['onEstimatorChange'];
 }) {
   const vols = state.moldPieces.map(p => meshVolumeCm3(
-    p.attributes.position.array as Float32Array,
+    p.getAttribute("position").array as Float32Array,
     p.index ? (p.index.array as ArrayLike<number>) : null,
   ));
   const ests = vols.map(v => estimatePieceCost(v, estimator.material, estimator.pricePerKg));
