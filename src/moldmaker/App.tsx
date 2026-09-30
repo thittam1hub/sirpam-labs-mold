@@ -240,7 +240,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               onToggleSplitLine={() => setState(prev => ({ ...prev, showSplitLine: !prev.showSplitLine }))}
               onSuggestParting={handleSuggestParting}
               estimator={state.estimator}
-              onEstimatorChange={(patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number }) =>
+              onEstimatorChange={(patch: { material?: 'pla' | 'resin'; pricePerKg?: number; siliconePricePerLiter?: number; castingPricePerKg?: number }) =>
                 setState(prev => ({ ...prev, estimator: { ...prev.estimator, ...patch } }))}
               projects={projects}
               projectBusy={projectBusy}
@@ -333,6 +333,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                   material={state.estimator.material}
                   pricePerKg={state.estimator.pricePerKg}
                   siliconeVolumeCm3={state.siliconeVolumeCm3}
+                  castingMaterial={state.tier2.castingMaterial}
+                  cavities={state.tier2.cavityCount}
                 />
               </>}
               toolsSlot={

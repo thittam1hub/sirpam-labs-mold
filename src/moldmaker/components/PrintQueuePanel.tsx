@@ -4,7 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import type { MoldMode } from '../types';
-import { solidProps } from '../utils/tier2';
+import { solidProps, CASTING_MATERIALS, type CastingMaterialId } from '../utils/tier2';
 import { addPrintJob } from '@/lib/printQueue.functions';
 import { useAppSession } from '@/components/AppSession';
 import { BUSINESS } from '@/lib/business';
@@ -30,13 +30,15 @@ const s = {
  * Measurements are read from the generated pieces so the shop gets the
  * same numbers the user sees on screen.
  */
-export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePerKg, siliconeVolumeCm3 }: {
+export function PrintQueuePanel({ pieces, fileName, moldMode, material, pricePerKg, siliconeVolumeCm3, castingMaterial, cavities }: {
   pieces: THREE.BufferGeometry[];
   fileName: string;
   moldMode: MoldMode;
   material: 'pla' | 'resin';
   pricePerKg: number;
   siliconeVolumeCm3?: number;
+  castingMaterial?: CastingMaterialId;
+  cavities?: number;
 }) {
   const { session, ready } = useAppSession();
   const submit = useServerFn(addPrintJob);
