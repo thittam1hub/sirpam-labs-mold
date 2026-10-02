@@ -91,7 +91,7 @@ function CalculatorPage() {
   const [pricePerKg, setPricePerKg] = useState("");
   const [temp, setTemp] = useState(30);
 
-  const material = mode === "box" ? SILICONE : CASTING_MATERIALS.find((m) => m.id === materialId) ?? CASTING_MATERIALS[0];
+  const material = mode === "box" ? SILICONE : CASTING_MATERIALS.find((m) => m.id === materialId) ?? CASTING_MATERIALS[0]!;
 
   const r = useMemo(() => {
     const w = num(wall);
@@ -100,7 +100,7 @@ function CalculatorPage() {
     const volCm3 = mode === "box" ? Math.max(0, boxCm3 - num(modelVol)) : num(castVol);
     const grams = volCm3 * material.density;
     const total = grams * (1 + num(allowance) / 100);
-    const ratio = RATIOS[ratioIdx].v ?? (mode === "cast" ? WORKSHOP_MATERIAL_PROFILES[materialId as keyof typeof WORKSHOP_MATERIAL_PROFILES]?.mixByWeight ?? null : null);
+    const ratio = RATIOS[ratioIdx]?.v ?? (mode === "cast" ? WORKSHOP_MATERIAL_PROFILES[materialId as keyof typeof WORKSHOP_MATERIAL_PROFILES]?.mixByWeight ?? null : null);
     const split = splitByWeight(total, ratio);
     const cost = num(pricePerKg) > 0 ? (total / 1000) * num(pricePerKg) : null;
     return { boxL, boxW, boxH, volCm3, grams, total, split, ratio, cost };
