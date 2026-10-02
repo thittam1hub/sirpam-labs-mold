@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { BrandLink } from "@/components/BrandLink";
 import { BUSINESS } from "@/lib/business";
+import { HomeDeepDive } from "@/components/home/HomeDeepDive";
 import showcase from "@/assets/real-mold-workbench.webp";
 import { ArrowRight, Check, Droplet, FileDown, MessageCircle, Plus, ScanSearch, Scissors, Wrench } from "lucide-react";
 
@@ -60,6 +61,10 @@ const FAQ = [
   { q: "Can I get STEP files for CAD?", a: "Yes. Export halves as STL, OBJ, 3MF or STEP, so you can keep editing in your own CAD tool." },
   { q: "I don't own a printer. Can you print it?", a: "Yes. Send the mold files on WhatsApp with your city and PIN code. We reply with a price within one working day and ship anywhere in India." },
   { q: "Are the mix ratios on the workshop sheet exact?", a: "No. The sheet gives planning ranges. Always follow the technical data sheet for the exact product you buy." },
+  { q: "How big a model can it handle?", a: "Most models up to a few hundred thousand triangles build in seconds on a normal laptop. Very dense scans may need simplifying first; the studio tells you if a model is too heavy." },
+  { q: "My model has holes or errors. Will it still work?", a: "Usually. Mesh repair closes small holes and turns inside-out faces the right way. If a model cannot be fixed, the build stops with a plain explanation and no credits are used." },
+  { q: "Can I sell parts cast from these molds?", a: "Yes. Molds and casts you make are yours to use commercially. The mold engine is our own code, so no extra licence or credit line is needed." },
+  { q: "Should I export STL or STEP?", a: "STL or 3MF if you are going straight to a slicer. STEP if you want to add text, change walls or combine the mold with other parts in CAD." },
 ];
 
 function LandingPage() {
@@ -199,6 +204,8 @@ function LandingPage() {
             </p>
           </div>
         </section>
+
+        <HomeDeepDive />
 
         {/* Print with us band */}
         <section className="mx-auto max-w-7xl px-6">
