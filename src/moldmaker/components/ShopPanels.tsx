@@ -96,14 +96,14 @@ export function MoldPrepPanel({ castingMaterial, scale, onScaleChange, onSetClea
 
   return (
     <div style={s.section} id="sirpam-shop-prep">
-      <div style={s.title}>What are you casting?</div>
+      <div style={s.title}>Quick start presets</div>
       <div style={s.row}>
         {POUR_PRESETS.map(p => (
           <button key={p.id} type="button" style={s.chip(preset === p.id)} aria-pressed={preset === p.id}
             onClick={() => { setPreset(p.id); onApplyPreset(p); }}>{p.label}</button>
         ))}
       </div>
-      <div style={s.hint}>{active ? active.notes : 'One click sets mold type, silicone thickness, pour hole size and casting material.'}</div>
+      <div style={s.hint}>{active ? active.notes : 'Optional: one click fills mold type, silicone thickness, pour hole and casting material for you.'}</div>
 
       <div style={s.sub}>Shrink & fit compensation</div>
       <label style={s.hint}>Printer material
