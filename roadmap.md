@@ -9,6 +9,7 @@
 - [ ] NOTE: this project is a REMIX of the main project — do NOT publish from here without confirming with user
 
 ## Done this round
+- [x] Doctor view + workshop sheet standardized — deterministic problem markers, TDS-first material guidance, 25 °C references, qualitative temperature cautions, focused tests and browser verification
 - [x] Reddit pain-point research (sub_dertspg4) — top issues: trapped air bubbles, misaligned seams, leaking molds, demolding tears (undercuts), key misalignment, mold deformation, layer-line transfer, cure inhibition, over-mixed silicone waste, clamping pressure
 
 ## Proposed next features (from research; existing-engine overlaps noted)
