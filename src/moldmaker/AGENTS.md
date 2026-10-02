@@ -8,3 +8,4 @@
 - Studio: left WorkflowRail, centre view, right ControlPanel, bottom StatusBar; AI Maker is route /studio/ai handing specs via lib/aiHandoff.ts sessionStorage; AI returns a JSON shape spec built by modelTools.buildFromSpec (why: CAD convention; no 3D-gen model available).
 - Print queue panel (components/PrintQueuePanel.tsx) calls lib/printQueue.functions.ts (why: orders land in the shop's sheet).
 - AI Maker tries the browser's built-in model first (localAi.ts, free, text only) and falls back to the cloud path that charges credits; both validate with ShapeSpec and share shapePrompt.ts (why: zero-cost private generation where supported).
+- Mold Doctor (moldDoctorAi.ts) derives findings only from castRisk checks; on-device model only rephrases/parses, Co-Pilot output validated by CopilotPatch with a rule-parser fallback and previewed before apply (why: model never decides geometry).

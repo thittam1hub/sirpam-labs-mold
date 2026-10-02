@@ -19,6 +19,7 @@ import { Link } from '@tanstack/react-router';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import { CastRiskCard } from './components/CastRiskCard';
+import { MoldDoctorCard } from './components/MoldDoctorCard';
 import { PourPlanCard } from './components/PourPlanCard';
 import { getPresetById } from './utils/printerPresets';
 
@@ -278,6 +279,25 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                     onAxisChange={axis => setState(prev => ({ ...prev, axis, planeOffset: 0.5, cutAngle: 0 }))}
                     onEnableAutoVents={() => setState(prev => ({ ...prev, tier2: { ...prev.tier2, autoVents: true } }))}
                   />
+                  <MoldDoctorCard
+                    geometry={state.originalGeometry}
+                    boundingBox={state.boundingBox}
+                    axis={state.axis}
+                    offset={state.planeOffset}
+                    cutAngle={state.cutAngle}
+                    autoVents={!!state.tier2.autoVents}
+                    moldMode={state.moldMode}
+                    onApply={cp => setState(prev => ({
+                      ...prev,
+                      ...(cp.axis ? { axis: cp.axis, planeOffset: 0.5, cutAngle: 0 } : {}),
+                      ...(cp.moldMode ? { moldMode: cp.moldMode } : {}),
+                      ...(cp.sprueDiameterMm !== undefined ? { sprueDiameterMm: cp.sprueDiameterMm } : {}),
+                      ...(cp.clearanceMm !== undefined ? { clearanceMm: cp.clearanceMm } : {}),
+                      ...(cp.formFit !== undefined ? { formFit: cp.formFit } : {}),
+                      tier2: cp.autoVents !== undefined ? { ...prev.tier2, autoVents: cp.autoVents } : prev.tier2,
+                    }))}
+                  />
+
                   <MoldPrepPanel
                     castingMaterial={state.tier2.castingMaterial}
                     scale={state.scale}
