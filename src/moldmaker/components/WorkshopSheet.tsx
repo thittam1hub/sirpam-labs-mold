@@ -101,7 +101,7 @@ export function WorkshopSheet(p: Props) {
         <div style={row}><span>Material</span><span>PLA or PETG; PETG for wax/soap above 60 °C</span></div>
 
         <div style={h}>Pour checklist</div>
-        <ol style={{ margin: 0, paddingLeft: 20 }}>
+        <ol style={{ margin: 0, paddingLeft: 20, listStyle: 'decimal' }}>
           {[
             'Clean the cavity and apply release; let it dry.',
             'Clamp the halves evenly; seal the seam with clay or tape.',

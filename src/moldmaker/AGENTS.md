@@ -9,3 +9,4 @@
 - Print queue panel (components/PrintQueuePanel.tsx) calls lib/printQueue.functions.ts (why: orders land in the shop's sheet).
 - AI Maker tries the browser's built-in model first (localAi.ts, free, text only) and falls back to the cloud path that charges credits; both validate with ShapeSpec and share shapePrompt.ts (why: zero-cost private generation where supported).
 - Mold Doctor (moldDoctorAi.ts) derives findings only from castRisk checks; on-device model only rephrases/parses, Co-Pilot output validated by CopilotPatch with a rule-parser fallback and previewed before apply (why: model never decides geometry).
+- Doctor view (components/DoctorOverlay.tsx) and WorkshopSheet only display castRisk/draftAnalysis results and rule-of-thumb numbers; never change geometry (why: advice stays separate from the engine).
