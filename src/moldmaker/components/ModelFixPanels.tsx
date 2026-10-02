@@ -10,8 +10,8 @@ import { MATERIALS } from '../utils/costEstimate';
 import { buildFlashGuide } from '../utils/flashGuide';
 
 const s = {
-  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
-  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm + 2, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
+  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md, boxShadow: shadows.raised },
+  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
   sub: { fontSize: fontSizes.xs, fontWeight: 600, color: colors.textMuted, margin: `${spacing.md}px 0 ${spacing.xs}px`, textTransform: 'uppercase' as const, letterSpacing: 1 },
   hint: { fontSize: fontSizes.xs, color: colors.textDim, lineHeight: 1.4, marginTop: spacing.xs },
   row: { display: 'flex', gap: spacing.xs, flexWrap: 'wrap' as const, alignItems: 'center' },
@@ -26,7 +26,7 @@ const s = {
   },
   kv: { display: 'flex', justifyContent: 'space-between', fontSize: fontSizes.sm, color: colors.textBody, padding: '2px 0' },
   input: {
-    width: '100%', padding: `${spacing.xs + 2}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none', fontFamily: 'inherit',
+    width: '100%', padding: `${spacing.xs}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none', fontFamily: 'inherit',
     background: colors.sectionBg, boxShadow: shadows.inset, color: colors.textBody, fontSize: fontSizes.sm,
   },
 };

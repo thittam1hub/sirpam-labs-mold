@@ -94,8 +94,9 @@ interface Props {
 }
 
 const s = {
-  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
-  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm + 2, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
+  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md, boxShadow: shadows.raised },
+  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
+  group: { fontSize: fontSizes.sm, fontWeight: 700, color: colors.primary, margin: `${spacing.lg}px 0 ${spacing.xs}px`, paddingTop: spacing.md, borderTop: `1px solid ${colors.borderSubtle}` },
   sub: { fontSize: fontSizes.xs, fontWeight: 600, color: colors.textMuted, margin: `${spacing.md}px 0 ${spacing.xs}px`, textTransform: 'uppercase' as const, letterSpacing: 1 },
   label: { fontSize: fontSizes.sm, color: colors.textBody },
   hint: { fontSize: fontSizes.xs, color: colors.textDim, lineHeight: 1.4, marginTop: spacing.xs },
@@ -111,7 +112,7 @@ const s = {
   },
   kv: { display: 'flex', justifyContent: 'space-between', fontSize: fontSizes.sm, color: colors.textBody, padding: '2px 0' },
   input: {
-    width: '100%', padding: `${spacing.xs + 2}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none',
+    width: '100%', padding: `${spacing.xs}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none',
     background: colors.sectionBg, boxShadow: shadows.inset, color: colors.textBody, fontSize: fontSizes.sm,
   },
 };
@@ -218,7 +219,8 @@ export default function AdvancedMoldPanel(p: Props) {
           <>
             {std && (
               <>
-                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                <div style={{ ...s.group, marginTop: spacing.sm, borderTop: 'none', paddingTop: 0 }}>Split &amp; clamping</div>
+                <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.sm }}>
                   <input type="checkbox" checked={!!t.curvedSplit} onChange={e => onChange({ curvedSplit: e.target.checked })} />
                   Curved split line (follows the model)
                 </label>
@@ -244,7 +246,8 @@ export default function AdvancedMoldPanel(p: Props) {
                 )}
                 {!!t.clampBoltMm && !t.curvedSplit && <div style={s.hint}>Raised flat rings around each bolt so washers and spring clamps press evenly without cracking the wing.</div>}
 
-                <div style={{ ...s.label, marginTop: spacing.md }}>Core pin (through-hole)</div>
+                <div style={s.group}>Tooling &amp; cores</div>
+                <div style={{ ...s.label, marginTop: spacing.sm }}>Core pin (through-hole)</div>
                 <div style={s.row}>
                   {([0, 2, 3, 5, 8] as const).map(n => (
                     <button key={n} style={s.chip((t.corePinMm ?? 0) === n)} onClick={() => onChange({ corePinMm: n })}>
@@ -277,6 +280,7 @@ export default function AdvancedMoldPanel(p: Props) {
                 </label>
                 <div style={s.hint}>{t.curvedSplit ? 'Not available with the curved split.' : 'Four fins under the bottom half so a rounded (form-fit) mold stands level while you pour.'}</div>
 
+                <div style={s.group}>Pieces &amp; finishing</div>
                 <div style={s.sub}>Pieces</div>
                 <div style={s.row}>
                   {([2, 3, 4] as const).map(n => (
@@ -320,6 +324,7 @@ export default function AdvancedMoldPanel(p: Props) {
 
       {hasSplit && (
         <>
+          <div style={s.group}>Interlocks &amp; registration</div>
           <div style={s.sub}>Seal between halves</div>
           <div style={s.row}>
             <button style={s.chip(t.seal === 'pins')} onClick={() => onChange({ seal: 'pins' })}>Keyed pins</button>
@@ -401,6 +406,7 @@ export default function AdvancedMoldPanel(p: Props) {
         </>
       )}
 
+      <div style={s.group}>Layout &amp; multiples</div>
       <div style={s.sub}>Radial split (around the part)</div>
       <div style={s.row}>
         {([0, 3, 4, 6] as const).map(n => (
@@ -490,8 +496,9 @@ export default function AdvancedMoldPanel(p: Props) {
         </>
       )}
 
+      <div style={s.group}>Material &amp; printing</div>
       <div style={s.sub}>Casting material</div>
-      <div style={s.hint}>{mat.label} — change it in the Mold step (“What are you casting?”).</div>
+      <div style={s.hint}>{mat.label} — change it in the Mold step, under Mold details.</div>
       <div style={{ marginTop: spacing.sm }}>
         <div style={s.kv}><span>Cast weight{t.cavityCount > 1 ? ` (×${t.cavityCount})` : ''}</span><span>{castGrams.toFixed(0)} g</span></div>
         <div style={s.kv}><span>Mold silicone</span><span>{mat.silicone}</span></div>

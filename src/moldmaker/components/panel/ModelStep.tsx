@@ -25,7 +25,7 @@ export function ModelStep({ state, hasModel, onLoadFile, onPrinterChange, onScal
     <>
       <div style={styles.section}>
         <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Model</h2>
-        {state.fileName && <div style={{ ...styles.fileInfo, marginBottom: spacing.sm + 2 }}>{state.fileName}</div>}
+        {state.fileName && <div style={{ ...styles.fileInfo, marginBottom: spacing.sm }}>{state.fileName}</div>}
         <button type="button" style={{ ...styles.button, ...styles.secondaryBtn }} onClick={onLoadFile}>
           {hasModel ? 'Load a different model' : 'Open model file'}
         </button>
