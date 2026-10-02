@@ -6,6 +6,17 @@ import * as THREE from 'three';
 import type { Axis, MoldMode } from '../types';
 import { CASTING_MATERIALS, solidProps, type CastingMaterialId } from '../utils/tier2';
 import { demoldRisk, airTrapPoints } from '../mold/castRisk';
+import {
+  HANDLING_ALLOWANCE,
+  REFERENCE_TEMPERATURE_C,
+  SILICONE_MOLD_CURE_HOURS_AT_25C,
+  SILICONE_MOLD_DENSITY_G_CM3,
+  SILICONE_MOLD_WALL_MM,
+  SILICONE_MOLD_WORK_MINUTES_AT_25C,
+  WORKSHOP_MATERIAL_PROFILES,
+  splitByWeight,
+  temperatureGuidance,
+} from '../utils/workshopDefaults';
 
 interface Props {
   geometry: THREE.BufferGeometry; boundingBox: THREE.Box3 | null; axis: Axis; offset: number; cutAngle: number;
@@ -13,42 +24,28 @@ interface Props {
   onClose: () => void;
 }
 
-/** Mix ratio by weight (A:B) typical for each casting material, null = single part. */
-const MIX: Record<CastingMaterialId, [number, number] | null> = {
-  pu_resin: [1, 1], epoxy: [2, 1], plaster: [100, 70], concrete: null, wax: null, soap: null, chocolate: null, silicone_cast: [1, 1],
-};
-const REACTIVE = new Set<CastingMaterialId>(['pu_resin', 'epoxy', 'silicone_cast']);
-const SILICONE_DENSITY = 1.1; // g/cm³
-const WALL_MM = 10;
-
-/** Rule of thumb: cure speed roughly doubles every 10 °C above 25 °C. */
-export function heatFactor(tempC: number) { return Math.pow(2, (tempC - 25) / 10); }
-
-const fmtMin = (m: number) => (m >= 90 ? `${(m / 60).toFixed(1)} h` : `${Math.round(m)} min`);
+const fmtRange = (range: readonly [number, number], unit: string) => `${range[0]}–${range[1]} ${unit}`;
 
 export function WorkshopSheet(p: Props) {
-  const [temp, setTemp] = useState(32);
-  const mat = CASTING_MATERIALS.find(m => m.id === p.castingMaterial) ?? CASTING_MATERIALS[0]!;
+  const [temp, setTemp] = useState(REFERENCE_TEMPERATURE_C);
+  const mat = CASTING_MATERIALS.find(m => m.id === p.castingMaterial) ?? CASTING_MATERIALS[0];
+  if (!mat) return null;
+  const profile = WORKSHOP_MATERIAL_PROFILES[p.castingMaterial];
   const data = useMemo(() => {
     const s3 = p.scale ** 3;
     const partCm3 = Math.abs(solidProps(p.geometry).volume) * s3 / 1000;
     const bb = p.boundingBox ?? new THREE.Box3().setFromBufferAttribute(p.geometry.getAttribute('position') as THREE.BufferAttribute);
     const sz = bb.getSize(new THREE.Vector3()).multiplyScalar(p.scale);
-    const blockCm3 = ((sz.x + 2 * WALL_MM) * (sz.y + 2 * WALL_MM) * (sz.z + 2 * WALL_MM)) / 1000;
+    const blockCm3 = ((sz.x + 2 * SILICONE_MOLD_WALL_MM) * (sz.y + 2 * SILICONE_MOLD_WALL_MM) * (sz.z + 2 * SILICONE_MOLD_WALL_MM)) / 1000;
     const siliconeCm3 = Math.max(0, blockCm3 - partCm3) * p.cavities;
-    const castG = partCm3 * mat.density * p.cavities * 1.1; // +10% for sprue and spill
+    const castG = partCm3 * mat.density * p.cavities * (1 + HANDLING_ALLOWANCE);
     const risk = p.boundingBox ? demoldRisk(p.geometry, p.axis, p.offset, p.boundingBox, p.cutAngle) : null;
     const traps = p.boundingBox ? airTrapPoints(p.geometry, p.axis, p.boundingBox).length : 0;
-    return { partCm3, siliconeG: siliconeCm3 * SILICONE_DENSITY * 1.1, castG, sz, risk, traps };
+    return { partCm3, siliconeG: siliconeCm3 * SILICONE_MOLD_DENSITY_G_CM3 * (1 + HANDLING_ALLOWANCE), castG, sz, risk, traps };
   }, [p.geometry, p.boundingBox, p.scale, p.cavities, p.axis, p.offset, p.cutAngle, mat.density]);
 
-  const f = heatFactor(temp);
-  const mix = MIX[p.castingMaterial];
-  const split = (g: number) => (mix ? [g * mix[0] / (mix[0] + mix[1]), g * mix[1] / (mix[0] + mix[1])] : null);
-  const castSplit = split(data.castG);
-  const silSplit = p.moldMode === 'silicone' ? [data.siliconeG / 2, data.siliconeG / 2] : null;
-  const potLife = REACTIVE.has(p.castingMaterial) ? (p.castingMaterial === 'epoxy' ? 40 : 10) / f : null;
-  const siliconeWork = 40 / f, siliconeCure = 6 * 60 / f;
+  const mix = profile.mixByWeight;
+  const castSplit = splitByWeight(data.castG, mix);
   const row = { display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid #ddd' } as const;
   const h = { fontSize: 13, fontWeight: 700, margin: '14px 0 4px', textTransform: 'uppercase' as const, letterSpacing: 1 };
 
@@ -79,19 +76,21 @@ export function WorkshopSheet(p: Props) {
         <div style={row}><span>Air pockets</span><span>{data.traps ? `${data.traps}${p.autoVents ? ' — vents added' : ' — add vents!'}` : 'none'}</span></div>
 
         <div style={h}>Casting: {mat.label}</div>
-        <div style={row}><span>Total to mix (+10% spare)</span><strong>{data.castG.toFixed(0)} g</strong></div>
-        {castSplit && mix && <div style={row}><span>Part A : Part B ({mix[0]}:{mix[1]} by weight)</span><strong>{castSplit[0]!.toFixed(0)} g + {castSplit[1]!.toFixed(0)} g</strong></div>}
-        {potLife !== null && <div style={row}><span>Working time at {temp} °C</span><span>about {fmtMin(potLife)}</span></div>}
-        <div style={row}><span>Demold (datasheet at 25 °C)</span><span>{mat.demold}{f > 1.2 ? ' — usually sooner in this heat' : ''}</span></div>
+        <div style={row}><span>Total to prepare (+10% handling allowance)</span><strong>{data.castG.toFixed(0)} g</strong></div>
+        {castSplit && mix && <div style={row}><span>Plaster : water ({mix[0]}:{mix[1]} by weight)</span><strong>{castSplit[0].toFixed(0)} g + {castSplit[1].toFixed(0)} g</strong></div>}
+        <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> use the exact ratio printed in your product TDS. Resin and silicone ratios are product-specific.</div>
+        {profile.workingMinutesAt25C && <div style={row}><span>Typical working-time range at 25 °C</span><span>{fmtRange(profile.workingMinutesAt25C, 'min')}</span></div>}
+        <div style={row}><span>Typical demold range at 25 °C</span><span>{mat.demold}</span></div>
+        <div style={{ color: '#555', marginTop: 4 }}>{temperatureGuidance(temp)}</div>
         <div style={row}><span>Release agent</span><span>{mat.release}</span></div>
         <div style={{ color: '#555', marginTop: 4 }}>{mat.notes}</div>
 
-        {silSplit && <>
+        {p.moldMode === 'silicone' && <>
           <div style={h}>Mold silicone ({mat.shore}, {mat.silicone})</div>
-          <div style={row}><span>Silicone needed (10 mm walls, +10%)</span><strong>{data.siliconeG.toFixed(0)} g</strong></div>
-          <div style={row}><span>Part A + Part B (1:1, check your kit)</span><strong>{silSplit[0]!.toFixed(0)} g + {silSplit[1]!.toFixed(0)} g</strong></div>
-          <div style={row}><span>Working time at {temp} °C</span><span>about {fmtMin(siliconeWork)}</span></div>
-          <div style={row}><span>Cure before demold at {temp} °C</span><span>about {fmtMin(siliconeCure)}</span></div>
+          <div style={row}><span>Silicone estimate ({SILICONE_MOLD_WALL_MM} mm walls, +10%)</span><strong>{data.siliconeG.toFixed(0)} g</strong></div>
+          <div style={row}><span>Typical working-time range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_WORK_MINUTES_AT_25C, 'min')}</span></div>
+          <div style={row}><span>Typical cure range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_CURE_HOURS_AT_25C, 'h')}</span></div>
+          <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> silicone may be 1:1, 100:10 or 100:5. Use your product's exact TDS ratio and minimum cure time.</div>
         </>}
 
         <div style={h}>Print the mold</div>
@@ -105,14 +104,14 @@ export function WorkshopSheet(p: Props) {
           {[
             'Clean the cavity and apply release; let it dry.',
             'Clamp the halves evenly; seal the seam with clay or tape.',
-            temp >= 30 ? `It is ${temp} °C: mix small batches and pour quickly — it sets faster in heat.` : 'Weigh both parts on a scale, never by eye.',
-            'Mix slowly for 2–3 minutes, scraping the sides and bottom.',
-            'Pour in a thin stream from 30–50 cm into the lowest corner.',
+            temp >= 30 ? `It is ${temp} °C: working time may be shorter. Prepare a smaller batch and follow the TDS.` : 'Weigh both parts on a suitable scale, never by eye.',
+            'Mix for the time stated in the TDS, scraping the sides and bottom without whipping in air.',
+            'Pour a thin, steady stream into the lowest point and let the material rise through the cavity.',
             'Tap the mold or vibrate for 1 minute to lift bubbles.',
             'Top up the pour hole as it shrinks; demold only when fully hard.',
           ].map((t, i) => <li key={i}>{t}</li>)}
         </ol>
-        <div style={{ marginTop: 12, fontSize: 11, color: '#666' }}>Estimates only — follow your material supplier's datasheet. Questions? WhatsApp Sirpam 3D Labs +91 97893 91798.</div>
+        <div style={{ marginTop: 12, fontSize: 11, color: '#666' }}>Planning estimates only — the product Technical Data Sheet (TDS) controls ratio, working time, cure, temperature, safety and release. Questions? WhatsApp Sirpam 3D Labs +91 97893 91798.</div>
       </article>
     </div>
   );
