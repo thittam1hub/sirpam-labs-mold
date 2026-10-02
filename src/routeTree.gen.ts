@@ -14,7 +14,9 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LicensesRouteImport } from './routes/licenses'
@@ -59,9 +61,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalculatorRoute = CalculatorRouteImport.update({
+  id: '/calculator',
+  path: '/calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeliveryRoute = DeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -163,7 +175,9 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
+  '/delivery': typeof DeliveryRoute
   '/gallery': typeof GalleryRoute
   '/help': typeof HelpRoute
   '/licenses': typeof LicensesRoute
@@ -189,7 +203,9 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
+  '/delivery': typeof DeliveryRoute
   '/gallery': typeof GalleryRoute
   '/help': typeof HelpRoute
   '/licenses': typeof LicensesRoute
@@ -216,7 +232,9 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
+  '/delivery': typeof DeliveryRoute
   '/gallery': typeof GalleryRoute
   '/help': typeof HelpRoute
   '/licenses': typeof LicensesRoute
@@ -244,7 +262,9 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/calculator'
     | '/contact'
+    | '/delivery'
     | '/gallery'
     | '/help'
     | '/licenses'
@@ -270,7 +290,9 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/calculator'
     | '/contact'
+    | '/delivery'
     | '/gallery'
     | '/help'
     | '/licenses'
@@ -296,7 +318,9 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
+    | '/calculator'
     | '/contact'
+    | '/delivery'
     | '/gallery'
     | '/help'
     | '/licenses'
@@ -323,7 +347,9 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  CalculatorRoute: typeof CalculatorRoute
   ContactRoute: typeof ContactRoute
+  DeliveryRoute: typeof DeliveryRoute
   GalleryRoute: typeof GalleryRoute
   HelpRoute: typeof HelpRoute
   LicensesRoute: typeof LicensesRoute
@@ -381,11 +407,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calculator': {
+      id: '/calculator'
+      path: '/calculator'
+      fullPath: '/calculator'
+      preLoaderRoute: typeof CalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/delivery': {
+      id: '/delivery'
+      path: '/delivery'
+      fullPath: '/delivery'
+      preLoaderRoute: typeof DeliveryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -523,7 +563,9 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  CalculatorRoute: CalculatorRoute,
   ContactRoute: ContactRoute,
+  DeliveryRoute: DeliveryRoute,
   GalleryRoute: GalleryRoute,
   HelpRoute: HelpRoute,
   LicensesRoute: LicensesRoute,
