@@ -17,7 +17,7 @@ export function LegalFooter() {
         <Link to="/about">About</Link> · <Link to="/help">Help</Link> · <Link to="/guides">Guides</Link> · <Link to="/contact">Contact</Link> · <Link to="/pricing">Pricing</Link>
       </p>
       <p className="mt-1">
-        <Link to="/terms">Terms</Link> · <Link to="/refunds">Refund policy</Link> · <Link to="/privacy">Privacy</Link> · <Link to="/licenses">Licenses</Link>
+        <Link to="/terms">Terms</Link> · <Link to="/refunds">Refund policy</Link> · <Link to="/delivery">Delivery</Link> · <Link to="/privacy">Privacy</Link> · <Link to="/licenses">Licenses</Link>
       </p>
       </div>
     </footer>

@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const links = [
   { to: "/studio", label: "Studio" },
+  { to: "/calculator", label: "Calculator" },
   { to: "/shop", label: "Shop" },
   { to: "/gallery", label: "Gallery" },
   { to: "/pricing", label: "Pricing" },
