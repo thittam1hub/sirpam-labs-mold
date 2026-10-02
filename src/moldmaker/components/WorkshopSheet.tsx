@@ -46,8 +46,6 @@ export function WorkshopSheet(p: Props) {
 
   const mix = profile.mixByWeight;
   const castSplit = splitByWeight(data.castG, mix);
-  const siliconeReferenceRatio = [1, 1] as const;
-  const silSplit = p.moldMode === 'silicone' ? splitByWeight(data.siliconeG, siliconeReferenceRatio) : null;
   const row = { display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid #ddd' } as const;
   const h = { fontSize: 13, fontWeight: 700, margin: '14px 0 4px', textTransform: 'uppercase' as const, letterSpacing: 1 };
 
@@ -78,22 +76,21 @@ export function WorkshopSheet(p: Props) {
         <div style={row}><span>Air pockets</span><span>{data.traps ? `${data.traps}${p.autoVents ? ' — vents added' : ' — add vents!'}` : 'none'}</span></div>
 
         <div style={h}>Casting: {mat.label}</div>
-        <div style={row}><span>Total to prepare (+15% handling allowance)</span><strong>{data.castG.toFixed(0)} g</strong></div>
-        {castSplit && mix && <div style={row}><span>Planning ratio A:B ({mix[0]}:{mix[1]} by weight)</span><strong>{castSplit[0].toFixed(0)} g + {castSplit[1].toFixed(0)} g</strong></div>}
-        {mix && <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> replace this planning ratio with the exact ratio printed in your product TDS.</div>}
+        <div style={row}><span>Total to prepare (+10% handling allowance)</span><strong>{data.castG.toFixed(0)} g</strong></div>
+        {castSplit && mix && <div style={row}><span>Plaster : water ({mix[0]}:{mix[1]} by weight)</span><strong>{castSplit[0].toFixed(0)} g + {castSplit[1].toFixed(0)} g</strong></div>}
+        <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> use the exact ratio printed in your product TDS. Resin and silicone ratios are product-specific.</div>
         {profile.workingMinutesAt25C && <div style={row}><span>Typical working-time range at 25 °C</span><span>{fmtRange(profile.workingMinutesAt25C, 'min')}</span></div>}
         <div style={row}><span>Typical demold range at 25 °C</span><span>{mat.demold}</span></div>
         <div style={{ color: '#555', marginTop: 4 }}>{temperatureGuidance(temp)}</div>
         <div style={row}><span>Release agent</span><span>{mat.release}</span></div>
         <div style={{ color: '#555', marginTop: 4 }}>{mat.notes}</div>
 
-        {silSplit && <>
+        {p.moldMode === 'silicone' && <>
           <div style={h}>Mold silicone ({mat.shore}, {mat.silicone})</div>
-          <div style={row}><span>Silicone estimate ({SILICONE_MOLD_WALL_MM} mm walls, +15%)</span><strong>{data.siliconeG.toFixed(0)} g</strong></div>
-          <div style={row}><span>Planning ratio A:B (1:1 by weight)</span><strong>{silSplit[0].toFixed(0)} g + {silSplit[1].toFixed(0)} g</strong></div>
+          <div style={row}><span>Silicone estimate ({SILICONE_MOLD_WALL_MM} mm walls, +10%)</span><strong>{data.siliconeG.toFixed(0)} g</strong></div>
           <div style={row}><span>Typical working-time range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_WORK_MINUTES_AT_25C, 'min')}</span></div>
-          <div style={row}><span>Conservative cure range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_CURE_HOURS_AT_25C, 'h')}</span></div>
-          <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> silicone ratios vary. Use your product's exact TDS ratio and minimum cure time.</div>
+          <div style={row}><span>Typical cure range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_CURE_HOURS_AT_25C, 'h')}</span></div>
+          <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> silicone may be 1:1, 100:10 or 100:5. Use your product's exact TDS ratio and minimum cure time.</div>
         </>}
 
         <div style={h}>Print the mold</div>

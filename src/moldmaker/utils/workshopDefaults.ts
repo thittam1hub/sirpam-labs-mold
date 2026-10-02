@@ -3,7 +3,7 @@ import type { CastingMaterialId } from './tier2';
 export type MixRatio = readonly [partA: number, partB: number];
 
 export interface WorkshopMaterialProfile {
-  /** Representative planning ratio only. The selected product TDS always wins. */
+  /** Only set when a broad industry convention is defensible. */
   mixByWeight: MixRatio | null;
   workingMinutesAt25C: readonly [min: number, max: number] | null;
 }
@@ -13,22 +13,22 @@ export interface WorkshopMaterialProfile {
  * product specifications and must never replace the material supplier's TDS.
  */
 export const WORKSHOP_MATERIAL_PROFILES: Record<CastingMaterialId, WorkshopMaterialProfile> = {
-  pu_resin: { mixByWeight: [1, 1], workingMinutesAt25C: [5, 15] },
-  epoxy: { mixByWeight: [2, 1], workingMinutesAt25C: [30, 45] },
+  pu_resin: { mixByWeight: null, workingMinutesAt25C: [5, 15] },
+  epoxy: { mixByWeight: null, workingMinutesAt25C: [15, 360] },
   plaster: { mixByWeight: [100, 70], workingMinutesAt25C: [8, 15] },
   concrete: { mixByWeight: null, workingMinutesAt25C: null },
   wax: { mixByWeight: null, workingMinutesAt25C: null },
   soap: { mixByWeight: null, workingMinutesAt25C: null },
   chocolate: { mixByWeight: null, workingMinutesAt25C: null },
-  silicone_cast: { mixByWeight: [1, 1], workingMinutesAt25C: [30, 45] },
+  silicone_cast: { mixByWeight: null, workingMinutesAt25C: [15, 60] },
 };
 
 export const REFERENCE_TEMPERATURE_C = 25;
-export const SILICONE_MOLD_DENSITY_G_CM3 = 1.15;
-export const SILICONE_MOLD_WALL_MM = 12;
-export const HANDLING_ALLOWANCE = 0.15;
-export const SILICONE_MOLD_WORK_MINUTES_AT_25C = [30, 45] as const;
-export const SILICONE_MOLD_CURE_HOURS_AT_25C = [16, 24] as const;
+export const SILICONE_MOLD_DENSITY_G_CM3 = 1.1;
+export const SILICONE_MOLD_WALL_MM = 10;
+export const HANDLING_ALLOWANCE = 0.1;
+export const SILICONE_MOLD_WORK_MINUTES_AT_25C = [15, 60] as const;
+export const SILICONE_MOLD_CURE_HOURS_AT_25C = [4, 24] as const;
 
 export function temperatureGuidance(tempC: number): string {
   if (tempC >= 30) return 'Warm workshop: working time may be shorter. Mix smaller batches and check the product TDS.';
