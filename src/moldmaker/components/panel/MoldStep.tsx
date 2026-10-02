@@ -145,7 +145,7 @@ export function MoldStep(props: MoldStepProps) {
           </label>
           {state.formFit && (
             <p style={{ ...styles.label, color: colors.textDim, marginTop: spacing.xs }}>
-              Saves material on curvy models — generation takes longer.
+              The shell follows the model's shape, so it uses less material. Building takes longer.
             </p>
           )}
         </div>

@@ -296,12 +296,14 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                     onAxisChange={axis => setState(prev => ({ ...prev, axis, planeOffset: 0.5, cutAngle: 0 }))}
                     onEnableAutoVents={() => setState(prev => ({ ...prev, tier2: { ...prev.tier2, autoVents: true } }))}
                   />
-                  <button type="button" onClick={() => setSheetOpen(true)} style={{ marginTop: spacing.sm, width: '100%', padding: `${spacing.sm}px`, borderRadius: radii.pill, border: `1px solid ${colors.primary}`, background: 'transparent', color: colors.primary, fontWeight: 600, cursor: 'pointer', fontSize: fontSizes.sm }}>
-                    Workshop pour & print sheet
-                  </button>
-                  <button type="button" onClick={() => setShowDoctor(v => !v)} aria-pressed={showDoctor} style={{ marginTop: spacing.xs, width: '100%', padding: `${spacing.sm}px`, borderRadius: radii.pill, border: 'none', background: colors.sectionBg, boxShadow: showDoctor ? shadows.inset : shadows.raisedSm, color: showDoctor ? colors.primary : colors.textBody, fontWeight: 600, cursor: 'pointer', fontSize: fontSizes.sm }}>
-                    {showDoctor ? 'Hide problem spots on model' : 'Show problem spots on model'}
-                  </button>
+                  <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.sm }}>
+                    <button type="button" onClick={() => setSheetOpen(true)} style={{ flex: 1, padding: `${spacing.sm}px`, borderRadius: radii.pill, border: `1px solid ${colors.primary}`, background: 'transparent', color: colors.primary, fontWeight: 600, cursor: 'pointer', fontSize: fontSizes.sm }}>
+                      Workshop sheet
+                    </button>
+                    <button type="button" onClick={() => setShowDoctor(v => !v)} aria-pressed={showDoctor} style={{ flex: 1, padding: `${spacing.sm}px`, borderRadius: radii.pill, border: 'none', background: colors.sectionBg, boxShadow: showDoctor ? shadows.inset : shadows.raisedSm, color: showDoctor ? colors.primary : colors.textBody, fontWeight: 600, cursor: 'pointer', fontSize: fontSizes.sm }}>
+                      {showDoctor ? 'Hide problem spots' : 'Show problem spots'}
+                    </button>
+                  </div>
                   <MoldDoctorCard
                     geometry={state.originalGeometry}
                     boundingBox={state.boundingBox}

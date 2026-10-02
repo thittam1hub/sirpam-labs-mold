@@ -151,8 +151,7 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
         onChange={e => onChange({ castingMaterial: e.target.value as CastingMaterialId })}>
         {CASTING_MATERIALS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
       </select>
-      <div style={s.hint}>Used everywhere: shrink compensation, cast weight, advisor and report.</div>
-      <CompatCard input={{ castingMaterial: t.castingMaterial, moldMode: p.moldMode, siliconeType: p.siliconeType, printMaterial: p.printMaterial ?? 'pla' }} />
+      <div style={s.hint}>Sets shrink, cast weight and the report. Material fit check is on the Finish step.</div>
 
       <div style={s.sub}>Copies per mold</div>
       <Slider label="Copies" value={t.cavityCount} min={1} max={9} step={1} unit="×"
@@ -174,7 +173,7 @@ export function MoldCoreSettings(p: { settings: Tier2Settings; onChange: (patch:
             <button key={n} style={s.chip((t.ventCount ?? -1) === n)} onClick={() => onChange({ ventCount: n })}>{n === -1 ? 'Auto' : n === 0 ? 'Off' : n}</button>
           ))}
         </div>
-        <div style={s.hint}>Vent size lives in the Mold step next to the pour hole. Typical: 1.5–3 mm vents.</div>
+        <div style={s.hint}>How many vents. Vent size is set above, under Air vent size.</div>
       </>)}
 
       {blockSilicone && (<>

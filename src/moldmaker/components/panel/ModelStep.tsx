@@ -27,7 +27,7 @@ export function ModelStep({ state, hasModel, onLoadFile, onPrinterChange, onScal
         <h2 style={{ ...styles.sectionTitle, marginTop: 0 }}>Model</h2>
         {state.fileName && <div style={{ ...styles.fileInfo, marginBottom: spacing.sm + 2 }}>{state.fileName}</div>}
         <button type="button" style={{ ...styles.button, ...styles.secondaryBtn }} onClick={onLoadFile}>
-          {hasModel ? 'Load Different Model' : 'Open STL / OBJ File'}
+          {hasModel ? 'Load a different model' : 'Open model file'}
         </button>
       </div>
 
@@ -98,7 +98,7 @@ export function ModelStep({ state, hasModel, onLoadFile, onPrinterChange, onScal
           {selectedPrinter && (
             <div>
               <label style={{ ...styles.label, marginBottom: spacing.xs, display: 'block' }}>
-                Print Scale: {Math.round(state.scale * 100)}%
+                Print scale: {Math.round(state.scale * 100)}%
               </label>
               <input
                 type="range" min={0.1} max={1.0} step={0.01} value={state.scale}
@@ -110,7 +110,7 @@ export function ModelStep({ state, hasModel, onLoadFile, onPrinterChange, onScal
 
           {!selectedPrinter && (
             <div style={{ ...styles.hint, marginTop: spacing.xs }}>
-              Pick a printer to check fit and see a scale suggestion. Scale is a preview — the exported STL matches what's shown here.
+              Pick a printer to check fit and see a scale suggestion. Every export uses the scale shown here.
             </div>
           )}
         </div>
