@@ -43,7 +43,7 @@ export default function DoctorOverlay({ geometry, axis, offset, boundingBox, cut
   const group = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     const s = 1 + 0.35 * Math.sin(clock.elapsedTime * 4);
-    group.current?.children.forEach(c => { if (c.userData.halo) c.scale.setScalar(s); });
+    group.current?.children.forEach(c => { if (c.userData['halo']) c.scale.setScalar(s); });
   });
 
   return (
