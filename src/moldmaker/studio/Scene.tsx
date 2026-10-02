@@ -9,6 +9,7 @@ import HeatmapOverlay from '../components/HeatmapOverlay';
 import SplitLineOverlay from '../components/SplitLineOverlay';
 import FillOverlay from '../components/FillOverlay';
 import ThicknessOverlay from '../components/ThicknessOverlay';
+import DoctorOverlay from '../components/DoctorOverlay';
 import { EXPLODE_OFFSET_RATIO } from '../hooks/useMoldGenerator';
 import type { Axis } from '../types';
 import type { AppState } from './state';
@@ -90,6 +91,7 @@ export interface StudioSceneProps {
   modelFitSize: number | undefined;
   showThickness: boolean;
   showFill: boolean;
+  showDoctor?: boolean;
   onTrapCount: (n: number) => void;
   onThicknessMin: (n: number) => void;
   onCreated: () => void;
@@ -99,7 +101,7 @@ export interface StudioSceneProps {
 /** The full 3D viewport contents: lights, model/mold meshes, overlays, gizmo. */
 export default function StudioScene({
   state, setState, themeMode, sceneCols, modelFitSize,
-  showThickness, showFill, onTrapCount, onThicknessMin, onCreated, showPartingPlaneIndicator,
+  showThickness, showFill, showDoctor = false, onTrapCount, onThicknessMin, onCreated, showPartingPlaneIndicator,
 }: StudioSceneProps) {
   return (
     <Canvas
@@ -117,13 +119,17 @@ export default function StudioScene({
           viewport visually matches the exported file size. Grid/gizmo stay
           outside — they're world-space reference, not part-space. */}
       <group scale={[state.scale, state.scale, state.scale]}>
-        {state.originalGeometry && showFill && !showThickness && (
+        {state.originalGeometry && state.boundingBox && showDoctor && (
+          <DoctorOverlay geometry={state.originalGeometry} axis={state.axis} offset={state.planeOffset}
+            boundingBox={state.boundingBox} cutAngle={state.cutAngle} />
+        )}
+        {state.originalGeometry && showFill && !showThickness && !showDoctor && (
           <FillOverlay geometry={state.originalGeometry} axis={state.axis} onTraps={onTrapCount} />
         )}
-        {state.originalGeometry && showThickness && (
+        {state.originalGeometry && showThickness && !showDoctor && (
           <ThicknessOverlay geometry={state.originalGeometry} onMin={onThicknessMin} />
         )}
-        {state.originalGeometry && state.boundingBox && state.showHeatmap && !showThickness && !showFill && (
+        {state.originalGeometry && state.boundingBox && state.showHeatmap && !showThickness && !showFill && !showDoctor && (
           <HeatmapOverlay
             geometry={state.originalGeometry}
             axis={state.axis}
@@ -144,7 +150,7 @@ export default function StudioScene({
           />
         )}
 
-        {state.originalGeometry && !state.showHeatmap && !showThickness && !showFill && state.showOriginal && (
+        {state.originalGeometry && !state.showHeatmap && !showThickness && !showFill && !showDoctor && state.showOriginal && (
           <ModelViewer
             geometry={state.originalGeometry}
             color="#6c9bcf"

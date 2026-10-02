@@ -20,6 +20,7 @@ import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import { CastRiskCard } from './components/CastRiskCard';
 import { MoldDoctorCard } from './components/MoldDoctorCard';
+import { WorkshopSheet } from './components/WorkshopSheet';
 import { PourPlanCard } from './components/PourPlanCard';
 import { getPresetById } from './utils/printerPresets';
 
@@ -81,6 +82,8 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
 
   const [showThickness, setShowThickness] = useState(false);
   const [showFill, setShowFill] = useState(false);
+  const [showDoctor, setShowDoctor] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [trapCount, setTrapCount] = useState<number | null>(null);
   const [thicknessMin, setThicknessMin] = useState<number | null>(null);
 
@@ -168,6 +171,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               modelFitSize={modelFitSize}
               showThickness={showThickness}
               showFill={showFill}
+              showDoctor={showDoctor}
               onTrapCount={setTrapCount}
               onThicknessMin={setThicknessMin}
               onCreated={() => setNoWebgl(false)}
@@ -185,8 +189,9 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               <ViewToolbar
                 wireframe={state.wireframe} onToggleWireframe={() => setState(p => ({ ...p, wireframe: !p.wireframe }))}
                 showHeatmap={state.showHeatmap} onToggleHeatmap={() => setState(p => ({ ...p, showHeatmap: !p.showHeatmap }))}
-                showThickness={showThickness} onToggleThickness={() => { setShowThickness(v => !v); setShowFill(false); }}
-                showFill={showFill} onToggleFill={() => { setShowFill(v => !v); setShowThickness(false); }}
+                showThickness={showThickness} onToggleThickness={() => { setShowThickness(v => !v); setShowFill(false); setShowDoctor(false); }}
+                showFill={showFill} onToggleFill={() => { setShowFill(v => !v); setShowThickness(false); setShowDoctor(false); }}
+                showDoctor={showDoctor} onToggleDoctor={() => { setShowDoctor(v => !v); setShowFill(false); setShowThickness(false); }}
                 explodedView={state.explodedView} onToggleExplode={() => setState(p => ({ ...p, explodedView: !p.explodedView }))}
                 showOriginal={state.showOriginal} onToggleOriginal={() => setState(p => ({ ...p, showOriginal: !p.showOriginal }))}
                 moldGenerated={state.moldGenerated}
@@ -194,6 +199,18 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             )}
             {showFill && state.originalGeometry && <FillLegend axis={state.axis} trapCount={trapCount} />}
             {showThickness && state.originalGeometry && <ThicknessLegend min={thicknessMin} />}
+            {showDoctor && state.originalGeometry && (
+              <div role="note" style={{ position: 'absolute', top: spacing.lg, left: spacing.lg, zIndex: 5, background: colors.sectionBg, borderRadius: radii.md, boxShadow: shadows.raisedSm, padding: `${spacing.xs}px ${spacing.sm}px`, fontSize: fontSizes.xs, color: colors.textBody, lineHeight: 1.6 }}>
+                <div><span style={{ color: '#ef4444' }}>■</span> Will lock in or tear the mold</div>
+                <div><span style={{ color: '#f59e0b' }}>●</span> Air bubble will be trapped here</div>
+              </div>
+            )}
+            {sheetOpen && state.originalGeometry && (
+              <WorkshopSheet geometry={state.originalGeometry} boundingBox={state.boundingBox} axis={state.axis}
+                offset={state.planeOffset} cutAngle={state.cutAngle} moldMode={state.moldMode}
+                castingMaterial={state.tier2.castingMaterial} cavities={state.tier2.cavityCount ?? 1}
+                autoVents={!!state.tier2.autoVents} scale={state.scale} onClose={() => setSheetOpen(false)} />
+            )}
           </main>
 
           <div style={{ display: panelOpen ? 'contents' : 'none' }}>
@@ -279,6 +296,12 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
                     onAxisChange={axis => setState(prev => ({ ...prev, axis, planeOffset: 0.5, cutAngle: 0 }))}
                     onEnableAutoVents={() => setState(prev => ({ ...prev, tier2: { ...prev.tier2, autoVents: true } }))}
                   />
+                  <button type="button" onClick={() => setSheetOpen(true)} style={{ marginTop: spacing.sm, width: '100%', padding: `${spacing.sm}px`, borderRadius: radii.pill, border: `1px solid ${colors.primary}`, background: 'transparent', color: colors.primary, fontWeight: 600, cursor: 'pointer', fontSize: fontSizes.sm }}>
+                    Workshop pour & print sheet
+                  </button>
+                  <button type="button" onClick={() => setShowDoctor(v => !v)} aria-pressed={showDoctor} style={{ marginTop: spacing.xs, width: '100%', padding: `${spacing.sm}px`, borderRadius: radii.pill, border: 'none', background: colors.sectionBg, boxShadow: showDoctor ? shadows.inset : shadows.raisedSm, color: showDoctor ? colors.primary : colors.textBody, fontWeight: 600, cursor: 'pointer', fontSize: fontSizes.sm }}>
+                    {showDoctor ? 'Hide problem spots on model' : 'Show problem spots on model'}
+                  </button>
                   <MoldDoctorCard
                     geometry={state.originalGeometry}
                     boundingBox={state.boundingBox}
