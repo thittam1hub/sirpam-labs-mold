@@ -40,7 +40,7 @@ const PROOF = [
   { k: "STL · OBJ · 3MF · STEP", v: "Files you can open" },
   { k: "In your browser", v: "Models stay on your computer" },
   { k: "2, 3 or 4 parts", v: "Straight, angled or curved splits" },
-  { k: "India workshop", v: "Printed and shipped from Tamil Nadu" },
+  { k: "India workshop", v: "Printing and delivery within India" },
 ];
 
 const STEPS = [
@@ -102,7 +102,7 @@ function LandingPage() {
                 className="aspect-[8/5] w-full rounded-xl border border-border object-cover shadow-lg"
               />
               <figcaption className="absolute -bottom-4 left-4 rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs shadow-md">
-                Two-part mold · printed in PLA · cast in PU resin
+                Two-part printed mold and finished cast
               </figcaption>
             </figure>
           </div>
