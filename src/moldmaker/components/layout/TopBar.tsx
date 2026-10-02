@@ -107,14 +107,20 @@ export default function TopBar(p: Props) {
         </span>
       )}
       <div style={{ flex: 1 }} />
-      <div className="sirpam-hide-sm" style={{ display: 'flex', gap: spacing.sm }}>
-        <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
-        <button type="button" style={pill()} onClick={p.onSample}>Try sample</button>
-        <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
-        <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
-        <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
-        <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
-        <ThemeToggle style={{ ...pill(), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px 10px' }} className="" />
+      <div className="sirpam-hide-sm" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+        <div role="group" aria-label="File" style={{ display: 'flex', gap: spacing.sm }}>
+          <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
+          <button type="button" style={pill()} onClick={p.onSample}>Try sample</button>
+          <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
+        </div>
+        <span aria-hidden="true" style={{ width: 1, height: spacing.xl, background: colors.borderSubtle, margin: `0 ${spacing.xs}px` }} />
+        <nav aria-label="Site" style={{ display: 'flex', gap: spacing.sm }}>
+          <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
+          <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
+        </nav>
+        <button type="button" style={{ ...pill(), padding: `${spacing.sm}px ${spacing.md}px` }} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
+        <ThemeToggle style={{ ...pill(), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: `${spacing.sm}px ${spacing.md}px` }} className="" />
+        <span aria-hidden="true" style={{ width: 1, height: spacing.xl, background: colors.borderSubtle, margin: `0 ${spacing.xs}px` }} />
       </div>
       {ready && (session ? (
         <div style={{ position: 'relative', display: 'flex', gap: spacing.sm }}>
