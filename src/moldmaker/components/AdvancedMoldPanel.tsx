@@ -4,7 +4,6 @@ import type { Axis, MoldMode, SiliconeMoldType } from '../types';
 import type { SealType, LockStyle } from '../mold/moldFeatures';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { CASTING_MATERIALS, adviseGate, solidProps, type CastingMaterialId, type GateAdvice } from '../utils/tier2';
-import { CompatCard } from './CompatCard';
 
 export interface Tier2Settings {
   seal: SealType;
