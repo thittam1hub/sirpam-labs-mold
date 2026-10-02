@@ -15,16 +15,16 @@ type Props = { step: number; onStep: (n: number) => void; hasModel: boolean; has
 /** Left workflow rail: task switcher (industry pattern: task left, settings right). */
 export default function WorkflowRail({ step, onStep, hasModel, hasMold }: Props) {
   const item = (active: boolean, disabled: boolean): React.CSSProperties => ({
-    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '100%',
-    padding: `${spacing.sm}px 2px`, border: 'none', borderRadius: radii.md, fontFamily: fonts.body,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, width: '100%',
+    minHeight: 56, padding: `${spacing.sm}px ${spacing.xs}px`, border: 'none', borderRadius: radii.md, fontFamily: fonts.body,
     background: active ? colors.primaryAlpha : 'transparent', color: active ? colors.primary : colors.textMuted,
     cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1, textDecoration: 'none',
-    fontSize: fontSizes.xs, fontWeight: 600, position: 'relative',
+    fontSize: fontSizes.xs, fontWeight: 600, position: 'relative', lineHeight: 1.2,
   });
   return (
     <nav aria-label="Workflow steps" className="sirpam-rail" style={{
-      width: 76, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-      padding: `${spacing.md}px 6px`, background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 2,
+      width: 76, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing.xs,
+      padding: `${spacing.lg}px ${spacing.sm}px`, background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 2,
     }}>
       {STEPS.map((s, i) => {
         const active = i === step;
@@ -38,7 +38,7 @@ export default function WorkflowRail({ step, onStep, hasModel, hasMold }: Props)
             style={item(active, disabled)}>
             <Icon aria-hidden="true" size={20} />
             <span>{s.name}</span>
-            {done && !active && <CircleCheck aria-label="done" size={12} style={{ position: 'absolute', top: 4, right: 10, color: colors.primary }} />}
+            {done && !active && <CircleCheck aria-label="done" size={12} style={{ position: 'absolute', top: spacing.xs, right: spacing.xs, color: colors.primary }} />}
           </button>
         );
       })}
