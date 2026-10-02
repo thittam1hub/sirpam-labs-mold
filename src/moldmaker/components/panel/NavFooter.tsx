@@ -46,7 +46,7 @@ export function StepFooter({
   onGenerate: () => void;
 }) {
   return (
-    <div style={{ display: 'flex', gap: spacing.sm, padding: `${spacing.md}px ${spacing.xl}px`, boxShadow: '0 -6px 12px -8px var(--neu-dark)' }}>
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: spacing.md, padding: `${spacing.md}px ${spacing.xl}px ${spacing.lg}px`, minHeight: 72, boxShadow: '0 -6px 12px -8px var(--neu-dark)' }}>
       <button
         type="button" style={{ ...styles.button, ...styles.secondaryBtn, flex: 1, ...(step === 0 ? styles.disabledBtn : {}) }}
         disabled={step === 0} onClick={() => onStepChange(Math.max(0, step - 1))}
