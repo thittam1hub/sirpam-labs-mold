@@ -14,7 +14,7 @@ export default function OverhangPanel({ pieces, labels }: { pieces: THREE.Buffer
   );
   if (!pieces.length) return null;
   return (
-    <div style={{ background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised, marginTop: spacing.md }}>
+    <div style={{ background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md, boxShadow: shadows.raised, marginTop: spacing.md }}>
       <div style={{ fontWeight: 600, color: colors.textPrimary, fontSize: fontSizes.md }}>Print without supports</div>
       <div style={{ color: colors.textMuted, fontSize: fontSizes.sm, margin: `${spacing.xs}px 0 ${spacing.sm}px` }}>
         Set your printer's safe overhang angle. Each piece is checked in all six flat positions.

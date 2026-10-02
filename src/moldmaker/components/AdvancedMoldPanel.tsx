@@ -112,7 +112,7 @@ const s = {
   },
   kv: { display: 'flex', justifyContent: 'space-between', fontSize: fontSizes.sm, color: colors.textBody, padding: '2px 0' },
   input: {
-    width: '100%', padding: `${spacing.xs + 2}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none',
+    width: '100%', padding: `${spacing.xs}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none',
     background: colors.sectionBg, boxShadow: shadows.inset, color: colors.textBody, fontSize: fontSizes.sm,
   },
 };

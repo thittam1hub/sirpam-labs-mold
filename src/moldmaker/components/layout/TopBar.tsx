@@ -27,7 +27,7 @@ interface Props {
 }
 
 const pill = (primary = false, disabled = false) => ({
-  padding: `${spacing.sm}px ${spacing.md + 2}px`, borderRadius: radii.pill, border: 'none',
+  padding: `${spacing.sm}px ${spacing.md}px`, borderRadius: radii.pill, border: 'none',
   cursor: disabled ? 'default' : 'pointer', whiteSpace: 'nowrap' as const, fontFamily: 'inherit',
   background: primary ? colors.primary : colors.sectionBg,
   color: primary ? '#fff' : colors.textBody,
@@ -92,7 +92,7 @@ export default function TopBar(p: Props) {
 
   return (
     <header ref={ref} className="sirpam-topbar" style={{
-      display: 'flex', alignItems: 'center', gap: spacing.md, padding: `${spacing.sm + 2}px ${spacing.lg}px`,
+      display: 'flex', alignItems: 'center', gap: spacing.md, padding: `${spacing.sm}px ${spacing.lg}px`,
       background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 20, fontFamily: fonts.body, minWidth: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0, flexShrink: 0 }}>

@@ -11,12 +11,12 @@ import { BUSINESS } from '@/lib/business';
 import { trackEvent } from '@/components/Analytics';
 
 const s = {
-  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
-  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm + 2, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
+  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md, boxShadow: shadows.raised },
+  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
   hint: { fontSize: fontSizes.xs, color: colors.textDim, lineHeight: 1.4, marginTop: spacing.xs },
   kv: { display: 'flex', justifyContent: 'space-between', fontSize: fontSizes.sm, color: colors.textBody, padding: '2px 0' },
   input: {
-    width: '100%', marginTop: spacing.xs, padding: `${spacing.xs + 2}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none', fontFamily: 'inherit',
+    width: '100%', marginTop: spacing.xs, padding: `${spacing.xs}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none', fontFamily: 'inherit',
     background: colors.sectionBg, boxShadow: shadows.inset, color: colors.textBody, fontSize: fontSizes.sm,
   },
   btn: {
