@@ -1,6 +1,6 @@
 ---
 name: edge-ai-runtime
-description: Use when adding on-device (browser) AI to a web app — Chrome built-in Prompt API (Gemini Nano), Transformers.js v3 / ONNX Runtime Web on WebGPU or WASM, model caching, worker isolation, and cloud fallback. Triggers: "local AI", "edge AI", "offline AI", "WebGPU model", "run model in browser", "cut AI cost".
+description: "Use when adding on-device (browser) AI to a web app - Chrome built-in Prompt API (Gemini Nano), Transformers.js v3 / ONNX Runtime Web on WebGPU or WASM, model caching, worker isolation, and cloud fallback. Triggers include local AI, edge AI, offline AI, WebGPU model, run model in browser, cut AI cost."
 ---
 
 # Edge AI Runtime (browser)
