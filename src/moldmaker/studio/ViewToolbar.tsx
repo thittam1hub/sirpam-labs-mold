@@ -10,6 +10,8 @@ export interface ViewToolbarProps {
   onToggleThickness: () => void;
   showFill: boolean;
   onToggleFill: () => void;
+  showDoctor: boolean;
+  onToggleDoctor: () => void;
   explodedView: boolean;
   onToggleExplode: () => void;
   showOriginal: boolean;
@@ -23,6 +25,7 @@ export default function ViewToolbar(p: ViewToolbarProps) {
     ['Wireframe', p.wireframe, p.onToggleWireframe, true],
     ['Heatmap', p.showHeatmap, p.onToggleHeatmap, true],
     ['Thickness', p.showThickness, p.onToggleThickness, true],
+    ['Doctor view', p.showDoctor, p.onToggleDoctor, true],
     ['Fill preview', p.showFill, p.onToggleFill, true],
     ['Exploded', p.explodedView, p.onToggleExplode, p.moldGenerated],
     ['Original', p.showOriginal, p.onToggleOriginal, p.moldGenerated],
