@@ -37,6 +37,24 @@ export function InfoBanner({ message, onDismiss, pushDown }: { message: string; 
   );
 }
 
+export function RecoveryBanner({ fileName, onRestore, onDismiss }: { fileName: string; onRestore: () => void; onDismiss: () => void }) {
+  const btn = { borderRadius: radii.sm, padding: `${spacing.xs}px ${spacing.md}px`, cursor: 'pointer', fontSize: fontSizes.sm, fontWeight: 600 } as const;
+  return (
+    <div role="status" style={{
+      position: 'absolute', top: spacing.lg, left: spacing.lg, right: spacing.lg, zIndex: 20,
+      background: colors.panelBg, color: colors.textPrimary, padding: `${spacing.md}px ${spacing.lg}px`,
+      borderRadius: radii.lg, border: `1px solid ${colors.primary}`, boxShadow: shadows.raised,
+      display: 'flex', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap', fontSize: fontSizes.md,
+    }}>
+      <span style={{ flex: 1, minWidth: 220 }}>
+        <b>Unfinished work found on this device.</b> Restore "{fileName}" with all your mold settings?
+      </span>
+      <button type="button" onClick={onRestore} style={{ ...btn, background: colors.primary, color: '#fff', border: 'none' }}>Restore</button>
+      <button type="button" onClick={onDismiss} style={{ ...btn, background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.textMuted}` }}>Discard</button>
+    </div>
+  );
+}
+
 export function RepairProgressBanner({ pct, label, sceneBg }: { pct: number; label: string; sceneBg: string }) {
   return (
     <div role="progressbar" aria-label="Repairing model" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} style={{

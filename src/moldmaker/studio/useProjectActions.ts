@@ -5,7 +5,7 @@ import type { AppState } from './state';
 import { DEFAULT_TIER2 } from '../components/AdvancedMoldPanel';
 import {
   listProjects, saveProject, getProject, deleteProject,
-  downloadProjectFile, pickProjectFile, newProjectId,
+  downloadProjectFile, pickProjectFile, newProjectId, AUTOSAVE_ID,
   type ProjectMeta, type ProjectParams,
 } from '../services/projectStorage';
 
@@ -17,6 +17,10 @@ export interface ProjectActions {
   handleDeleteProject: (id: string) => Promise<void>;
   handleExportProject: (id: string) => Promise<void>;
   handleImportProject: () => Promise<void>;
+  /** File name of a session backup found on this device, if any. */
+  recoveryName: string | null;
+  handleRestoreRecovery: () => Promise<void>;
+  handleDismissRecovery: () => void;
 }
 
 /** Rebuild a BufferGeometry from stored typed arrays (save/load/import). */
@@ -25,6 +29,39 @@ function geometryFromProject(positions: Float32Array, index: Uint32Array | null)
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   if (index) geo.setIndex(new THREE.BufferAttribute(index, 1));
   return geo;
+}
+
+/** Copy the live model + every mold setting into storable form. */
+function snapshot(state: AppState): { positions: Float32Array; index: Uint32Array | null; params: ProjectParams } {
+  const geo = state.originalGeometry!;
+  const positionAttr = geo.attributes["position"];
+  if (!positionAttr) throw new Error('Model has no geometry to save.');
+  const positions = new Float32Array(positionAttr.array as Float32Array);
+  const index = geo.index
+    ? new Uint32Array(geo.index.array as Uint16Array | Uint32Array)
+    : null;
+  const params: ProjectParams = {
+    axis: state.axis,
+    planeOffset: state.planeOffset,
+    cutAngle: state.cutAngle,
+    wallThicknessRatio: state.wallThicknessRatio,
+    clearanceMm: state.clearanceMm,
+    sprueDiameterMm: state.sprueDiameterMm,
+    moldBoxShape: state.moldBoxShape,
+    sprueOverride: { ...state.sprueOverride },
+    additionalPlanes: state.additionalPlanes.map(p => ({ ...p })),
+    isHollow: state.isHollow,
+    moldMode: state.moldMode,
+    siliconeType: state.siliconeType,
+    siliconeMarginMm: state.siliconeMarginMm,
+    skinThicknessMm: state.skinThicknessMm,
+    includeCore: state.includeCore,
+    formFit: state.formFit,
+    tier2: state.tier2,
+    scale: state.scale,
+    selectedPrinterId: state.selectedPrinterId,
+  };
+  return { positions, index, params };
 }
 
 /**
@@ -58,33 +95,7 @@ export function useProjectActions(
       // Overwrite an existing project of the same name instead of piling up
       // duplicates — the library stays one-row-per-project.
       const existing = projects.find(p => p.name === name);
-      const positionAttr = geo.attributes["position"];
-      if (!positionAttr) throw new Error('Model has no geometry to save.');
-      const positions = new Float32Array(positionAttr.array as Float32Array);
-      const index = geo.index
-        ? new Uint32Array(geo.index.array as Uint16Array | Uint32Array)
-        : null;
-      const params: ProjectParams = {
-        axis: state.axis,
-        planeOffset: state.planeOffset,
-        cutAngle: state.cutAngle,
-        wallThicknessRatio: state.wallThicknessRatio,
-        clearanceMm: state.clearanceMm,
-        sprueDiameterMm: state.sprueDiameterMm,
-        moldBoxShape: state.moldBoxShape,
-        sprueOverride: { ...state.sprueOverride },
-        additionalPlanes: state.additionalPlanes.map(p => ({ ...p })),
-        isHollow: state.isHollow,
-        moldMode: state.moldMode,
-        siliconeType: state.siliconeType,
-        siliconeMarginMm: state.siliconeMarginMm,
-        skinThicknessMm: state.skinThicknessMm,
-        includeCore: state.includeCore,
-        formFit: state.formFit,
-        tier2: state.tier2,
-        scale: state.scale,
-        selectedPrinterId: state.selectedPrinterId,
-      };
+      const { positions, index, params } = snapshot(state);
       await saveProject({
         id: existing?.id ?? newProjectId(),
         name,
@@ -161,5 +172,46 @@ export function useProjectActions(
     }
   }, [projectBusy, commitGeometry, setState]);
 
-  return { projects, projectBusy, handleSaveProject, handleOpenProject, handleDeleteProject, handleImportProject, handleExportProject };
+  // ---- accident protection: automatic on-device backup (never leaves the browser) ----
+  const [recoveryName, setRecoveryName] = useState<string | null>(null);
+  const hasModel = !!state.originalGeometry;
+
+  useEffect(() => {
+    getProject(AUTOSAVE_ID).then(p => { if (p) setRecoveryName(p.fileName); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!hasModel) return;
+    const t = setTimeout(() => {
+      try {
+        const snap = snapshot(state);
+        saveProject({ id: AUTOSAVE_ID, name: 'Auto backup', savedAt: new Date().toISOString(), fileName: state.fileName || 'model.stl', ...snap })
+          .catch(() => {});
+      } catch { /* backup is best-effort */ }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [state, hasModel]);
+
+  useEffect(() => {
+    if (!hasModel) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasModel]);
+
+  // Loading any model replaces the offer; the new session becomes the backup.
+  useEffect(() => { if (hasModel) setRecoveryName(null); }, [hasModel]);
+
+  const handleRestoreRecovery = useCallback(async () => {
+    setRecoveryName(null);
+    await handleOpenProject(AUTOSAVE_ID);
+    setState(prev => ({ ...prev, infoMessage: 'Your last session was restored from this device. Press Generate to rebuild the mold.' }));
+  }, [handleOpenProject, setState]);
+
+  const handleDismissRecovery = useCallback(() => {
+    setRecoveryName(null);
+    deleteProject(AUTOSAVE_ID).catch(() => {});
+  }, []);
+
+  return { projects, projectBusy, handleSaveProject, handleOpenProject, handleDeleteProject, handleImportProject, handleExportProject, recoveryName, handleRestoreRecovery, handleDismissRecovery };
 }

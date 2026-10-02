@@ -35,7 +35,7 @@ import StudioScene from './studio/Scene';
 import DropZone from './studio/DropZone';
 import ViewToolbar from './studio/ViewToolbar';
 import ShortcutsSheet from './studio/ShortcutsSheet';
-import { ErrorBanner, InfoBanner, RepairProgressBanner, HeatmapLegend, FillLegend, ThicknessLegend } from './studio/Banners';
+import { ErrorBanner, InfoBanner, RecoveryBanner, RepairProgressBanner, HeatmapLegend, FillLegend, ThicknessLegend } from './studio/Banners';
 
 export type { AppState };
 
@@ -95,7 +95,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
 
   const { handleExport, handleCancelStepExport, stepExporting } = useExportActions(state, setState);
 
-  const { projects, projectBusy, handleSaveProject, handleOpenProject, handleDeleteProject, handleExportProject, handleImportProject } =
+  const { projects, projectBusy, handleSaveProject, handleOpenProject, handleDeleteProject, handleExportProject, handleImportProject, recoveryName, handleRestoreRecovery, handleDismissRecovery } =
     useProjectActions(state, setState, commitGeometry);
 
   useShortcuts({
@@ -181,6 +181,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             {state.errorMessage && <ErrorBanner message={state.errorMessage} onDismiss={clearError} />}
             {repairProgress && <RepairProgressBanner pct={repairProgress.pct} label={repairProgress.label} sceneBg={sceneCols.sceneBg} />}
             {state.infoMessage && <InfoBanner message={state.infoMessage} onDismiss={clearInfo} pushDown={!!state.errorMessage} />}
+            {recoveryName && !state.originalGeometry && <RecoveryBanner fileName={recoveryName} onRestore={handleRestoreRecovery} onDismiss={handleDismissRecovery} />}
             {state.showHeatmap && state.originalGeometry && <HeatmapLegend />}
 
             {!state.originalGeometry && <DropZone onLoadFile={handleFileLoad} onLoadTemplate={loadTemplate} />}

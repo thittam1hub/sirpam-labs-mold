@@ -73,6 +73,7 @@ export async function listProjects(): Promise<ProjectMeta[]> {
   try {
     const all = (await withStore('readonly', s => s.getAll())) as StoredProject[];
     return all
+      .filter(p => p.id !== AUTOSAVE_ID)
       .map(({ id, name, savedAt, fileName }) => ({ id, name, savedAt, fileName }))
       .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
   } catch {
@@ -167,5 +168,8 @@ export function pickProjectFile(): Promise<StoredProject | null> {
     input.click();
   });
 }
+
+/** Fixed slot for the automatic on-device backup of the current session. */
+export const AUTOSAVE_ID = '__autosave__';
 
 export const newProjectId = () => `p-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
