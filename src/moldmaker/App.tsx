@@ -16,7 +16,7 @@ import { PrintQueuePanel } from './components/PrintQueuePanel';
 import WorkflowRail from './components/layout/WorkflowRail';
 import StatusBar from './components/layout/StatusBar';
 import { Link } from '@tanstack/react-router';
-import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { PanelLeftOpen } from 'lucide-react';
 import { ModelFixPanel, MoldReportPanel } from './components/ModelFixPanels';
 import { CastRiskCard } from './components/CastRiskCard';
 import { MoldDoctorCard } from './components/MoldDoctorCard';
@@ -57,6 +57,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
 
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
+  const togglePanel = () => setPanelOpen(o => { try { localStorage.setItem('sirpam.panel', o ? '0' : '1'); } catch { /* ignore */ } return !o; });
   useEffect(() => { try { if (localStorage.getItem('sirpam.panel') === '0') setPanelOpen(false); } catch { /* ignore */ } }, []);
 
   const [step, setStepRaw] = useState(() => initialStep ? initialStep - 1 : 0);
@@ -117,14 +118,13 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
       <style>{focusVisibleCss}</style>
       <style>{`
         .sirpam-show-sm{display:none}
+        .sirpam-panel{order:-1;box-shadow:2px 0 8px rgba(0,0,0,0.08);z-index:2}
         @media (max-width: 900px){
           .sirpam-hide-sm{display:none !important}
           .sirpam-show-sm{display:block}
           .sirpam-body{flex-direction:column}
-          .sirpam-rail{order:3;width:100% !important;flex-direction:row !important;justify-content:space-around;padding:4px !important}
-          .sirpam-rail-sep{display:none}
           .sirpam-body > main{min-height:45vh}
-          .sirpam-panel{width:100% !important;max-height:55vh;border-radius:20px 20px 0 0}
+          .sirpam-panel{order:2;width:100% !important;max-height:55vh;border-radius:20px 20px 0 0}
         }
       `}</style>
 
@@ -147,15 +147,14 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
           onExport={handleExport}
         />
         <div className="sirpam-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <WorkflowRail step={step} onStep={setStep} hasModel={!!state.originalGeometry} hasMold={state.moldGenerated} />
           <main style={{ flex: 1, position: 'relative' }} aria-label="3D viewport" onDrop={handleDrop} onDragOver={handleDragOver}>
-            <button type="button" className="sirpam-hide-sm"
-              onClick={() => setPanelOpen(o => { try { localStorage.setItem('sirpam.panel', o ? '0' : '1'); } catch { /* ignore */ } return !o; })}
-              aria-label={panelOpen ? 'Hide settings panel' : 'Show settings panel'}
-              title={panelOpen ? 'Hide settings' : 'Show settings'} aria-expanded={panelOpen}
-              style={{ position: 'absolute', bottom: spacing.lg, right: spacing.lg, zIndex: 7, border: 'none', borderRadius: radii.md, padding: 8, cursor: 'pointer', background: colors.sectionBg, color: colors.textBody, boxShadow: shadows.raisedSm, display: 'flex' }}>
-              {panelOpen ? <PanelRightClose size={18} aria-hidden="true" /> : <PanelRightOpen size={18} aria-hidden="true" />}
-            </button>
+            {!panelOpen && (
+              <button type="button" className="sirpam-hide-sm" onClick={togglePanel}
+                aria-label="Show settings panel" title="Show settings" aria-expanded={false}
+                style={{ position: 'absolute', top: spacing.lg, left: 0, zIndex: 7, border: 'none', borderRadius: `0 ${radii.md}px ${radii.md}px 0`, padding: `${spacing.sm}px ${spacing.md}px ${spacing.sm}px ${spacing.sm}px`, cursor: 'pointer', background: colors.primary, color: '#fff', boxShadow: shadows.raisedSm, display: 'flex', alignItems: 'center', gap: spacing.xs, fontFamily: fonts.body, fontSize: fontSizes.sm, fontWeight: 600 }}>
+                <PanelLeftOpen size={16} aria-hidden="true" /> Show settings
+              </button>
+            )}
             {noWebgl && (
               <div role="alert" style={{ position: 'absolute', inset: 0, zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing.lg, pointerEvents: 'none' }}>
                 <div style={{ maxWidth: 420, background: colors.sectionBg, borderRadius: radii.lg, boxShadow: shadows.raised, padding: spacing.lg, color: colors.textBody, fontSize: fontSizes.sm, lineHeight: 1.5 }}>
@@ -275,6 +274,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
               onPrinterChange={(selectedPrinterId: string | null) => setState(prev => ({ ...prev, selectedPrinterId }))}
               onScaleChange={(scale: number) => setState(prev => ({ ...prev, scale }))}
               onResetScale={() => setState(prev => ({ ...prev, scale: 1.0 }))}
+              headerSlot={<WorkflowRail step={step} onStep={setStep} hasModel={!!state.originalGeometry} hasMold={state.moldGenerated} onHide={togglePanel} />}
               stepExporting={stepExporting}
               onCancelStepExport={handleCancelStepExport}
               moldSlot={
