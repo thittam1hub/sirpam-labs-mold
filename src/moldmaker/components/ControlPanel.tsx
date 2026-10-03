@@ -71,6 +71,7 @@ interface ControlPanelProps {
   onPrinterChange: (printerId: string | null) => void;
   onScaleChange: (scale: number) => void;
   onResetScale: () => void;
+  headerSlot?: React.ReactNode;
 }
 
 export default function ControlPanel(props: ControlPanelProps) {
@@ -80,6 +81,8 @@ export default function ControlPanel(props: ControlPanelProps) {
 
   return (
     <aside className="sirpam-panel" style={styles.panel} aria-label="Controls">
+      {props.headerSlot}
+
 
       <div style={styles.scrollArea}>
         {!hasModel && (
