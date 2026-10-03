@@ -149,9 +149,9 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
         <div className="sirpam-body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <main style={{ flex: 1, position: 'relative' }} aria-label="3D viewport" onDrop={handleDrop} onDragOver={handleDragOver}>
             {!panelOpen && (
-              <button type="button" className="sirpam-hide-sm" onClick={togglePanel}
+              <button type="button" onClick={togglePanel}
                 aria-label="Show settings panel" title="Show settings" aria-expanded={false}
-                style={{ position: 'absolute', top: spacing.lg, left: 0, zIndex: 7, border: 'none', borderRadius: `0 ${radii.md}px ${radii.md}px 0`, padding: `${spacing.sm}px ${spacing.md}px ${spacing.sm}px ${spacing.sm}px`, cursor: 'pointer', background: colors.primary, color: '#fff', boxShadow: shadows.raisedSm, display: 'flex', alignItems: 'center', gap: spacing.xs, fontFamily: fonts.body, fontSize: fontSizes.sm, fontWeight: 600 }}>
+                style={{ position: "absolute", bottom: spacing.lg, left: 0, zIndex: 7, border: 'none', borderRadius: `0 ${radii.md}px ${radii.md}px 0`, padding: `${spacing.sm}px ${spacing.md}px ${spacing.sm}px ${spacing.sm}px`, cursor: 'pointer', background: colors.primary, color: '#fff', boxShadow: shadows.raisedSm, display: 'flex', alignItems: 'center', gap: spacing.xs, fontFamily: fonts.body, fontSize: fontSizes.sm, fontWeight: 600 }}>
                 <PanelLeftOpen size={16} aria-hidden="true" /> Show settings
               </button>
             )}
