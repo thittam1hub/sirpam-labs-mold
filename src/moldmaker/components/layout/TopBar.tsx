@@ -95,9 +95,10 @@ export default function TopBar(p: Props) {
       display: 'flex', alignItems: 'center', gap: spacing.md, padding: `${spacing.sm}px ${spacing.lg}px`,
       background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 20, fontFamily: fonts.body, minWidth: 0,
     }}>
+      <style>{`@media (max-width:1180px){.sirpam-tb-wide{display:none !important}}@media (max-width:1040px){.sirpam-tb-title{display:none !important}.sirpam-tb-mid{display:none !important}}`}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0, flexShrink: 0 }}>
         <img src="/logo.svg" alt="Sirpam logo" width={30} height={30} style={{ width: 30, height: 30, borderRadius: '50%', boxShadow: shadows.raisedSm, objectFit: 'cover' }} />
-        <h1 className="sirpam-hide-sm" style={{ margin: 0, fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
+        <h1 className="sirpam-hide-sm sirpam-tb-title" style={{ margin: 0, fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
           Sirpam <span style={{ color: colors.primary }}>3D Labs</span> Mold
         </h1>
       </div>
@@ -110,11 +111,11 @@ export default function TopBar(p: Props) {
       <div className="sirpam-hide-sm" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
         <div role="group" aria-label="File" style={{ display: 'flex', gap: spacing.sm }}>
           <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
-          <button type="button" style={pill()} onClick={p.onSample}>Try sample</button>
+          <button type="button" style={pill()} onClick={p.onSample} className="sirpam-tb-mid">Try sample</button>
           <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
         </div>
-        <span aria-hidden="true" style={{ width: 1, height: spacing.xl, background: colors.borderSubtle, margin: `0 ${spacing.xs}px` }} />
-        <nav aria-label="Site" style={{ display: 'flex', gap: spacing.sm }}>
+        <span aria-hidden="true" className="sirpam-tb-wide" style={{ width: 1, height: spacing.xl, background: colors.borderSubtle, margin: `0 ${spacing.xs}px` }} />
+        <nav aria-label="Site" className="sirpam-tb-wide" style={{ display: 'flex', gap: spacing.sm }}>
           <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
           <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
         </nav>
