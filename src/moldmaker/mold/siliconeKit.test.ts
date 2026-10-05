@@ -32,3 +32,15 @@ describe('silicone bench-ready kit', () => {
     expect(r.labels).toEqual(['base_plate', 'frame_bottom', 'frame_top', 'parting_board', 'pour_rods']);
   }, 60000);
 });
+
+describe('skin mold core supports', () => {
+  it('adds feet and a pin, and tells the user', async () => {
+    const g = model();
+    const base = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', sprueDiameterMm: 10 });
+    const r = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', sprueDiameterMm: 10, extras: { coreSupport: 'auto' } });
+    const wasm = await getManifold();
+    const vol = (res: typeof r, i: number) => geometryToManifold(wasm, res.pieces[i]!).volume();
+    expect(vol(r, 0) + vol(r, 1)).toBeGreaterThan(vol(base, 0) + vol(base, 1));
+    expect(r.notices?.some(n => n.includes('feet'))).toBe(true);
+  }, 60000);
+});

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { pieceDisplayName } from "../utils/pieceNames";
 import type * as THREE from 'three';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { overhangCheck } from '../mold/round7';
@@ -31,7 +32,7 @@ export default function OverhangPanel({ pieces, labels }: { pieces: THREE.Buffer
         <ul style={{ listStyle: 'none', padding: 0, margin: `${spacing.sm}px 0 0`, fontSize: fontSizes.sm, color: colors.textBody }}>
           {results.map((r, i) => (
             <li key={i} style={{ padding: '4px 0', borderTop: `1px solid ${colors.borderSubtle}` }}>
-              <b>{labels[i] ?? `Piece ${i + 1}`}</b>: {r.supportFree
+              <b>{pieceDisplayName(labels[i], i)}</b>: {r.supportFree
                 ? <span style={{ color: colors.primary }}>no supports needed</span>
                 : <>needs supports on ~{r.overhangCm2.toFixed(1)} cm²</>} — print with the {r.bestDown}
             </li>
