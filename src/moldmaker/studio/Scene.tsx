@@ -89,7 +89,16 @@ export function getExplodeOffsetForPiece(axis: Axis, index: number, bbox: THREE.
  * kits (base plate, frames, parting board, rods) separate without overlap.
  * Two-piece molds keep the classic +1 / -1 spread.
  */
-export function getStackedExplodeOffsets(axis: Axis, pieces: THREE.BufferGeometry[], bbox: THREE.Box3): [number, number, number][] {
+export function getStackedExplodeOffsets(axis: Axis, pieces: THREE.BufferGeometry[], bbox: THREE.Box3, labels: string[] = []): [number, number, number][] {
+  const core = labels.indexOf('core'), bottom = labels.indexOf('mother_bottom');
+  if (core >= 0 && bottom >= 0) {
+    const rest = pieces.map((_, i) => i).filter(i => i !== core);
+    const sub = getStackedExplodeOffsets(axis, rest.map(i => pieces[i]!), bbox);
+    const out: [number, number, number][] = pieces.map(() => [0, 0, 0]);
+    rest.forEach((i, k) => { out[i] = sub[k]!; });
+    out[core] = out[bottom]!;
+    return out;
+  }
   const n = pieces.length;
   if (n <= 2) return pieces.map((_, i) => getExplodeOffsetForPiece(axis, i, bbox));
   const k = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;
@@ -194,7 +203,7 @@ export default function StudioScene({
             geometry={piece}
             color={getPieceColor(i)}
             opacity={0.85}
-            position={state.explodedView ? getStackedExplodeOffsets(state.axis, state.moldPieces, state.boundingBox!)[i]! : [0, 0, 0]}
+            position={state.explodedView ? getStackedExplodeOffsets(state.axis, state.moldPieces, state.boundingBox!, state.pieceLabels)[i]! : [0, 0, 0]}
             wireframe={state.wireframe}
           />
         ))}

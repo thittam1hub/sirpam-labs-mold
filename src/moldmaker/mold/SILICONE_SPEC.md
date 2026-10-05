@@ -22,4 +22,4 @@ Sources: Smooth-On box-mold and two-piece mold guides, Formlabs and Prusa silico
 
 ## Skin + mother mold
 - Skin 3–6 mm, registration rim at the split; mother mold hugs the skin (form-fit) at 3–5 mm with flange and bolts.
-- Core support: flat-bottomed models sit on a printed lip (2 mm) with the bottom left open as the casting fill hole; otherwise the model rests on 3 printed cone feet (tip 0.6–1.2 mm) lifting it by the skin thickness, plus one top pin off the pour hole; seal the pin holes with a dab of silicone after demolding.
+- Core support: the model is glued to one printed stand on the bottom shell, nothing else enters the skin gap. Flat bottom: plinth + 1.5 mm collar, bottom left open as the casting fill hole. Otherwise one post (6–20 mm, about a third of the model width) with a cup under the lowest point; the post hole becomes the fill hole.

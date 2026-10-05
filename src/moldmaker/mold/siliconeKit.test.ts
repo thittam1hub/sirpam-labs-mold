@@ -33,15 +33,17 @@ describe('silicone bench-ready kit', () => {
   }, 60000);
 });
 
-describe('skin mold core supports', () => {
-  it('adds feet and a pin, and tells the user', async () => {
+describe('skin mold core stand', () => {
+  it('adds one small post, and tells the user', async () => {
     const g = model();
     const base = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', sprueDiameterMm: 10 });
     const r = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', sprueDiameterMm: 10, extras: { coreSupport: 'auto' } });
     const wasm = await getManifold();
     const vol = (res: typeof r, i: number) => geometryToManifold(wasm, res.pieces[i]!).volume();
     expect(vol(r, 0) + vol(r, 1)).toBeGreaterThan(vol(base, 0) + vol(base, 1));
-    expect(r.notices?.some(n => n.includes('feet'))).toBe(true);
+    expect(r.notices?.some(n => n.includes('post'))).toBe(true);
+    const added = vol(r, 0) + vol(r, 1) - vol(base, 0) - vol(base, 1);
+    expect(added).toBeLessThan(r.siliconeVolumeCm3 * 1000 * 0.15);
   }, 60000);
 });
 
