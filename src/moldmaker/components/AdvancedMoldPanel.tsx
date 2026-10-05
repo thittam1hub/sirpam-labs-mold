@@ -393,7 +393,7 @@ export default function AdvancedMoldPanel(p: Props) {
           {p.moldMode === 'silicone' && p.siliconeType === 'skinCore' && (
             <>
               <label style={{ ...s.label, display: 'block', marginTop: spacing.md }}>Hold model in place</label>
-              <select value={t.coreSupport ?? 'auto'} onChange={e => onChange({ coreSupport: e.target.value as Tier2Settings['coreSupport'] })} style={{ width: '100%' }}>
+              <select value={t.coreSupport ?? 'auto'} onChange={e => onChange({ coreSupport: e.target.value as 'auto' | 'feet' | 'flatBase' | 'off' })} style={{ width: '100%' }}>
                 <option value="auto">Auto (flat base if possible, else feet)</option>
                 <option value="feet">Feet + top pin</option>
                 <option value="flatBase">Flat base (open bottom)</option>
