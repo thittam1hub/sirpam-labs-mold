@@ -22,8 +22,8 @@ export interface MoldExtras extends Round6Extras, Round7Extras, V3Extras {
   pryPockets?: boolean | undefined;
   /** Silicone block molds: bench-ready kit (open frame, base plate, pour rods). */
   shopKit?: boolean | undefined;
-  /** Skin molds: printed feet + top pin that hold the model centred in the skin gap. */
-  coreSupport?: 'auto' | 'feet' | 'flatBase' | 'off' | undefined;
+  /** Skin molds: one printed stand (flat base or post) holding the model in the skin gap. 'feet' = legacy alias of 'post'. */
+  coreSupport?: 'auto' | 'post' | 'feet' | 'flatBase' | 'off' | undefined;
   /** Removable core pin through the model centre along the split axis (cast gets a through-hole). */
   corePinMm?: number | undefined;
   /** Split every piece radially around the parting axis (3, 4 or 6). */

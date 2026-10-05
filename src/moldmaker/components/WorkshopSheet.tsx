@@ -98,11 +98,10 @@ export function WorkshopSheet(p: Props) {
           <ol style={{ margin: 0, paddingLeft: 20, listStyle: 'decimal' }}>
             {[
               'Spray release on the model and inside both mother mold halves.',
-              'Set the model on the 3 printed feet in the bottom half.',
-              'Close the top half (its pin touches the model), bolt or clamp the flange, seal the seam.',
+              'Glue the model onto its printed stand in the bottom half (hot glue).',
+              'Close the top half, bolt or clamp the flange, seal the seam.',
               'Pour the silicone slowly into the pour hole until it shows at the vents.',
               'After full cure (see TDS), open the jacket and peel the skin off the model.',
-              'Seal the small pin holes in the skin with a dab of silicone.',
               'Put the skin back into the mother mold to cast.',
             ].map((t, i) => <li key={i}>{t}</li>)}
           </ol>

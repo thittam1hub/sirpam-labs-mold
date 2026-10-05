@@ -420,17 +420,19 @@ export async function generateSiliconeMold(
       mother = createMoldBoxManifold(wasm, env).subtract(skinOuter);
     }
     if (extras.coreSupport && extras.coreSupport !== 'off') {
-      const seat = extras.coreSupport !== 'feet' ? flatBaseSeat(wasm, master, axis, skin, wall) : null;
+      const mode = extras.coreSupport === 'feet' ? 'post' : extras.coreSupport;
+      const seat = mode !== 'post' ? flatBaseSeat(wasm, master, axis, skin, wall) : null;
       if (seat) {
-        mother = mother.add(seat.platform.subtract(master)).subtract(seat.drill);
-        notices.push('Your model has a flat bottom, so it sits on a printed lip and the bottom stays open. That opening becomes the fill hole when you cast. A dab of hot glue on the lip stops the model lifting while you pour.');
+        mother = mother.add(seat.platform.add(seat.collar).subtract(master));
+        notices.push('Your model has a flat bottom, so it stands on a printed base with a low collar round its edge. Glue it down with a dab of hot glue. The bottom stays open and becomes the fill hole when you cast.');
       } else {
-        if (extras.coreSupport === 'flatBase') notices.push('The model has no flat bottom to sit on, so small feet are used instead.');
-        const sup = buildCoreSupports(wasm, master, axis, skin, longest);
-        if (sup.solid) mother = mother.add(sup.solid);
-        notices.push(sup.feet > 0
-          ? `The model rests on ${sup.feet} small feet${sup.pin ? ' and a top pin holds it down' : ''}, so silicone flows all round it. Seal the tiny pin holes in the skin with a dab of silicone after demolding.`
-          : 'Model support feet could not be placed for this shape. Prop the model up by the skin thickness before pouring.');
+        if (mode === 'flatBase') notices.push('The model has no flat bottom, so it stands on a single post instead.');
+        const st = buildCoreStand(wasm, master, axis, skin);
+        if (st.solid) {
+          mother = mother.add(st.solid);
+          notices.push(`The model stands on one ${st.diameterMm.toFixed(0)} mm post under its lowest point. Glue it into the cup on top of the post. The hole the post leaves in the skin becomes the fill hole when you cast.`);
+          if (st.small) notices.push('This model is small, so the post is thin. A thicker skin gives it a stronger stand.');
+        } else notices.push('A stand could not be placed for this shape. Prop the model up by the skin thickness before pouring.');
       }
     }
     mother = drillPour(mother, env, shellBox);
@@ -461,11 +463,11 @@ export async function generateSiliconeMold(
 }
 
 /**
- * Core supports for skin molds: small cones from the jacket floor up to the
- * model's underside (3 feet) plus one pin from the jacket roof to a high
- * point, so the model sits centred in the skin gap instead of on the shell.
+ * Core stand for skin molds: one printed post from the jacket floor up to the
+ * model's lowest point, with a cup the model sits in (post minus model).
+ * Nothing else enters the skin gap; the post spot becomes the cast fill hole.
  */
-function buildCoreSupports(wasm: any, master: any, axis: Axis, skin: number, longest: number): { solid: any; feet: number; pin: boolean } {
+function buildCoreStand(wasm: any, master: any, axis: Axis, skin: number): { solid: any; diameterMm: number; small: boolean } {
   const pi = primaryAxisIndex(axis);
   const [la, lb] = lateralAxisIndices(axis);
   const mesh = master.getMesh();
@@ -473,48 +475,17 @@ function buildCoreSupports(wasm: any, master: any, axis: Axis, skin: number, lon
   const np: number = mesh.numProp;
   const bb = master.boundingBox();
   const mn = bb.min as number[], mx = bb.max as number[];
-  const ca = (mn[la]! + mx[la]!) / 2, cb = (mn[lb]! + mx[lb]!) / 2;
-  const ra = (mx[la]! - mn[la]!) * 0.3, rb = (mx[lb]! - mn[lb]!) * 0.3;
-  const near = Math.max(1.5, longest * 0.04);
-  const surfaceAt = (a: number, b: number, low: boolean): number | null => {
-    let best: number | null = null;
-    for (let i = 0; i < vp.length; i += np) {
-      if (Math.hypot(vp[i + la]! - a, vp[i + lb]! - b) > near) continue;
-      const p = vp[i + pi]!;
-      if (best === null || (low ? p < best : p > best)) best = p;
-    }
-    return best;
-  };
-  const tipR = Math.max(0.6, Math.min(1.2, skin * 0.25));
-  const baseR = Math.max(tipR * 2, Math.min(4, skin));
-  const cone = (a: number, b: number, from: number, to: number) => {
-    const h = Math.abs(to - from) + 0.2; // overlap the model surface slightly
-    let c = wasm.Manifold.cylinder(h, baseR, tipR, 16);
-    if (to < from) c = c.mirror([0, 0, 1]);
-    if (axis === 'x') c = c.rotate([0, 90, 0]);
-    else if (axis === 'y') c = c.rotate([-90, 0, 0]);
-    const p: [number, number, number] = [0, 0, 0];
-    p[pi] = from; p[la] = a; p[lb] = b;
-    return c.translate(p);
-  };
-  const parts: any[] = [];
-  let feet = 0;
-  for (let k = 0; k < 3; k++) {
-    const t = (k / 3) * Math.PI * 2 + Math.PI / 2;
-    const a = ca + Math.cos(t) * ra, b = cb + Math.sin(t) * rb;
-    const s = surfaceAt(a, b, true);
-    if (s === null) continue;
-    parts.push(cone(a, b, mn[pi]! - skin - 0.5, s));
-    feet++;
-  }
-  let pin = false;
-  if (feet > 0) {
-    // Pin off-centre so it never lands on the pour hole at the centre top.
-    const a = ca + ra * 0.6, b = cb;
-    const s = surfaceAt(a, b, false);
-    if (s !== null) { parts.push(cone(a, b, mx[pi]! + skin + 0.5, s)); pin = true; }
-  }
-  if (!parts.length) return { solid: null, feet: 0, pin: false };
-  const solid = parts.reduce((acc, p) => acc.add(p)).subtract(master);
-  return { solid, feet, pin };
+  const lat = Math.min(mx[la]! - mn[la]!, mx[lb]! - mn[lb]!);
+  let low = Infinity, a = (mn[la]! + mx[la]!) / 2, b = (mn[lb]! + mx[lb]!) / 2;
+  for (let i = 0; i < vp.length; i += np) if (vp[i + pi]! < low) { low = vp[i + pi]!; a = vp[i + la]!; b = vp[i + lb]!; }
+  const r = Math.max(1.5, Math.min(Math.max(3, Math.min(10, lat * 0.17)), lat * 0.2));
+  const from = mn[pi]! - skin - 1;
+  const h = low - from + Math.min(2, r);
+  let c = wasm.Manifold.cylinder(h, r, r, 32);
+  if (axis === 'x') c = c.rotate([0, 90, 0]);
+  else if (axis === 'y') c = c.rotate([-90, 0, 0]);
+  const p: [number, number, number] = [0, 0, 0];
+  p[pi] = from; p[la] = a; p[lb] = b;
+  const solid = c.translate(p).subtract(master);
+  return { solid: solid.isEmpty?.() ? null : solid, diameterMm: r * 2, small: r < 3 };
 }

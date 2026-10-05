@@ -45,7 +45,7 @@ export interface Tier2Settings {
   flangeBoltMm?: number;
   partingBoard?: boolean;
   wallRibs?: boolean;
-  coreSupport?: 'auto' | 'feet' | 'flatBase' | 'off';
+  coreSupport?: 'auto' | 'post' | 'feet' | 'flatBase' | 'off';
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -393,13 +393,13 @@ export default function AdvancedMoldPanel(p: Props) {
           {p.moldMode === 'silicone' && p.siliconeType === 'skinCore' && (
             <>
               <label style={{ ...s.label, display: 'block', marginTop: spacing.md }}>Hold model in place</label>
-              <select value={t.coreSupport ?? 'auto'} onChange={e => onChange({ coreSupport: e.target.value as 'auto' | 'feet' | 'flatBase' | 'off' })} style={{ width: '100%' }}>
-                <option value="auto">Auto (flat base if possible, else feet)</option>
-                <option value="feet">Feet + top pin</option>
+              <select value={t.coreSupport === 'feet' ? 'post' : (t.coreSupport ?? 'auto')} onChange={e => onChange({ coreSupport: e.target.value as 'auto' | 'post' | 'feet' | 'flatBase' | 'off' })} style={{ width: '100%' }}>
+                <option value="auto">Auto (flat base if possible, else post)</option>
+                <option value="post">Stand post</option>
                 <option value="flatBase">Flat base (open bottom)</option>
                 <option value="off">Off</option>
               </select>
-              <div style={s.hint}>Flat base: the model sits on a lip and its bottom stays open as the fill hole. Feet: 3 small feet lift the model one skin-thickness off the floor so silicone flows underneath; a pin on top stops it floating. Seal the tiny pin holes with a dab of silicone after demolding.</div>
+              <div style={s.hint}>The model stands on one printed stand on the bottom shell, like on a workshop base board. Flat base: a low collar grips the bottom, which stays open as the fill hole. Stand post: one post under the lowest point; its hole becomes the fill hole.</div>
             </>
           )}
           {p.moldMode === 'silicone' && !p.formFit && (
