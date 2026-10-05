@@ -452,3 +452,62 @@ export async function generateSiliconeMold(
     ...(notices.length ? { notices } : {}),
   };
 }
+
+/**
+ * Core supports for skin molds: small cones from the jacket floor up to the
+ * model's underside (3 feet) plus one pin from the jacket roof to a high
+ * point, so the model sits centred in the skin gap instead of on the shell.
+ */
+function buildCoreSupports(wasm: any, master: any, axis: Axis, skin: number, longest: number): { solid: any; feet: number; pin: boolean } {
+  const pi = primaryAxisIndex(axis);
+  const [la, lb] = lateralAxisIndices(axis);
+  const mesh = master.getMesh();
+  const vp: ArrayLike<number> = mesh.vertProperties;
+  const np: number = mesh.numProp;
+  const bb = master.boundingBox();
+  const mn = bb.min as number[], mx = bb.max as number[];
+  const ca = (mn[la]! + mx[la]!) / 2, cb = (mn[lb]! + mx[lb]!) / 2;
+  const ra = (mx[la]! - mn[la]!) * 0.3, rb = (mx[lb]! - mn[lb]!) * 0.3;
+  const near = Math.max(1.5, longest * 0.04);
+  const surfaceAt = (a: number, b: number, low: boolean): number | null => {
+    let best: number | null = null;
+    for (let i = 0; i < vp.length; i += np) {
+      if (Math.hypot(vp[i + la]! - a, vp[i + lb]! - b) > near) continue;
+      const p = vp[i + pi]!;
+      if (best === null || (low ? p < best : p > best)) best = p;
+    }
+    return best;
+  };
+  const tipR = Math.max(0.6, Math.min(1.2, skin * 0.25));
+  const baseR = Math.max(tipR * 2, Math.min(4, skin));
+  const cone = (a: number, b: number, from: number, to: number) => {
+    const h = Math.abs(to - from) + 0.2; // overlap the model surface slightly
+    let c = wasm.Manifold.cylinder(h, baseR, tipR, 16);
+    if (to < from) c = c.mirror([0, 0, 1]);
+    if (axis === 'x') c = c.rotate([0, 90, 0]);
+    else if (axis === 'y') c = c.rotate([-90, 0, 0]);
+    const p: [number, number, number] = [0, 0, 0];
+    p[pi] = from; p[la] = a; p[lb] = b;
+    return c.translate(p);
+  };
+  const parts: any[] = [];
+  let feet = 0;
+  for (let k = 0; k < 3; k++) {
+    const t = (k / 3) * Math.PI * 2 + Math.PI / 2;
+    const a = ca + Math.cos(t) * ra, b = cb + Math.sin(t) * rb;
+    const s = surfaceAt(a, b, true);
+    if (s === null) continue;
+    parts.push(cone(a, b, mn[pi]! - skin - 0.5, s));
+    feet++;
+  }
+  let pin = false;
+  if (feet > 0) {
+    // Pin off-centre so it never lands on the pour hole at the centre top.
+    const a = ca + ra * 0.6, b = cb;
+    const s = surfaceAt(a, b, false);
+    if (s !== null) { parts.push(cone(a, b, mx[pi]! + skin + 0.5, s)); pin = true; }
+  }
+  if (!parts.length) return { solid: null, feet: 0, pin: false };
+  const solid = parts.reduce((acc, p) => acc.add(p)).subtract(master);
+  return { solid, feet, pin };
+}
