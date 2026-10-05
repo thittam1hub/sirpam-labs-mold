@@ -42,6 +42,11 @@ export default function ViewToolbar(p: ViewToolbarProps) {
           color: on ? colors.primary : colors.textMuted, boxShadow: on ? shadows.inset : 'none',
         }}>{label}</button>
       ))}
+      {p.explodedView && p.moldGenerated && (
+        <div style={{ flexBasis: '100%', textAlign: 'center', fontSize: fontSizes.xs, color: colors.textMuted, padding: `2px ${spacing.sm}px` }}>
+          Pieces are spread apart to show them. Turn off Exploded to see them stacked as you pour.
+        </div>
+      )}
     </div>
   );
 }
