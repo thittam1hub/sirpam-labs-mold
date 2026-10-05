@@ -20,7 +20,7 @@ import {
 
 interface Props {
   geometry: THREE.BufferGeometry; boundingBox: THREE.Box3 | null; axis: Axis; offset: number; cutAngle: number;
-  moldMode: MoldMode; castingMaterial: CastingMaterialId; cavities: number; autoVents: boolean; scale: number;
+  moldMode: MoldMode; siliconeType?: string; castingMaterial: CastingMaterialId; cavities: number; autoVents: boolean; scale: number;
   onClose: () => void;
 }
 
@@ -91,6 +91,21 @@ export function WorkshopSheet(p: Props) {
           <div style={row}><span>Typical working-time range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_WORK_MINUTES_AT_25C, 'min')}</span></div>
           <div style={row}><span>Typical cure range at 25 °C</span><span>{fmtRange(SILICONE_MOLD_CURE_HOURS_AT_25C, 'h')}</span></div>
           <div style={{ color: '#8a4b16', marginTop: 4 }}><strong>Before mixing:</strong> silicone may be 1:1, 100:10 or 100:5. Use your product's exact TDS ratio and minimum cure time.</div>
+        </>}
+
+        {p.moldMode === 'silicone' && p.siliconeType === 'skinCore' && <>
+          <div style={h}>Skin + mother mold pour order</div>
+          <ol style={{ margin: 0, paddingLeft: 20, listStyle: 'decimal' }}>
+            {[
+              'Spray release on the model and inside both mother mold halves.',
+              'Set the model on the 3 printed feet in the bottom half.',
+              'Close the top half (its pin touches the model), bolt or clamp the flange, seal the seam.',
+              'Pour the silicone slowly into the pour hole until it shows at the vents.',
+              'After full cure (see TDS), open the jacket and peel the skin off the model.',
+              'Seal the small pin holes in the skin with a dab of silicone.',
+              'Put the skin back into the mother mold to cast.',
+            ].map((t, i) => <li key={i}>{t}</li>)}
+          </ol>
         </>}
 
         <div style={h}>Print the mold</div>

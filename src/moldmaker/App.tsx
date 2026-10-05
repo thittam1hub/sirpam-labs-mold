@@ -207,7 +207,7 @@ export default function App({ initialStep, initialTool }: MoldMakerAppProps) {
             )}
             {sheetOpen && state.originalGeometry && (
               <WorkshopSheet geometry={state.originalGeometry} boundingBox={state.boundingBox} axis={state.axis}
-                offset={state.planeOffset} cutAngle={state.cutAngle} moldMode={state.moldMode}
+                offset={state.planeOffset} cutAngle={state.cutAngle} moldMode={state.moldMode} siliconeType={state.siliconeType}
                 castingMaterial={state.tier2.castingMaterial} cavities={state.tier2.cavityCount ?? 1}
                 autoVents={!!state.tier2.autoVents} scale={state.scale} onClose={() => setSheetOpen(false)} />
             )}
