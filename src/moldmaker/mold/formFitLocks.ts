@@ -259,3 +259,31 @@ export function partingBoard(
     return null;
   }
 }
+
+/**
+ * Flat-base core seat for skin molds: if the model has a flat bottom, fill the
+ * skin gap under it with a footprint-shaped platform and cut a hole through the
+ * jacket floor inset by `lipMm`. The model rests on the lip and its bottom stays
+ * open as the casting fill hole. Returns null when the bottom is not flat.
+ */
+export function flatBaseSeat(wasm: any, master: any, axis: Axis, skinMm: number, floorMm: number, lipMm = 2): any | null {
+  try {
+    const { M, Mi } = permMats(axis);
+    const m = master.transform(M);
+    const bb = m.boundingBox();
+    const z0 = bb.min[2] as number, z1 = bb.max[2] as number;
+    const foot = m.slice(z0 + Math.min(0.3, (z1 - z0) * 0.02));
+    const mid = m.slice((z0 + z1) / 2);
+    const fa = foot.area(), ma = mid.area();
+    if (!(fa > 25 && fa > ma * 0.3)) return null;
+    const hole = foot.offset(-lipMm, 'Round');
+    if (hole.area() < 4) return null;
+    const ext = (cs: any, h: number) => (typeof cs.extrude === 'function' ? cs.extrude(h) : wasm.Manifold.extrude(cs, h));
+    const platform = ext(foot, skinMm + 0.6).translate([0, 0, z0 - skinMm - 0.5]);
+    const drill = ext(hole, skinMm + floorMm + 4).translate([0, 0, z0 - skinMm - floorMm - 3.9]);
+    return { platform: platform.transform(Mi), drill: drill.transform(Mi) };
+  } catch (e) {
+    console.warn('Flat base seat failed', e);
+    return null;
+  }
+}
