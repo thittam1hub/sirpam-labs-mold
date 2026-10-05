@@ -44,3 +44,13 @@ describe('skin mold core supports', () => {
     expect(r.notices?.some(n => n.includes('feet'))).toBe(true);
   }, 60000);
 });
+
+describe('skin mold flat base', () => {
+  it('seats a flat-bottomed model on a lip', async () => {
+    const g = new THREE.BoxGeometry(40, 30, 20); g.computeBoundingBox();
+    const r = await generateSiliconeMold(g, g.boundingBox!, 'z', 0.5, { type: 'skinCore', sprueDiameterMm: 10, extras: { coreSupport: 'auto' } });
+    const wasm = await getManifold();
+    for (const p of r.pieces) expect(geometryToManifold(wasm, p).volume()).toBeGreaterThan(0);
+    expect(r.notices?.some(n => n.includes('flat bottom'))).toBe(true);
+  }, 60000);
+});

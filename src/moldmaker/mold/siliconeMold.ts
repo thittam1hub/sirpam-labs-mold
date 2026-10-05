@@ -23,7 +23,7 @@ import { capOpenBoundaries } from './capOpenBoundaries';
 import { getRegistrationPinPositionsForEnvelope, getRotationForAxis } from './channelPlacement';
 import { computeMoldEnvelope, createMoldBoxManifold, primaryAxisIndex, lateralAxisIndices, type MoldEnvelope } from './moldBox';
 import { envelopeAroundManifold, offsetOutward } from './moldOffset';
-import { buildPartingFlange, planHugLocks, cavityHighPoints, flangeBoltCutters, skinRim, partingBoard } from './formFitLocks';
+import { buildPartingFlange, planHugLocks, cavityHighPoints, flangeBoltCutters, skinRim, partingBoard, flatBaseSeat } from './formFitLocks';
 import { buildWallRibs } from './proFeatures';
 import {
   type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit, asymmetricCavityBox, lateralToWorld,
@@ -420,11 +420,18 @@ export async function generateSiliconeMold(
       mother = createMoldBoxManifold(wasm, env).subtract(skinOuter);
     }
     if (extras.coreSupport && extras.coreSupport !== 'off') {
-      const sup = buildCoreSupports(wasm, master, axis, skin, longest);
-      if (sup.solid) mother = mother.add(sup.solid);
-      notices.push(sup.feet > 0
-        ? `The model rests on ${sup.feet} small feet${sup.pin ? ' and a top pin holds it down' : ''}, so silicone flows all round it. Seal the tiny pin holes in the skin with a dab of silicone after demolding.`
-        : 'Model support feet could not be placed for this shape. Prop the model up by the skin thickness before pouring.');
+      const seat = extras.coreSupport !== 'feet' ? flatBaseSeat(wasm, master, axis, skin, wall) : null;
+      if (seat) {
+        mother = mother.add(seat.platform.subtract(master)).subtract(seat.drill);
+        notices.push('Your model has a flat bottom, so it sits on a printed lip and the bottom stays open. That opening becomes the fill hole when you cast. A dab of hot glue on the lip stops the model lifting while you pour.');
+      } else {
+        if (extras.coreSupport === 'flatBase') notices.push('The model has no flat bottom to sit on, so small feet are used instead.');
+        const sup = buildCoreSupports(wasm, master, axis, skin, longest);
+        if (sup.solid) mother = mother.add(sup.solid);
+        notices.push(sup.feet > 0
+          ? `The model rests on ${sup.feet} small feet${sup.pin ? ' and a top pin holds it down' : ''}, so silicone flows all round it. Seal the tiny pin holes in the skin with a dab of silicone after demolding.`
+          : 'Model support feet could not be placed for this shape. Prop the model up by the skin thickness before pouring.');
+      }
     }
     mother = drillPour(mother, env, shellBox);
     pieces.push(...splitWithLocks(mother, env, shellBox));

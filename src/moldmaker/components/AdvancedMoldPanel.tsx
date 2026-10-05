@@ -45,7 +45,7 @@ export interface Tier2Settings {
   flangeBoltMm?: number;
   partingBoard?: boolean;
   wallRibs?: boolean;
-  coreSupport?: 'auto' | 'off';
+  coreSupport?: 'auto' | 'feet' | 'flatBase' | 'off';
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -392,11 +392,14 @@ export default function AdvancedMoldPanel(p: Props) {
           )}
           {p.moldMode === 'silicone' && p.siliconeType === 'skinCore' && (
             <>
-              <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
-                <input type="checkbox" checked={t.coreSupport !== 'off'} onChange={e => onChange({ coreSupport: e.target.checked ? 'auto' : 'off' })} />
-                Hold model in place (feet + top pin)
-              </label>
-              <div style={s.hint}>3 small feet lift the model one skin-thickness off the floor so silicone flows underneath; a pin on top stops it floating. Seal the tiny pin holes with a dab of silicone after demolding.</div>
+              <label style={{ ...s.label, display: 'block', marginTop: spacing.md }}>Hold model in place</label>
+              <select value={t.coreSupport ?? 'auto'} onChange={e => onChange({ coreSupport: e.target.value as 'auto' | 'feet' | 'flatBase' | 'off' })} style={{ width: '100%' }}>
+                <option value="auto">Auto (flat base if possible, else feet)</option>
+                <option value="feet">Feet + top pin</option>
+                <option value="flatBase">Flat base (open bottom)</option>
+                <option value="off">Off</option>
+              </select>
+              <div style={s.hint}>Flat base: the model sits on a lip and its bottom stays open as the fill hole. Feet: 3 small feet lift the model one skin-thickness off the floor so silicone flows underneath; a pin on top stops it floating. Seal the tiny pin holes with a dab of silicone after demolding.</div>
             </>
           )}
           {p.moldMode === 'silicone' && !p.formFit && (
