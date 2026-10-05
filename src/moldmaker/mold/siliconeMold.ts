@@ -224,7 +224,97 @@ export async function generateSiliconeMold(
   const labels: string[] = [];
   let siliconeVolumeCm3 = 0;
 
-  if (options.type === 'blockOneWay' || options.type === 'blockTwoPart') {
+  const isBlock = options.type === 'blockOneWay' || options.type === 'blockTwoPart';
+  const wantShop = !!extras.shopKit && isBlock;
+  if (wantShop && (hug || !flat)) {
+    notices.push(hug
+      ? 'The bench-ready kit (base plate, open frame, pour rods) needs a box shell, so the simple closed box was built instead.'
+      : 'The bench-ready kit needs a flat, untilted split, so the simple closed box was built instead.');
+  }
+
+  if (wantShop && !hug && flat) {
+    // Bench-ready kit (see SILICONE_SPEC.md): open frame that lifts off the
+    // cured block, a base plate with a locating plug, and printed rods that
+    // form the pour and vent channels in the silicone.
+    const margin = options.siliconeMarginMm ?? defaultMargin(longest);
+    const sm = extras.siliconeMargins;
+    const cavityBox = sm && (sm.top > 0 || sm.bottom > 0 || sm.sides > 0)
+      ? asymmetricCavityBox(boundingBox, axis, { top: sm.top || margin, bottom: sm.bottom || margin, sides: sm.sides || margin })
+      : boundingBox.clone().expandByScalar(margin);
+    const env = computeMoldEnvelope(cavityBox, shape, axis, wall);
+    const outer = createMoldBoxManifold(wasm, env);
+    const cavity = createMoldBoxManifold(wasm, computeMoldEnvelope(cavityBox, shape, axis, 0));
+    siliconeVolumeCm3 = Math.max(0, cm3(cavity) - cm3(master));
+    const envLo = env.moldMin.getComponent(p);
+    const envHi = envLo + env.moldSize.getComponent(p);
+    const lo = cavityBox.min.getComponent(p);
+    const hi = cavityBox.max.getComponent(p);
+    const boxAlongP = (src: THREE.Box3, a: number, b: number) => {
+      const bx = src.clone();
+      bx.min.setComponent(p, a); bx.max.setComponent(p, b);
+      return bx;
+    };
+    // Open frame: walls only, no floor or roof.
+    const through = createMoldBoxManifold(wasm, computeMoldEnvelope(boxAlongP(cavityBox, envLo - 1, envHi + 1), shape, axis, 0));
+    const frame = outer.subtract(through);
+    // Base plate: slab under the frame plus a plug that fills the frame's
+    // bottom opening up to the silicone floor.
+    const outerBox = new THREE.Box3(env.moldMin.clone(), env.moldMin.clone().add(env.moldSize));
+    const slab = createMoldBoxManifold(wasm, computeMoldEnvelope(boxAlongP(outerBox, envLo - wall, envLo), shape, axis, 0));
+    const plugBox = boxAlongP(cavityBox, envLo, lo);
+    plugBox.min.setComponent(la, plugBox.min.getComponent(la) + clearance);
+    plugBox.max.setComponent(la, plugBox.max.getComponent(la) - clearance);
+    plugBox.min.setComponent(lb, plugBox.min.getComponent(lb) + clearance);
+    plugBox.max.setComponent(lb, plugBox.max.getComponent(lb) - clearance);
+    let base = slab.add(createMoldBoxManifold(wasm, computeMoldEnvelope(plugBox, shape, axis, 0)));
+
+    const pos = clean.getAttribute('position').array as ArrayLike<number>;
+    if (options.type === 'blockOneWay') {
+      // Stand + pour funnel: a cone from the plug up into the model's lowest
+      // point. Once the block is flipped it becomes the casting's pour hole.
+      let low: number[] | null = null;
+      for (let i = 0; i < pos.length; i += 3) {
+        const v = [pos[i]!, pos[i + 1]!, pos[i + 2]!];
+        if (!low || v[p]! < low[p]!) low = v;
+      }
+      if (low) {
+        const h = low[p]! - lo + 1.5;
+        const at: P3 = [0, 0, 0];
+        at[p] = lo + h / 2; at[la] = low[la]!; at[lb] = low[lb]!;
+        // Manifold cylinders run bottom radius -> top radius along +p after rotate.
+        base = base.add(rod(h, sprueR, sprueR * 0.6, 32, at).subtract(master));
+      }
+      pieces.push(base, frame);
+      labels.push('base_plate', 'box_walls');
+      notices.push('Silicone kit: glue the model onto the cone on the base plate, slide the walls on, seal the seam with hot glue, then pour. The cone becomes the pour hole of your mold.');
+    } else {
+      const [ftop, fbottom] = splitWithLocks(frame, env, cavityBox);
+      pieces.push(base, fbottom, ftop);
+      labels.push('base_plate', 'frame_bottom', 'frame_top');
+      const sp = splitAt(cavityBox);
+      const board = partingBoard(wasm, cavity, offsetOutward(wasm, master, clearance, boundingBox), axis, sp,
+        lateralCentre, 3, Math.max(2.5, Math.min(5, margin * 0.35)), clearance);
+      if (board) {
+        pieces.push(board.board); labels.push('parting_board');
+        if (board.keys < 4) notices.push(`Only ${board.keys} of 4 key bumps fit on the parting board. Increase the silicone margin for more.`);
+      } else {
+        notices.push('The parting board could not be built for this shape; use modelling clay at the split line instead.');
+      }
+      // Pour and vent rods: from the model's high points up past the frame top.
+      const highs = cavityHighPoints(pos, axis, 4, Math.max(sprueR * 4, longest * 0.2));
+      let rods: Solid | null = null;
+      highs.forEach((q, k) => {
+        const r0 = k === 0 ? sprueR : Math.max(sprueR * 0.3, 1.2);
+        const h = envHi + 2 - q[p]! + 1;
+        const at: P3 = [0, 0, 0];
+        at[p] = q[p]! - 1 + h / 2; at[la] = q[la]!; at[lb] = q[lb]!;
+        const c = rod(h, k === 0 ? r0 * 0.6 : r0, k === 0 ? r0 : r0, k === 0 ? 32 : 12, at);
+        rods = rods ? rods.add(c) : c;
+      });
+      if (rods) { pieces.push((rods as Solid).subtract(master)); labels.push('pour_rods'); }
+      notices.push('Silicone kit: stage 1 — stack base plate, bottom frame, parting board (model pressed into it), top frame; glue the pour rods on the model and pour. Stage 2 — flip, remove the board, brush on release, refit the base plate and pour the second half.');
+    }
+  } else if (isBlock) {
     const margin = options.siliconeMarginMm ?? defaultMargin(longest);
     let outer: Solid, cavity: Solid, cavityBox: THREE.Box3, env: MoldEnvelope;
     if (hug) {
