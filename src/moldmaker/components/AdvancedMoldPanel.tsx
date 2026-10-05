@@ -45,6 +45,7 @@ export interface Tier2Settings {
   flangeBoltMm?: number;
   partingBoard?: boolean;
   wallRibs?: boolean;
+  coreSupport?: 'auto' | 'off';
 }
 
 export const DEFAULT_TIER2: Tier2Settings = {
@@ -78,6 +79,7 @@ export const DEFAULT_TIER2: Tier2Settings = {
   flangeBoltMm: 0,
   partingBoard: false,
   wallRibs: false,
+  coreSupport: 'auto',
 };
 
 interface Props {
@@ -388,6 +390,15 @@ export default function AdvancedMoldPanel(p: Props) {
               Printable parting board with silicone keys
             </label>
           )}
+          {p.moldMode === 'silicone' && p.siliconeType === 'skinCore' && (
+            <>
+              <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
+                <input type="checkbox" checked={t.coreSupport !== 'off'} onChange={e => onChange({ coreSupport: e.target.checked ? 'auto' : 'off' })} />
+                Hold model in place (feet + top pin)
+              </label>
+              <div style={s.hint}>3 small feet lift the model one skin-thickness off the floor so silicone flows underneath; a pin on top stops it floating. Seal the tiny pin holes with a dab of silicone after demolding.</div>
+            </>
+          )}
           {p.moldMode === 'silicone' && !p.formFit && (
             <>
               <label style={{ ...s.label, display: 'flex', gap: spacing.xs, alignItems: 'center', marginTop: spacing.md }}>
@@ -527,5 +538,5 @@ export default function AdvancedMoldPanel(p: Props) {
 /** Key of the Tier-2 settings that affect geometry (used for staleness). */
 export function tier2GeomKey(t: Tier2Settings | undefined): string {
   if (!t) return '';
-  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.clampLands, t.corePinMm, t.pourFunnel, t.clampJig, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs]);
+  return JSON.stringify([t.seal, t.pryPockets, t.radialSegments, t.siliconeSides, t.cavityCount, t.cavitySpacingMm, t.hollowCore, t.runner, t.moldStyle, t.curvedSplit, t.clampBoltMm, t.clampLands, t.corePinMm, t.pourFunnel, t.clampJig, t.autoVents, t.standFins, t.volumeLabel, t.watermark, t.moldFeet, t.gapFiller, t.pieceCount, t.wallMm, t.ventDiameterMm, t.ventCount, t.lockStyle, t.lockDiameterMm, t.lockCount, t.flangeMm, t.flangeBoltMm, t.partingBoard, t.wallRibs, t.coreSupport]);
 }
