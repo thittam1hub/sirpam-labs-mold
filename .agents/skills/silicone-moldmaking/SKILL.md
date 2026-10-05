@@ -13,3 +13,6 @@ Rules:
 4. Silicone thickness 10–15 mm by default; fit gap 0.2 mm FDM / 0.1 mm resin.
 5. Every piece name and notice is plain language and tells the user the assembly order.
 6. Ratios and times always defer to the product data sheet.
+
+## Skin mold core support
+- Core support: model rests on 3 printed cone feet (tip 0.6–1.2 mm) lifting it by the skin thickness, plus one top pin off the pour hole; seal the pin holes with a dab of silicone after demolding.

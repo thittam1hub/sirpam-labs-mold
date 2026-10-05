@@ -22,3 +22,4 @@ Sources: Smooth-On box-mold and two-piece mold guides, Formlabs and Prusa silico
 
 ## Skin + mother mold
 - Skin 3–6 mm, registration rim at the split; mother mold hugs the skin (form-fit) at 3–5 mm with flange and bolts.
+- Core support: model rests on 3 printed cone feet (tip 0.6–1.2 mm) lifting it by the skin thickness, plus one top pin off the pour hole; seal the pin holes with a dab of silicone after demolding.
