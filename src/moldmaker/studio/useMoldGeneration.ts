@@ -95,6 +95,7 @@ export function useMoldGeneration(
       seal: t2.seal,
       pryPockets: t2.pryPockets,
       shopKit: true,
+      coreSupport: "auto",
       radialSegments: t2.radialSegments,
       siliconeMargins: t2.siliconeSides.enabled
         ? { top: t2.siliconeSides.top, bottom: t2.siliconeSides.bottom, sides: t2.siliconeSides.sides }
