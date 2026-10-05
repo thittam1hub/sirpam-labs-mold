@@ -419,6 +419,13 @@ export async function generateSiliconeMold(
     } else {
       mother = createMoldBoxManifold(wasm, env).subtract(skinOuter);
     }
+    if (extras.coreSupport && extras.coreSupport !== 'off') {
+      const sup = buildCoreSupports(wasm, master, axis, skin, longest);
+      if (sup.solid) mother = mother.add(sup.solid);
+      notices.push(sup.feet > 0
+        ? `The model rests on ${sup.feet} small feet${sup.pin ? ' and a top pin holds it down' : ''}, so silicone flows all round it. Seal the tiny pin holes in the skin with a dab of silicone after demolding.`
+        : 'Model support feet could not be placed for this shape. Prop the model up by the skin thickness before pouring.');
+    }
     mother = drillPour(mother, env, shellBox);
     pieces.push(...splitWithLocks(mother, env, shellBox));
     labels.push('mother_top', 'mother_bottom');
