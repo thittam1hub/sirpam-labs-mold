@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { pieceDisplayName } from "../utils/pieceNames";
 import * as THREE from 'three';
 import type { Axis, MoldMode } from '../types';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
@@ -222,7 +223,7 @@ export function MoldReportPanel(p: {
       const v = Math.abs(solidProps(g).volume) / 1000;
       totalCm3 += v;
       const grams = v * mat.densityGPerCm3;
-      return `<tr><td>${esc(p.labels[i] ?? `Piece ${i + 1}`)}</td><td>${sz.x.toFixed(1)} × ${sz.y.toFixed(1)} × ${sz.z.toFixed(1)} mm</td><td>${v.toFixed(1)} cm³</td><td>${grams.toFixed(0)} g</td><td>${(grams / 1000 * p.pricePerKg).toFixed(2)}</td><td>${(v / mat.cm3PerHour).toFixed(1)} h</td></tr>`;
+      return `<tr><td>${esc(pieceDisplayName(p.labels[i], i))}</td><td>${sz.x.toFixed(1)} × ${sz.y.toFixed(1)} × ${sz.z.toFixed(1)} mm</td><td>${v.toFixed(1)} cm³</td><td>${grams.toFixed(0)} g</td><td>${(grams / 1000 * p.pricePerKg).toFixed(2)}</td><td>${(v / mat.cm3PerHour).toFixed(1)} h</td></tr>`;
     }).join('');
     const printCost = totalCm3 * mat.densityGPerCm3 / 1000 * p.pricePerKg;
     const silCost = p.moldMode === 'silicone' ? p.siliconeVolumeCm3 / 1000 * p.siliconePricePerLiter : 0;
