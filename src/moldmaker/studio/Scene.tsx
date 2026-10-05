@@ -83,6 +83,35 @@ export function getExplodeOffsetForPiece(axis: Axis, index: number, bbox: THREE.
   }
 }
 
+/**
+ * Exploded offsets that follow the real stacking order: pieces are ranked by
+ * their centre along the split axis and spread evenly around the middle, so
+ * kits (base plate, frames, parting board, rods) separate without overlap.
+ * Two-piece molds keep the classic +1 / -1 spread.
+ */
+export function getStackedExplodeOffsets(axis: Axis, pieces: THREE.BufferGeometry[], bbox: THREE.Box3): [number, number, number][] {
+  const n = pieces.length;
+  if (n <= 2) return pieces.map((_, i) => getExplodeOffsetForPiece(axis, i, bbox));
+  const k = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;
+  const centres = pieces.map(g => {
+    if (!g.boundingBox) g.computeBoundingBox();
+    const c = g.boundingBox!.getCenter(new THREE.Vector3());
+    return [c.x, c.y, c.z][k]!;
+  });
+  const order = centres.map((c, i) => ({ c, i })).sort((a, b) => a.c - b.c || a.i - b.i);
+  const size = new THREE.Vector3();
+  bbox.getSize(size);
+  const step = Math.max(size.x, size.y, size.z) * EXPLODE_OFFSET_RATIO;
+  const out: [number, number, number][] = pieces.map(() => [0, 0, 0]);
+  order.forEach(({ i }, rank) => {
+    const d = (rank - (n - 1) / 2) * step;
+    const v: [number, number, number] = [0, 0, 0];
+    v[k] = d;
+    out[i] = v;
+  });
+  return out;
+}
+
 export interface StudioSceneProps {
   state: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -165,7 +194,7 @@ export default function StudioScene({
             geometry={piece}
             color={getPieceColor(i)}
             opacity={0.85}
-            position={state.explodedView ? getExplodeOffsetForPiece(state.axis, i, state.boundingBox!) : [0, 0, 0]}
+            position={state.explodedView ? getStackedExplodeOffsets(state.axis, state.moldPieces, state.boundingBox!)[i]! : [0, 0, 0]}
             wireframe={state.wireframe}
           />
         ))}
