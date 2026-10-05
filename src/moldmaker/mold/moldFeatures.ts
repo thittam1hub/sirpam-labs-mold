@@ -20,6 +20,8 @@ export interface MoldExtras extends Round6Extras, Round7Extras, V3Extras {
   seal?: SealType | undefined;
   /** Cut screwdriver pry slots into the parting line on two sides. */
   pryPockets?: boolean | undefined;
+  /** Silicone block molds: bench-ready kit (open frame, base plate, pour rods). */
+  shopKit?: boolean | undefined;
   /** Removable core pin through the model centre along the split axis (cast gets a through-hole). */
   corePinMm?: number | undefined;
   /** Split every piece radially around the parting axis (3, 4 or 6). */
