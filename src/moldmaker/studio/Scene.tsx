@@ -31,7 +31,9 @@ function CameraRig({ axis, fitSize }: { axis: Axis; fitSize?: number | undefined
     prevAxis.current = axis;
     prevFit.current = fitSize;
 
-    const dist = newModel ? Math.max(40, fitSize * 2.4) : (camera.position.length() || 120);
+    // Narrow (portrait) views see less sideways, so back off to keep the whole mold in frame.
+    const aspect = (camera as THREE.PerspectiveCamera).aspect || 1;
+    const dist = newModel ? Math.max(40, fitSize * 2.4) * Math.max(1, 1 / aspect) : (camera.position.length() || 120);
 
     const pos: [number, number, number] = [0, 0, 0];
     const primary = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;
