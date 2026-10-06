@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { pieceDisplayName } from "../utils/pieceNames";
 import type * as THREE from 'three';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
 import { overhangCheck } from '../mold/round7';
@@ -15,7 +14,7 @@ export default function OverhangPanel({ pieces, labels }: { pieces: THREE.Buffer
   );
   if (!pieces.length) return null;
   return (
-    <div style={{ background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md, boxShadow: shadows.raised, marginTop: spacing.md }}>
+    <div style={{ background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised, marginTop: spacing.md }}>
       <div style={{ fontWeight: 600, color: colors.textPrimary, fontSize: fontSizes.md }}>Print without supports</div>
       <div style={{ color: colors.textMuted, fontSize: fontSizes.sm, margin: `${spacing.xs}px 0 ${spacing.sm}px` }}>
         Set your printer's safe overhang angle. Each piece is checked in all six flat positions.
@@ -32,7 +31,7 @@ export default function OverhangPanel({ pieces, labels }: { pieces: THREE.Buffer
         <ul style={{ listStyle: 'none', padding: 0, margin: `${spacing.sm}px 0 0`, fontSize: fontSizes.sm, color: colors.textBody }}>
           {results.map((r, i) => (
             <li key={i} style={{ padding: '4px 0', borderTop: `1px solid ${colors.borderSubtle}` }}>
-              <b>{pieceDisplayName(labels[i], i)}</b>: {r.supportFree
+              <b>{labels[i] ?? `Piece ${i + 1}`}</b>: {r.supportFree
                 ? <span style={{ color: colors.primary }}>no supports needed</span>
                 : <>needs supports on ~{r.overhangCm2.toFixed(1)} cm²</>} — print with the {r.bestDown}
             </li>

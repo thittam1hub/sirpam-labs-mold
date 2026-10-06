@@ -1,81 +1,144 @@
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 /// <reference lib="webworker" />
-// Sirpam 3D Labs Mold — background thread for mold building.
-// Solid-geometry work can take seconds; running it here keeps the 3D view
-// responsive. The Manifold engine loads once and is reused for every job.
 import * as THREE from 'three';
 import { generateMold } from './generateMold';
 import { generateSiliconeMold } from './siliconeMold';
 import { suggestBestParting } from './suggestParting';
-import type { MeshRepairLog } from './validateMesh';
-import { serializeGeometry, collectResultTransferables, type WorkerRequest, type WorkerResponse, type MoldJob } from './workerProtocol';
+import {
+  deserializeGeometry,
+  serializeGeometry,
+  collectResultTransferables,
+  type WorkerRequest,
+  type WorkerResponse,
+} from './workerProtocol';
 
-const scope = self as unknown as DedicatedWorkerGlobalScope;
-const reply = (res: WorkerResponse, transfer: Transferable[] = []) => scope.postMessage(res, transfer);
+/**
+ * Dedicated worker that runs Manifold CSG off the UI thread.
+ *
+ * Why: generateMold can hang for several seconds on complex models —
+ * enough to trigger "page unresponsive" dialogs in Chromium. Moving it
+ * here keeps the React render loop smooth and lets the three.js preview
+ * (orbit, camera drag) stay responsive during generation.
+ *
+ * Lifetime: one worker instance per useMoldGenerator hook. The Manifold
+ * WASM module loads lazily on the first `generate` message and persists
+ * for subsequent generations — we pay the WASM init cost once.
+ */
 
-function rebuild(job: MoldJob): { geo: THREE.BufferGeometry; bbox: THREE.Box3 } {
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(job.positions, 3));
-  if (job.index) geo.setIndex(new THREE.BufferAttribute(job.index, 1));
-  const bbox = new THREE.Box3(new THREE.Vector3(...job.bboxMin), new THREE.Vector3(...job.bboxMax));
-  return { geo, bbox };
-}
+const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
 
-scope.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
+ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
   const req = ev.data;
-  const id = (req as { id?: number }).id ?? -1;
-  if (!['generate', 'silicone', 'suggest'].includes(req.type)) {
-    reply({ type: 'error', id, message: `Unknown worker message type: ${String((req as { type: unknown }).type)}` });
+  if (req.type !== 'generate' && req.type !== 'silicone' && req.type !== 'suggest') {
+    // Unknown message — reply with a structured error so the main thread
+    // doesn't silently stall waiting on a response.
+    const res: WorkerResponse = {
+      type: 'error',
+      id: (req as { id?: number }).id ?? -1,
+      message: `Unknown worker message type: ${(req as { type: string }).type}`,
+    };
+    ctx.postMessage(res);
     return;
   }
-  try {
-    const job = req.payload;
-    const { geo, bbox } = rebuild(job);
 
+  try {
+    // Rehydrate the BufferGeometry from flat typed arrays.
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(req.payload.positions, 3),
+    );
+    if (req.payload.index) {
+      geo.setIndex(new THREE.BufferAttribute(req.payload.index, 1));
+    }
+
+    const bbox = new THREE.Box3(
+      new THREE.Vector3(...req.payload.bboxMin),
+      new THREE.Vector3(...req.payload.bboxMax),
+    );
+
+    // Three pipelines share this worker: rigid two-part casting molds, the
+    // silicone tooling workflows, and the split advisor. All are Manifold
+    // WASM / draft-math over the same singletons, so keeping them in one
+    // worker means one init and no risk of concurrent CSG graphs.
     if (req.type === 'suggest') {
-      const s = suggestBestParting(geo, bbox);
-      reply({ type: 'suggestResult', id, payload: { axis: s.axis, offset: s.offset, cutAngle: s.cutAngle, undercut: s.undercut } });
+      // Advisor sweep: pure draft-math over the mesh — no CSG, no WASM.
+      const suggestion = suggestBestParting(geo, bbox);
+      const res: WorkerResponse = {
+        type: 'suggestResult',
+        id: req.id,
+        payload: {
+          axis: suggestion.axis,
+          offset: suggestion.offset,
+          cutAngle: suggestion.cutAngle,
+          undercut: suggestion.undercut,
+        },
+      };
+      ctx.postMessage(res);
       return;
     }
 
-    const shared = {
-      wallThicknessRatio: job.wallThicknessRatio,
-      clearanceMm: job.clearanceMm,
-      sprueDiameterMm: job.sprueDiameterMm,
-      moldBoxShape: job.moldBoxShape,
-      cutAngle: job.cutAngle,
-      isHollow: job.isHollow,
-      formFit: job.formFit,
-      extras: job.extras,
-    };
-    const result: { pieces: THREE.BufferGeometry[]; repairs: MeshRepairLog; labels?: string[]; notices?: string[]; siliconeVolumeCm3?: number } =
-      req.type === 'silicone'
-        ? await generateSiliconeMold(geo, bbox, job.axis, job.offset, {
-            ...shared,
-            type: job.silicone?.type ?? 'blockTwoPart',
-            siliconeMarginMm: job.silicone?.siliconeMarginMm,
-            skinThicknessMm: job.silicone?.skinThicknessMm,
-            includeCore: job.silicone?.includeCore,
-          } as never)
-        : await generateMold(geo, bbox, job.axis, job.offset, {
-            ...shared,
-            sprueOverride: job.sprueOverride,
-            additionalPlanes: job.additionalPlanes,
-          } as never);
+    const result = req.type === 'silicone'
+      ? await generateSiliconeMold(
+          geo,
+          bbox,
+          req.payload.axis,
+          req.payload.offset,
+          {
+            type: req.payload.silicone?.type ?? 'blockTwoPart',
+            siliconeMarginMm: req.payload.silicone?.siliconeMarginMm,
+            skinThicknessMm: req.payload.silicone?.skinThicknessMm,
+            includeCore: req.payload.silicone?.includeCore,
+            wallThicknessRatio: req.payload.wallThicknessRatio,
+            clearanceMm: req.payload.clearanceMm,
+            sprueDiameterMm: req.payload.sprueDiameterMm,
+            moldBoxShape: req.payload.moldBoxShape,
+            cutAngle: req.payload.cutAngle,
+            isHollow: req.payload.isHollow,
+            formFit: req.payload.formFit,
+            extras: req.payload.extras,
+          },
+        )
+      : await generateMold(
+          geo,
+          bbox,
+          req.payload.axis,
+          req.payload.offset,
+          {
+            wallThicknessRatio: req.payload.wallThicknessRatio,
+            clearanceMm: req.payload.clearanceMm,
+            sprueDiameterMm: req.payload.sprueDiameterMm,
+            moldBoxShape: req.payload.moldBoxShape,
+            cutAngle: req.payload.cutAngle,
+            sprueOverride: req.payload.sprueOverride,
+            additionalPlanes: req.payload.additionalPlanes,
+            isHollow: req.payload.isHollow,
+            formFit: req.payload.formFit,
+            extras: req.payload.extras,
+          },
+        );
 
     const res: WorkerResponse = {
       type: 'result',
-      id,
+      id: req.id,
       payload: {
         pieces: result.pieces.map(serializeGeometry),
         repairs: result.repairs,
-        labels: result.labels,
-        notices: result.notices,
-        siliconeVolumeCm3: result.siliconeVolumeCm3,
+        labels: (result as { labels?: string[] }).labels,
+        notices: (result as { notices?: string[] }).notices,
+        siliconeVolumeCm3: (result as { siliconeVolumeCm3?: number }).siliconeVolumeCm3,
       },
     };
-    reply(res, collectResultTransferables(res) as Transferable[]);
+
+    ctx.postMessage(res, collectResultTransferables(res));
   } catch (err) {
-    reply({ type: 'error', id, message: err instanceof Error ? err.message : String(err) });
+    const message = err instanceof Error ? err.message : String(err);
+    const res: WorkerResponse = {
+      type: 'error',
+      id: req.id,
+      message,
+    };
+    ctx.postMessage(res);
   }
 };
 

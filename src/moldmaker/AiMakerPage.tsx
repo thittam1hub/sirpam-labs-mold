@@ -12,7 +12,6 @@ import { setAiHandoff } from '@/lib/aiHandoff';
 import { useAppSession } from '@/components/AppSession';
 import { buildFromSpec } from './mold/modelTools';
 import { exportSTL } from './mold/exporters';
-import { localAiStatus, generateShapeLocal, type LocalStatus } from './localAi';
 import { colors, radii, spacing, fontSizes, shadows, fonts } from './theme';
 
 type Result = { id: number; prompt: string; spec: ShapeSpec; geometry: THREE.BufferGeometry; name: string };
@@ -53,38 +52,22 @@ export default function AiMakerPage({ initialPrompt }: { initialPrompt?: string 
   const [activeId, setActiveId] = useState<number | null>(null);
   const active = results.find(r => r.id === activeId) ?? null;
   const cost = ACTION_COST.ai_shape;
-  const [localStatus, setLocalStatus] = useState<LocalStatus>('unsupported');
-  const [useLocal, setUseLocal] = useState(true);
-  const [note, setNote] = useState<string | null>(null);
-  useEffect(() => { localAiStatus().then(setLocalStatus); }, []);
-  const localOn = useLocal && localStatus !== 'unsupported' && !image;
-
-  const addResult = async (text: string, spec: ShapeSpec) => {
-    const g = await buildFromSpec(spec);
-    g.computeVertexNormals();
-    const name = `${spec.name.replace(/[^\w-]+/g, '_').slice(0, 40) || 'ai_shape'}.stl`;
-    const id = Date.now();
-    setResults(prev => [{ id, prompt: text, spec, geometry: g, name }, ...prev].slice(0, 12));
-    setActiveId(id);
-  };
 
   const run = async (text: string) => {
-    setBusy(true); setErr(null); setNote(null);
-    if (localOn) {
-      try {
-        const spec = await generateShapeLocal(text);
-        if (spec) { await addResult(text, spec); setNote('Made on your device - no credits used.'); setBusy(false); return; }
-        setNote('On-device AI could not make this shape, so we used the cloud AI.');
-      } catch { setNote('On-device AI was not available, so we used the cloud AI.'); }
-    }
+    setBusy(true); setErr(null);
     let charge: Charge | null = null;
     try {
       charge = await reserveFor('ai_shape', setErr);
       if (!charge) return;
       const r = await gen({ data: { prompt: text, image: image ?? undefined, holdId: charge.holdId } });
       if (!r.ok) { await charge.fail(); setErr(`${r.error} Your credits were returned.`); return; }
-      await addResult(text, r.spec);
+      const g = await buildFromSpec(r.spec);
+      g.computeVertexNormals();
       await charge.succeed();
+      const name = `${r.spec.name.replace(/[^\w-]+/g, '_').slice(0, 40) || 'ai_shape'}.stl`;
+      const id = Date.now();
+      setResults(prev => [{ id, prompt: text, spec: r.spec, geometry: g, name }, ...prev].slice(0, 12));
+      setActiveId(id);
     } catch (e) {
       await charge?.fail();
       setErr(e instanceof Error ? e.message : 'Could not make that shape.');
@@ -92,7 +75,7 @@ export default function AiMakerPage({ initialPrompt }: { initialPrompt?: string 
   };
 
   const fullPrompt = () => [style ? `A ${style.toLowerCase()}.` : '', prompt.trim(), heightMm ? `Overall height about ${heightMm} mm.` : ''].filter(Boolean).join(' ');
-  const canGenerate = !busy && (!!user || localOn) && (!!prompt.trim() || !!image || !!style);
+  const canGenerate = !busy && !!user && (!!prompt.trim() || !!image || !!style);
 
   const download = (r: Result) => {
     const blob = new Blob([exportSTL(r.geometry)], { type: 'model/stl' });
@@ -155,22 +138,15 @@ export default function AiMakerPage({ initialPrompt }: { initialPrompt?: string 
             </div>}
           </div>
           <span style={{ flex: 1 }} />
-          {localStatus !== 'unsupported' && <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: fontSizes.sm, cursor: 'pointer' }}>
-            <input type="checkbox" checked={useLocal} onChange={e => setUseLocal(e.target.checked)} />
-            <span><b>Use on-device AI (free, private)</b><br /><span style={{ fontSize: fontSizes.xs, color: colors.textDim }}>
-              {image ? 'Photos always use the cloud AI.' : localStatus === 'downloadable' ? 'Your browser will download its AI model once the first time.' : 'Runs in your browser. Falls back to the cloud AI if needed.'}
-            </span></span>
-          </label>}
-          {!user && !localOn && <div style={{ fontSize: fontSizes.sm }}>
+          {!user && <div style={{ fontSize: fontSizes.sm }}>
             <Link to="/auth" search={{ redirect: '/studio/ai' } as never} style={{ color: colors.primary, fontWeight: 700 }}>Sign in</Link> to use the AI Model Maker.
           </div>}
           <button type="button" style={btn(true, !canGenerate)} disabled={!canGenerate} onClick={() => run(fullPrompt())}>
-            <Sparkles size={16} aria-hidden="true" /> {busy ? 'Designing… (up to a minute)' : localOn ? 'Generate model · free on your device' : `Generate model · ${cost} credits`}
+            <Sparkles size={16} aria-hidden="true" /> {busy ? 'Designing… (up to a minute)' : `Generate model · ${cost} credits`}
           </button>
           <div style={{ fontSize: fontSizes.xs, color: colors.textDim, lineHeight: 1.5 }}>
             Credits are only taken if a model is made. Your description and photo are sent to our secure AI service to generate the model — see our <Link to="/privacy" style={{ color: colors.primary }}>Privacy page</Link>. Works best for round objects, flat shapes and simple toys. Check sizes before printing.
           </div>
-          {note && <div role="status" style={{ fontSize: fontSizes.xs, color: colors.textMuted }}>{note}</div>}
           {err && <div role="alert" style={{ fontSize: fontSizes.sm, color: colors.primary, fontWeight: 600 }}>{err}</div>}
         </section>
 

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { pieceDisplayName } from "../utils/pieceNames";
 import * as THREE from 'three';
 import type { Axis, MoldMode } from '../types';
 import { colors, radii, spacing, fontSizes, shadows } from '../theme';
@@ -8,11 +7,10 @@ import { reserveFor } from '@/lib/credits';
 import { CASTING_MATERIALS, solidProps, type CastingMaterialId } from '../utils/tier2';
 import { leakGuide } from '../utils/shopAdvice';
 import { MATERIALS } from '../utils/costEstimate';
-import { buildFlashGuide } from '../utils/flashGuide';
 
 const s = {
-  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md, boxShadow: shadows.raised },
-  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
+  section: { background: colors.sectionBg, borderRadius: radii.xl, padding: spacing.md + 4, boxShadow: shadows.raised },
+  title: { fontSize: fontSizes.sm, fontWeight: 600, color: colors.textDim, marginBottom: spacing.sm + 2, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
   sub: { fontSize: fontSizes.xs, fontWeight: 600, color: colors.textMuted, margin: `${spacing.md}px 0 ${spacing.xs}px`, textTransform: 'uppercase' as const, letterSpacing: 1 },
   hint: { fontSize: fontSizes.xs, color: colors.textDim, lineHeight: 1.4, marginTop: spacing.xs },
   row: { display: 'flex', gap: spacing.xs, flexWrap: 'wrap' as const, alignItems: 'center' },
@@ -27,7 +25,7 @@ const s = {
   },
   kv: { display: 'flex', justifyContent: 'space-between', fontSize: fontSizes.sm, color: colors.textBody, padding: '2px 0' },
   input: {
-    width: '100%', padding: `${spacing.xs}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none', fontFamily: 'inherit',
+    width: '100%', padding: `${spacing.xs + 2}px ${spacing.sm}px`, borderRadius: radii.md, border: 'none', fontFamily: 'inherit',
     background: colors.sectionBg, boxShadow: shadows.inset, color: colors.textBody, fontSize: fontSizes.sm,
   },
 };
@@ -197,8 +195,6 @@ export function MoldReportPanel(p: {
   siliconePricePerLiter: number;
   wallMm: number;
   printer: 'fdm' | 'resin';
-  planeOffset?: number;
-  cutAngle?: number;
 }) {
   const [err, setErr] = useState<string | null>(null);
   if (!p.geometry || p.pieces.length === 0) return null;
@@ -223,12 +219,11 @@ export function MoldReportPanel(p: {
       const v = Math.abs(solidProps(g).volume) / 1000;
       totalCm3 += v;
       const grams = v * mat.densityGPerCm3;
-      return `<tr><td>${esc(pieceDisplayName(p.labels[i], i))}</td><td>${sz.x.toFixed(1)} × ${sz.y.toFixed(1)} × ${sz.z.toFixed(1)} mm</td><td>${v.toFixed(1)} cm³</td><td>${grams.toFixed(0)} g</td><td>${(grams / 1000 * p.pricePerKg).toFixed(2)}</td><td>${(v / mat.cm3PerHour).toFixed(1)} h</td></tr>`;
+      return `<tr><td>${esc(p.labels[i] ?? `Piece ${i + 1}`)}</td><td>${sz.x.toFixed(1)} × ${sz.y.toFixed(1)} × ${sz.z.toFixed(1)} mm</td><td>${v.toFixed(1)} cm³</td><td>${grams.toFixed(0)} g</td><td>${(grams / 1000 * p.pricePerKg).toFixed(2)}</td><td>${(v / mat.cm3PerHour).toFixed(1)} h</td></tr>`;
     }).join('');
     const printCost = totalCm3 * mat.densityGPerCm3 / 1000 * p.pricePerKg;
     const silCost = p.moldMode === 'silicone' ? p.siliconeVolumeCm3 / 1000 * p.siliconePricePerLiter : 0;
     const tips = leakGuide({ moldMode: p.moldMode, wallMm: p.wallMm, castingMaterial: p.castingMaterial, printer: p.printer });
-    const flash = buildFlashGuide(model, p.axis, p.planeOffset ?? 0.5, model.boundingBox!, p.cutAngle ?? 0, p.castingMaterial, p.moldMode);
     const img = renderPreview(p.pieces, null);
     const imgModel = renderPreview([], model);
     const date = new Date().toLocaleDateString();
@@ -256,7 +251,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <tr><td>Release agent</td><td>${esc(cast.release)}</td></tr><tr><td>Pour temperature</td><td>about ${cast.pourTempC} °C</td></tr>
 <tr><td>Demold after</td><td>${esc(cast.demold)}</td></tr><tr><td>Note</td><td>${esc(cast.notes)}</td></tr></table>
 ${p.notices && p.notices.length ? `<h2>Build notes</h2><ul>${p.notices.map(n => `<li class="warn">${esc(n)}</li>`).join('')}</ul>` : ''}
-<h2>Where to expect flash</h2><ul>${flash.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
 <h2>Pour tips</h2><ul>${tips.map(t => `<li class="${t.level === 'warn' ? 'warn' : ''}">${esc(t.text)}</li>`).join('')}</ul>
 <p class="muted">Made with Sirpam 3D Labs Mold.</p></body></html>`;
     win.document.open(); win.document.write(html); win.document.close();

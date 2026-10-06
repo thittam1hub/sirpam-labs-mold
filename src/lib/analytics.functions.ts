@@ -1,14 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 
+/** Microsoft Clarity project id (public value, safe in the bundle). */
+export const CLARITY_PROJECT_ID = "yputo6ifx9";
+
 /**
- * Analytics IDs are read on the server so the measurement ID can live in the
- * secret store; both values are public once rendered in the browser.
+ * The GA4 measurement ID is stored as a project secret. It is a public value
+ * once rendered in the page, but it is only available on the server, so the
+ * root route loads it through this server function.
  */
-export const getAnalyticsConfig = createServerFn({ method: "GET" }).handler(
-  async () => {
-    return {
-      gaId: process.env["GOOGLE_ANALYTICS_MEASUREMENT_ID"] ?? "",
-      clarityId: process.env["CLARITY_PROJECT_ID"] ?? "yputo6ifx9",
-    };
-  },
-);
+export const getAnalyticsConfig = createServerFn({ method: "GET" }).handler(() => {
+  const gaMeasurementId = process.env["GOOGLE_ANALYTICS_MEASUREMENT_ID"]?.trim() || null;
+  return { gaMeasurementId, clarityProjectId: CLARITY_PROJECT_ID };
+});

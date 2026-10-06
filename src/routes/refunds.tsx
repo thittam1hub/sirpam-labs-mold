@@ -5,13 +5,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 export const Route = createFileRoute("/refunds")({
   staticData: { sitemap: true },
   head: () => ({
-    links: [{ rel: "canonical", href: "/refunds" }],
     meta: [
       { title: "Refund Policy — Sirpam 3D Labs Mold" },
-      { name: "description", content: "When and how you can get a refund for Sirpam 3D Labs Mold credit packs, how failed mold builds are handled, and how long refunds take." },
+      { name: "description", content: "When you can get a refund for Sirpam 3D Labs Mold credit packs." },
       { property: "og:title", content: "Refund Policy — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "When you can get a refund for Sirpam 3D Labs Mold credit packs." },
-      { property: "og:url", content: "/refunds" },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
     ],

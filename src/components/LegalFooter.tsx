@@ -10,14 +10,12 @@ export function LegalFooter() {
       <p>
         {BUSINESS.product} is operated by <b>{BUSINESS.legalName}</b>, {BUSINESS.country}. Contact:{" "}
         <a className="text-primary" href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a>
-        {BUSINESS.whatsapp && <> · <a className="text-primary" href={`https://wa.me/${BUSINESS.whatsapp}`} target="_blank" rel="noopener noreferrer">WhatsApp +91 {BUSINESS.whatsapp.slice(2)}</a></>}
       </p>
-      <p className="mt-1">Prints and dispatches within India only.</p>
       <p className="mt-2">
         <Link to="/about">About</Link> · <Link to="/help">Help</Link> · <Link to="/guides">Guides</Link> · <Link to="/contact">Contact</Link> · <Link to="/pricing">Pricing</Link>
       </p>
       <p className="mt-1">
-        <Link to="/terms">Terms</Link> · <Link to="/refunds">Refund policy</Link> · <Link to="/delivery">Delivery</Link> · <Link to="/privacy">Privacy</Link> · <Link to="/licenses">Licenses</Link>
+        <Link to="/terms">Terms</Link> · <Link to="/refunds">Refund policy</Link> · <Link to="/privacy">Privacy</Link> · <Link to="/licenses">Licenses</Link>
       </p>
       </div>
     </footer>

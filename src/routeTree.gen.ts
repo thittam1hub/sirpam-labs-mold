@@ -14,9 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LicensesRouteImport } from './routes/licenses'
@@ -32,7 +30,6 @@ import { Route as CheckoutPackRouteImport } from './routes/checkout.$pack'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as StudioAiRouteImport } from './routes/studio_.ai'
-import { Route as OauthGoogle_driveReturnRouteImport } from './routes/oauth.google_drive.return'
 import { Route as ApiPublicPaymentsRazorpayRouteImport } from './routes/api/public/payments/razorpay'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -61,19 +58,9 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CalculatorRoute = CalculatorRouteImport.update({
-  id: '/calculator',
-  path: '/calculator',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeliveryRoute = DeliveryRouteImport.update({
-  id: '/delivery',
-  path: '/delivery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -151,11 +138,6 @@ const StudioAiRoute = StudioAiRouteImport.update({
   path: '/studio/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthGoogle_driveReturnRoute = OauthGoogle_driveReturnRouteImport.update({
-  id: '/oauth/google_drive/return',
-  path: '/oauth/google_drive/return',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaymentsRazorpayRoute =
   ApiPublicPaymentsRazorpayRouteImport.update({
     id: '/api/public/payments/razorpay',
@@ -175,9 +157,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
-  '/delivery': typeof DeliveryRoute
   '/gallery': typeof GalleryRoute
   '/help': typeof HelpRoute
   '/licenses': typeof LicensesRoute
@@ -193,7 +173,6 @@ export interface FileRoutesByFullPath {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
   '/guides/': typeof GuidesIndexRoute
-  '/oauth/google_drive/return': typeof OauthGoogle_driveReturnRoute
   '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -203,9 +182,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
-  '/delivery': typeof DeliveryRoute
   '/gallery': typeof GalleryRoute
   '/help': typeof HelpRoute
   '/licenses': typeof LicensesRoute
@@ -221,7 +198,6 @@ export interface FileRoutesByTo {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio/ai': typeof StudioAiRoute
   '/guides': typeof GuidesIndexRoute
-  '/oauth/google_drive/return': typeof OauthGoogle_driveReturnRoute
   '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -232,9 +208,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/calculator': typeof CalculatorRoute
   '/contact': typeof ContactRoute
-  '/delivery': typeof DeliveryRoute
   '/gallery': typeof GalleryRoute
   '/help': typeof HelpRoute
   '/licenses': typeof LicensesRoute
@@ -250,7 +224,6 @@ export interface FileRoutesById {
   '/guides/$slug': typeof GuidesSlugRoute
   '/studio_/ai': typeof StudioAiRoute
   '/guides/': typeof GuidesIndexRoute
-  '/oauth/google_drive/return': typeof OauthGoogle_driveReturnRoute
   '/api/public/payments/razorpay': typeof ApiPublicPaymentsRazorpayRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -262,9 +235,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
-    | '/calculator'
     | '/contact'
-    | '/delivery'
     | '/gallery'
     | '/help'
     | '/licenses'
@@ -280,7 +251,6 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio/ai'
     | '/guides/'
-    | '/oauth/google_drive/return'
     | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -290,9 +260,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
-    | '/calculator'
     | '/contact'
-    | '/delivery'
     | '/gallery'
     | '/help'
     | '/licenses'
@@ -308,7 +276,6 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio/ai'
     | '/guides'
-    | '/oauth/google_drive/return'
     | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   id:
@@ -318,9 +285,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/auth'
-    | '/calculator'
     | '/contact'
-    | '/delivery'
     | '/gallery'
     | '/help'
     | '/licenses'
@@ -336,7 +301,6 @@ export interface FileRouteTypes {
     | '/guides/$slug'
     | '/studio_/ai'
     | '/guides/'
-    | '/oauth/google_drive/return'
     | '/api/public/payments/razorpay'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -347,9 +311,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
-  CalculatorRoute: typeof CalculatorRoute
   ContactRoute: typeof ContactRoute
-  DeliveryRoute: typeof DeliveryRoute
   GalleryRoute: typeof GalleryRoute
   HelpRoute: typeof HelpRoute
   LicensesRoute: typeof LicensesRoute
@@ -365,7 +327,6 @@ export interface RootRouteChildren {
   GuidesSlugRoute: typeof GuidesSlugRoute
   StudioAiRoute: typeof StudioAiRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
-  OauthGoogle_driveReturnRoute: typeof OauthGoogle_driveReturnRoute
   ApiPublicPaymentsRazorpayRoute: typeof ApiPublicPaymentsRazorpayRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -407,25 +368,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/calculator': {
-      id: '/calculator'
-      path: '/calculator'
-      fullPath: '/calculator'
-      preLoaderRoute: typeof CalculatorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/delivery': {
-      id: '/delivery'
-      path: '/delivery'
-      fullPath: '/delivery'
-      preLoaderRoute: typeof DeliveryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -533,13 +480,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioAiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/google_drive/return': {
-      id: '/oauth/google_drive/return'
-      path: '/oauth/google_drive/return'
-      fullPath: '/oauth/google_drive/return'
-      preLoaderRoute: typeof OauthGoogle_driveReturnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/payments/razorpay': {
       id: '/api/public/payments/razorpay'
       path: '/api/public/payments/razorpay'
@@ -563,9 +503,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
-  CalculatorRoute: CalculatorRoute,
   ContactRoute: ContactRoute,
-  DeliveryRoute: DeliveryRoute,
   GalleryRoute: GalleryRoute,
   HelpRoute: HelpRoute,
   LicensesRoute: LicensesRoute,
@@ -581,7 +519,6 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesSlugRoute: GuidesSlugRoute,
   StudioAiRoute: StudioAiRoute,
   GuidesIndexRoute: GuidesIndexRoute,
-  OauthGoogle_driveReturnRoute: OauthGoogle_driveReturnRoute,
   ApiPublicPaymentsRazorpayRoute: ApiPublicPaymentsRazorpayRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

@@ -1,5 +1,0 @@
-- Credits: expiring credit_lots spent via hold_credits -> capture_hold/release_hold (auth.uid()-scoped, stale holds release after 30 min); only service-role grant_credits/record_purchase add credits; refunds call reverse_purchase; admin RPCs check has_role (why: charge-on-success, browser can't mint credits).
-- Payments: Paddle outside India (USD, webhook routes/api/public/payments/webhook.ts); Razorpay in India (INR from credit_packs, verify in payments.functions.ts + webhook routes/api/public/payments/razorpay.ts); preview uses RAZORPAY_TEST_* keys only (why: one idempotent credit path, preview never charges).
-- Sign-up via signup.functions.ts (server 13+ check, user_metadata.age_confirmed_at); AppSessionProvider shows one-time age gate (why: COPPA).
-- printQueue.functions.ts (auth) appends a row to sheet PRINT_QUEUE_SHEET_ID tab "Queue" A:N via the Google Sheets connector (why: no admin UI needed).
-- shapeAi.functions.ts calls Lovable AI with raw streamed HTTP (why: no new deps).

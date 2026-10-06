@@ -20,7 +20,6 @@ type StudioTool = keyof typeof studioTools;
 export const Route = createFileRoute("/studio")({
   staticData: { sitemap: true },
   head: () => ({
-    links: [{ rel: "canonical", href: "/studio" }],
     meta: [
       { title: "Mold Maker Studio — Sirpam 3D Labs Mold" },
       {
@@ -34,23 +33,10 @@ export const Route = createFileRoute("/studio")({
         content:
           "Turn 3D models into print-ready mold halves with auto-generated sprues, vents, and registration pins. Designed in your browser.",
       },
-      { property: "og:url", content: "/studio" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    scripts: [{
-      type: "application/ld+json",
-      children: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        name: "Sirpam 3D Labs Mold Maker Studio",
-        url: "https://mold.sirpam3dlabs.in/studio",
-        applicationCategory: "DesignApplication",
-        operatingSystem: "Any (web browser)",
-        browserRequirements: "Requires WebGL and JavaScript",
-        publisher: { "@type": "Organization", name: "Sirpam 3D Labs", url: "https://sirpam3dlabs.in" },
-      }),
-    }],
+    links: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
   }),
   validateSearch: (search: Record<string, unknown>): { step?: number; tool?: StudioTool } => {
     const step = Number(search["step"]);
@@ -74,7 +60,7 @@ function Studio() {
   const search = Route.useSearch();
   return (
     <ClientOnly
-      fallback={<StudioLoader heading="Mold Maker Studio" />}
+      fallback={<StudioLoader />}
     >
       <Suspense
         fallback={

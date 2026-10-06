@@ -1,24 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditPacks, getCreditStatus, type CreditPack, type CreditStatus, type RegionTier } from "@/lib/credits";
+import { CREDIT_COSTS, CREDIT_PACKS, guessRegion, getCreditPacks, getCreditStatus, type CreditPack, type CreditStatus } from "@/lib/credits";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Info } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
   staticData: { sitemap: true },
   head: () => ({
-    links: [{ rel: "canonical", href: "/pricing" }],
     meta: [
       { title: "Pricing — Sirpam 3D Labs Mold" },
-      { name: "description", content: "10 welcome credits and 3 free credits every month. Credit packs with fair regional prices, valid for 24 months." },
+      { name: "description", content: "10 welcome credits and 3 free credits every month. One-time credit packs in rupees or US dollars, valid for 24 months." },
       { property: "og:title", content: "Pricing — Sirpam 3D Labs Mold" },
-      { property: "og:description", content: "Design molds free. Pay per export with credit packs priced for your region." },
-      { property: "og:url", content: "/pricing" },
+      { property: "og:description", content: "Design molds free. Pay per export with one-time credit packs in rupees or US dollars." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
-      { name: "twitter:image", content: "https://mold.sirpam3dlabs.in/og-image.png" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PricingPage,
@@ -26,13 +22,10 @@ export const Route = createFileRoute("/pricing")({
 
 function PricingPage() {
   const { data: status = null } = useQuery({ queryKey: ["credits", "status"], queryFn: getCreditStatus, retry: false });
-  const [tier, setTier] = useState<RegionTier>("standard");
   const [india, setIndia] = useState(false);
   const { data: packs = CREDIT_PACKS } = useQuery({ queryKey: ["credit-packs"], queryFn: getCreditPacks, staleTime: 10 * 60_000 });
   useEffect(() => {
-    const g = guessRegion();
-    setTier(g.tier);
-    setIndia(g.india);
+    setIndia(guessRegion().india);
   }, []);
 
   const price = (p: CreditPack) =>
@@ -59,7 +52,7 @@ function PricingPage() {
 
         <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
           <Info aria-hidden size={16} />
-          Local pricing has been applied automatically. Final currency and tax follow your billing country.
+          Prices are in rupees for India and US dollars everywhere else. Checkout may show your local currency and add sales tax for your billing country.
         </div>
 
         <section className="mt-6 grid gap-6 md:grid-cols-3">
@@ -95,28 +88,6 @@ function PricingPage() {
             </tbody>
           </table>
           <p className="mt-4 text-xs text-muted-foreground">The displayed amount is a local estimate. Final currency and sales tax are worked out from your billing country at checkout.</p>
-        </section>
-
-        <section className="mt-12 rounded-3xl bg-card p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Common questions</h2>
-          <div className="mt-4 space-y-4 text-sm">
-            <div>
-              <h3 className="font-semibold">Do credits expire?</h3>
-              <p className="mt-1 text-muted-foreground">Bought credits are valid for 24 months. The 3 free monthly credits refresh each month and don't carry over.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">What happens if a mold generation fails?</h3>
-              <p className="mt-1 text-muted-foreground">You're only charged when an action succeeds. If generation fails, the credit is released back to your balance automatically.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">How do I pay from India?</h3>
-              <p className="mt-1 text-muted-foreground">Indian customers pay in rupees through Razorpay (UPI, cards, net banking). Customers outside India pay in US dollars through Paddle.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">Can I get a refund?</h3>
-              <p className="mt-1 text-muted-foreground">Unused credits from a pack can be refunded within 7 days of purchase. See the <Link to="/refunds" className="text-primary">refund policy</Link> for details.</p>
-            </div>
-          </div>
         </section>
 
         <p className="mt-8 text-sm text-muted-foreground">

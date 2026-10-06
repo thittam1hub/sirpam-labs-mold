@@ -1,70 +1,143 @@
-// Sirpam 3D Labs Mold — printed tooling for silicone molds.
-//
-// Three workflows:
-//   blockOneWay   open-top pour box: glue the model down, pour silicone over
-//                 it, cut it out once cured
-//   blockTwoPart  closed box split in two with pins, pour hole and vents;
-//                 silicone is poured around the model inside it
-//   skinCore      thin silicone skin + rigid two-part "mother" shell that
-//                 holds it in shape; the skin gap = model grown by the skin
-//                 thickness
-// Box shapes follow the chosen block shape, or hug the model (formFit).
-/* eslint-disable @typescript-eslint/no-explicit-any -- Manifold wasm handles */
+// @ts-nocheck — upstream mold-maker code; type-checked under its own repo tsconfig
 import * as THREE from 'three';
 import type { Axis, MoldBoxShape, SiliconeMoldType } from '../types';
 import {
-  WALL_THICKNESS_RATIO, CLEARANCE_MM, PIN_RADIUS_RATIO, PIN_HEIGHT_RATIO, ENABLE_OBLIQUE_PLANES,
-  suggestedSprueDiameterMm,
+  WALL_THICKNESS_RATIO,
+  CLEARANCE_MM,
+  SPRUE_DIAMETER_MM,
+  PIN_RADIUS_RATIO,
+  PIN_HEIGHT_RATIO,
+  ENABLE_OBLIQUE_PLANES,
 } from './constants';
 import { clampCutAngle, getPlaneEquation } from './planeGeometry';
 import { getManifold, geometryToManifold, manifoldToGeometry } from './manifoldBridge';
 import { validateMesh, type MeshRepairLog } from './validateMesh';
 import { capOpenBoundaries } from './capOpenBoundaries';
-import { getRegistrationPinPositionsForEnvelope, getRotationForAxis } from './channelPlacement';
-import { computeMoldEnvelope, createMoldBoxManifold, primaryAxisIndex, lateralAxisIndices, type MoldEnvelope } from './moldBox';
-import { envelopeAroundManifold, offsetOutward } from './moldOffset';
-import { buildPartingFlange, planHugLocks, cavityHighPoints, flangeBoltCutters, skinRim, partingBoard, flatBaseSeat } from './formFitLocks';
-import { buildWallRibs } from './proFeatures';
 import {
-  type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit, asymmetricCavityBox, lateralToWorld,
+  getRegistrationPinPositionsForEnvelope,
+  getRotationForAxis,
+} from './channelPlacement';
+import {
+  computeMoldEnvelope,
+  createMoldBoxManifold,
+  primaryAxisIndex,
+  lateralAxisIndices,
+} from './moldBox';
+import { envelopeAroundManifold, offsetOutward } from './moldOffset';
+import { buildPartingFlange, planHugLocks, cavityHighPoints, flangeBoltCutters, skinRim, partingBoard } from './formFitLocks';
+import {
+  type MoldExtras, applyTongueGroove, applyPryPockets, applyRadialSplit,
+  asymmetricCavityBox, lateralToWorld,
 } from './moldFeatures';
+
+/**
+ * Silicone mold generation — the three workflows the casting industry
+ * actually uses, all driven from the same master model:
+ *
+ *   • blockOneWay ("one-piece block mold" / open-pour box)
+ *       A printed open-top containment box. You glue the master to the
+ *       floor, pour silicone over it, let it cure, then cut a single relief
+ *       slit to demold. Cheapest and most forgiving; good for shapes with
+ *       no deep undercuts and one flat-ish side.
+ *
+ *   • blockTwoPart ("two-part block mold")
+ *       A closed containment box split on the parting plane, with keyed
+ *       registration, a pour sprue and air vents. Standard for figures and
+ *       parts that need a clean seam on both sides. Silicone is poured in
+ *       two stages (or in one, for the box-and-cut variant).
+ *
+ *   • skinCore ("skin / glove mold with mother mold")
+ *       A thin silicone skin of a controlled thickness held by a rigid
+ *       two-part mother mold. The mother-mold cavity is the master offset
+ *       outwards by the skin thickness, so the gap between master and
+ *       shell IS the silicone. Industry standard for large parts where a
+ *       solid silicone block would be prohibitively expensive.
+ *
+ * Every dimension the caster cares about (silicone margin, skin thickness,
+ * pour diameter, key clearance) is an absolute millimetre value, matching
+ * how silicone datasheets and shop practice are written.
+ */
 
 export interface SiliconeMoldOptions {
   type: SiliconeMoldType;
-  /** Silicone thickness around the model for block molds (mm). */
+  /** Silicone thickness around the master for block molds, mm. */
   siliconeMarginMm?: number;
-  /** Skin thickness for skin molds (mm). */
+  /** Skin thickness for skin/glove molds, mm. */
   skinThicknessMm?: number;
+  /** Rigid shell wall thickness, as fraction of max bbox extent. */
   wallThicknessRatio?: number;
+  /** Clearance on keys / mating surfaces, mm. */
   clearanceMm?: number;
+  /** Pour opening diameter, mm. */
   sprueDiameterMm?: number;
+  /** Outer shell silhouette. */
   moldBoxShape?: MoldBoxShape;
+  /** Parting-plane tilt, degrees. */
   cutAngle?: number;
-  /** Skin molds: also export the model itself as a core. Default true. */
+  /** Include the printable master/core piece in the output (skin molds). */
   includeCore?: boolean;
+  /** Cap open boundary loops before CSG (open vessels). */
   isHollow?: boolean;
+  /**
+   * Form-fit shell for the block workflows: the containment wall hugs the
+   * model (offset outward) instead of being a box/cylinder. Ignored for
+   * skinCore — its mother mold already hugs the inflated model.
+   */
   formFit?: boolean;
+  /** Tier-2 extras (seal, pry pockets, radial split, per-side margins, multi-cavity). */
   extras?: MoldExtras;
 }
 
 export interface SiliconeMoldResult {
   pieces: THREE.BufferGeometry[];
+  /** Plain-language notes about fallbacks. */
   notices?: string[];
+  /** Export filename suffixes, parallel to `pieces`. */
   labels: string[];
   repairs: MeshRepairLog;
-  /** Silicone needed, cm³ (cavity minus model). */
+  /** Estimated silicone volume in cm³ — what the caster actually buys. */
   siliconeVolumeCm3: number;
 }
 
-type Solid = any;
-type P3 = [number, number, number];
+/** Default silicone wall around a master for a block mold: 10 mm is the
+ *  common shop minimum, but never thinner than 8% of the part. */
+function defaultMargin(maxExtent: number): number {
+  return Math.max(10, maxExtent * 0.08);
+}
 
-/** Default silicone around the model: 8% of its size, at least 10 mm. */
-const defaultMargin = (longest: number) => Math.max(10, longest * 0.08);
-/** Default skin: 4% of its size, at least 4 mm. */
-const defaultSkin = (longest: number) => Math.max(4, longest * 0.04);
+/** Default skin thickness for glove molds: 5 mm holds detail without
+ *  tearing; scaled up a little for big parts. */
+function defaultSkin(maxExtent: number): number {
+  return Math.max(4, maxExtent * 0.04);
+}
 
-const cm3 = (s: Solid) => { try { return Math.max(0, s.volume()) / 1000; } catch { return 0; } };
+/** Axis-aligned cylinder helper: builds along Z, rotates onto `axis`. */
+function axialCylinder(
+  wasm: any,
+  axis: Axis,
+  height: number,
+  rLow: number,
+  rHigh: number,
+  segments: number,
+  pos: [number, number, number],
+) {
+  return wasm.Manifold.cylinder(height, rLow, rHigh, segments, true)
+    .rotate(getRotationForAxis(axis))
+    .translate(pos);
+}
+
+function expandedBox(bbox: THREE.Box3, by: number): THREE.Box3 {
+  return bbox.clone().expandByScalar(by);
+}
+
+function volumeCm3(m: any): number {
+  try {
+    // Manifold volume is in model units³ (mm³ for these files).
+    return Math.max(0, m.volume()) / 1000;
+  } catch {
+    return 0;
+  }
+}
 
 export async function generateSiliconeMold(
   geometry: THREE.BufferGeometry,
@@ -75,417 +148,336 @@ export async function generateSiliconeMold(
 ): Promise<SiliconeMoldResult> {
   const wasm = await getManifold();
   const { Manifold } = wasm;
-  const size = boundingBox.getSize(new THREE.Vector3());
-  if (!(size.x > 0 && size.y > 0 && size.z > 0)) {
-    throw new Error("This model is flat in at least one direction, so a silicone mold can't be made for it.");
+
+  const bboxSize = new THREE.Vector3();
+  boundingBox.getSize(bboxSize);
+  if (bboxSize.x <= 0 || bboxSize.y <= 0 || bboxSize.z <= 0) {
+    throw new Error(
+      'Cannot generate silicone mold: the model bounding box is degenerate ' +
+      '(flat or malformed geometry).',
+    );
   }
-  const longest = Math.max(size.x, size.y, size.z);
-  const wall = longest * (options.wallThicknessRatio ?? WALL_THICKNESS_RATIO);
+
+  const maxExtent = Math.max(bboxSize.x, bboxSize.y, bboxSize.z);
+  const wallThickness = maxExtent * (options.wallThicknessRatio ?? WALL_THICKNESS_RATIO);
   const clearance = options.clearanceMm ?? CLEARANCE_MM;
-  const sprueR = Math.max(
-    (options.sprueDiameterMm && options.sprueDiameterMm > 0 ? options.sprueDiameterMm : suggestedSprueDiameterMm(longest)) / 2,
-    1.5,
-  );
+  const sprueRadius = Math.max((options.sprueDiameterMm ?? SPRUE_DIAMETER_MM) / 2, 1.5);
   const shape: MoldBoxShape = options.moldBoxShape ?? 'rect';
   const cutAngle = ENABLE_OBLIQUE_PLANES ? clampCutAngle(options.cutAngle ?? 0) : 0;
-  const extras: MoldExtras = options.extras ?? {};
-  const hug = !!options.formFit;
-  const p = primaryAxisIndex(axis);
-  const [la, lb] = lateralAxisIndices(axis);
-  const rot = getRotationForAxis(axis);
-  const notices: string[] = [];
-  const centre = boundingBox.getCenter(new THREE.Vector3());
-  const lateralCentre = { a: centre.getComponent(la), b: centre.getComponent(lb) };
-  const flangeThickness = Math.max(6, wall * 2);
-  const flat = cutAngle === 0;
 
-  const { geometry: cleaned, repairs } = validateMesh(geometry);
-  let clean = cleaned;
+  // ── Pre-flight mesh cleanup, identical contract to the rigid pipeline ──
+  const validated = validateMesh(geometry);
+  const repairs = validated.repairs;
+  let cleanGeometry = validated.geometry;
   if (options.isHollow) {
-    const cap = capOpenBoundaries(clean);
-    repairs.closedHoles = cap.holesClosed;
-    clean = cap.geometry;
-  }
-  let master: Solid;
-  try { master = geometryToManifold(wasm, clean); } catch {
-    throw new Error('The model is not a closed solid. Use "Repair broken model" in the Model step and try again.');
+    const capped = capOpenBoundaries(cleanGeometry);
+    repairs.closedHoles = capped.holesClosed;
+    cleanGeometry = capped.geometry;
   }
 
-  /** Centred cylinder along the split axis. */
-  const rod = (h: number, r0: number, r1: number, seg: number, at: P3) =>
-    Manifold.cylinder(h, r0, r1, seg, true).rotate(rot).translate(at);
-  const splitAt = (box: THREE.Box3) => {
-    const lo = box.min.getComponent(p);
-    return lo + (box.max.getComponent(p) - lo) * offset;
-  };
+  let master: any;
+  try {
+    master = geometryToManifold(wasm, cleanGeometry);
+  } catch (e) {
+    console.error('Failed to create manifold from geometry:', e);
+    throw new Error(
+      'Could not convert the model to a solid. It may not be watertight — ' +
+      'repair it in Blender (Mesh > Clean Up) and try again.',
+    );
+  }
 
-  let hugCavity: Solid | null = null;
+  const primary = primaryAxisIndex(axis);
+  const [latA, latB] = lateralAxisIndices(axis);
+
+  const extras: MoldExtras = options.extras ?? {};
+  let lastEnv: any = null;
+  let hugCavity: any = null;
+  const pieces: any[] = [];
+  const labels: string[] = [];
+  let siliconeVolumeCm3 = 0;
+  const notices: string[] = [];
+  const hug = !!options.formFit;
   let flangeT = 0;
-  let lastEnv: MoldEnvelope | null = null;
 
-  /** Pour hole over the cavity centre (or highest point on hug molds) plus two vents. */
-  const drillPour = (solid: Solid, env: MoldEnvelope, cavityBox: THREE.Box3): Solid => {
-    const roof = env.moldMin.getComponent(p) + env.moldSize.getComponent(p);
-    const len = wall * 6;
-    const cc = cavityBox.getCenter(new THREE.Vector3());
-    const sprue: P3 = [0, 0, 0];
-    sprue[p] = roof - len / 2 + wall;
-    sprue[la] = cc.getComponent(la);
-    sprue[lb] = cc.getComponent(lb);
-    let highs: number[][] = [];
-    const cavities = extras.cavityCenters ?? [];
-    if (hug && cavities.length <= 1) {
-      highs = cavityHighPoints(clean.getAttribute('position').array, axis, 3, Math.max(sprueR * 4, longest * 0.2));
-      const h0 = highs[0];
-      if (h0) { sprue[la] = h0[la]!; sprue[lb] = h0[lb]!; }
+  /** Drill the pour sprue and two vents down through the top face. */
+  const addPourSystem = (solid: any, env: any, cavityBox: THREE.Box3) => {
+    const outerTop = env.moldMin.getComponent(primary) + env.moldSize.getComponent(primary);
+    const holeHeight = wallThickness * 6;
+    const center = new THREE.Vector3();
+    cavityBox.getCenter(center);
+
+    const spruePos: [number, number, number] = [0, 0, 0];
+    spruePos[primary] = outerTop - holeHeight / 2 + wallThickness;
+    spruePos[latA] = center.getComponent(latA);
+    spruePos[latB] = center.getComponent(latB);
+
+    let hp: number[][] = [];
+    if (hug && (extras.cavityCenters ?? []).length <= 1) {
+      hp = cavityHighPoints(cleanGeometry.attributes.position.array, axis, 3, Math.max(sprueRadius * 4, maxExtent * 0.2));
+      if (hp[0]) { spruePos[latA] = hp[0][latA]; spruePos[latB] = hp[0][latB]; }
     }
-    const pours: P3[] = cavities.length > 1
-      ? cavities.map(c => lateralToWorld(axis, c.a, c.b, sprue[p]) as P3)
-      : [sprue];
+    const centers = (extras.cavityCenters ?? []).length > 1
+      ? extras.cavityCenters!.map(c => lateralToWorld(axis, c.a, c.b, spruePos[primary]))
+      : [spruePos];
     let out = solid;
-    for (const at of pours) out = out.subtract(rod(len, sprueR * 0.7, sprueR, 24, at));
-    const ventR = Math.max(sprueR * 0.25, 0.8);
-    const inset = wall * 0.6;
-    const ventSpots: Array<[number, number]> = highs.length > 1
-      ? highs.slice(1).map(q => [q[la]!, q[lb]!])
+    for (const sp of centers) {
+      out = out.subtract(
+        axialCylinder(wasm, axis, holeHeight, sprueRadius * 0.7, sprueRadius, 24, sp),
+      );
+    }
+
+    // Two vents at opposite lateral corners of the cavity — air escapes at
+    // the extremities last, so that's where they belong.
+    const ventR = Math.max(sprueRadius * 0.25, 0.8);
+    const inset = wallThickness * 0.6;
+    const corners: Array<[number, number]> = hp.length > 1
+      ? hp.slice(1).map(q => [q[latA], q[latB]] as [number, number])
       : [
-          [cavityBox.min.getComponent(la) + inset, cavityBox.min.getComponent(lb) + inset],
-          [cavityBox.max.getComponent(la) - inset, cavityBox.max.getComponent(lb) - inset],
-        ];
-    for (const [a, b] of ventSpots) {
-      const at: P3 = [0, 0, 0];
-      at[p] = sprue[p]; at[la] = a; at[lb] = b;
-      out = out.subtract(rod(len, ventR, ventR * 1.2, 12, at));
+      [cavityBox.min.getComponent(latA) + inset, cavityBox.min.getComponent(latB) + inset],
+      [cavityBox.max.getComponent(latA) - inset, cavityBox.max.getComponent(latB) - inset],
+    ];
+    for (const [a, b] of corners) {
+      const p: [number, number, number] = [0, 0, 0];
+      p[primary] = spruePos[primary];
+      p[latA] = a;
+      p[latB] = b;
+      out = out.subtract(axialCylinder(wasm, axis, holeHeight, ventR, ventR * 1.2, 12, p));
     }
     return out;
   };
 
-  /** Split a shell in two and add alignment (pins, hug locks, or tongue & groove). */
-  const splitWithLocks = (solid: Solid, env: MoldEnvelope, refBox: THREE.Box3): [Solid, Solid] => {
-    const eq = getPlaneEquation(
-      [refBox.min.x, refBox.min.y, refBox.min.z], [refBox.max.x, refBox.max.y, refBox.max.z], axis, offset, cutAngle,
+  /** Split a shell on the parting plane and key the two halves together. */
+  const splitAndKey = (solid: any, env: any, refBox: THREE.Box3) => {
+    const planeEq = getPlaneEquation(
+      [refBox.min.x, refBox.min.y, refBox.min.z],
+      [refBox.max.x, refBox.max.y, refBox.max.z],
+      axis, offset, cutAngle,
     );
-    let [top, bottom] = solid.splitByPlane(eq.normal as P3, eq.originOffset);
-    const splitPos = splitAt(refBox);
-    const pinH = wall * PIN_HEIGHT_RATIO;
-    let pinR = wall * PIN_RADIUS_RATIO;
-    let pins: P3[] = getRegistrationPinPositionsForEnvelope(env, refBox, splitPos, cutAngle);
-    let pads: Array<{ at: number[]; r: number; halfHeight: number }> = [];
-    let bolts: Solid[] = [];
+    const [above, below] = solid.splitByPlane(
+      planeEq.normal as [number, number, number],
+      planeEq.originOffset,
+    );
+
+    const splitPos = refBox.min.getComponent(primary) +
+      (refBox.max.getComponent(primary) - refBox.min.getComponent(primary)) * offset;
+    const pinRadius = wallThickness * PIN_RADIUS_RATIO;
+    const pinHeight = wallThickness * PIN_HEIGHT_RATIO;
+    let pinPositions = getRegistrationPinPositionsForEnvelope(env, refBox, splitPos, cutAngle);
+    let pinR = pinRadius;
+    const pads: any[] = [];
+    let boltCuts: any[] = [];
     if (hug) {
-      if (!flat) {
-        pins = [];
+      if (cutAngle !== 0) {
+        pinPositions = [];
         notices.push('Locks on a form-fit shell need a flat, untilted split, so this mold has none. Set the tilt to 0 or use a box shell.');
       } else {
-        const plan = planHugLocks(wasm, solid, axis, splitPos, lateralCentre, pinR, clearance, 4, pinH);
-        pins = plan.positions as P3[]; pinR = plan.lockR; pads = plan.pads; notices.push(...plan.notices);
+        const c = boundingBox.getCenter(new THREE.Vector3());
+        const plan = planHugLocks(wasm, solid, axis, splitPos,
+          { a: c.getComponent(latA), b: c.getComponent(latB) }, pinRadius, clearance, 4, pinHeight);
+        pinPositions = plan.positions; pinR = plan.lockR; pads.push(...plan.pads); notices.push(...plan.notices);
         if (flangeT > 0 && (extras.flangeBoltMm ?? 0) > 0) {
-          bolts = flangeBoltCutters(wasm, solid, axis, splitPos, lateralCentre, extras.flangeBoltMm!, flangeT, 4);
-          if (bolts.length < 4) notices.push(`Only ${bolts.length} of 4 bolt holes fit in the flange. Make the flange wider for more.`);
+          boltCuts = flangeBoltCutters(wasm, solid, axis, splitPos, { a: c.getComponent(latA), b: c.getComponent(latB) }, extras.flangeBoltMm!, flangeT, 4);
+          if (boltCuts.length < 4) notices.push(`Only ${boltCuts.length} of 4 bolt holes fit in the flange. Make the flange wider for more.`);
         }
       }
     }
+
+    let top = above;
+    let bottom = below;
     let sealed = false;
-    if (extras.seal === 'tongueGroove') {
-      const tg = flat && !hug
-        ? applyTongueGroove(wasm, top, bottom, {
-            axis, cavityBox: refBox, envMin: env.moldMin, envSize: env.moldSize, splitPos, wallThickness: wall, clearance,
-          })
-        : null;
-      if (tg) { [top, bottom] = tg; sealed = true; }
-      else notices.push(!flat
-        ? 'Tongue & groove needs a flat, untilted split, so keyed pins were used instead.'
-        : hug
-          ? 'Tongue & groove needs a box shell, not a form-fit shell, so keyed pins were used instead.'
-          : 'Tongue & groove could not be built around this cavity (the wall is too thin at the split), so keyed pins were used instead.');
+    if (extras.seal === 'tongueGroove' && cutAngle === 0 && !options.formFit) {
+      const res = applyTongueGroove(wasm, top, bottom, {
+        axis, cavityBox: refBox, envMin: env.moldMin, envSize: env.moldSize,
+        splitPos, wallThickness, clearance,
+      });
+      if (res) { [top, bottom] = res; sealed = true; }
     }
-    const keepOut = hugCavity ?? master;
     for (const pad of pads) {
-      const h = pad.halfHeight;
-      const at = (dz: number) => pad.at.map((v, i) => (i === p ? splitPos + dz : v)) as P3;
-      top = top.add(rod(h, pad.r, pad.r, 32, at(h / 2)).subtract(keepOut));
-      bottom = bottom.add(rod(h, pad.r, pad.r, 32, at(-h / 2)).subtract(keepOut));
+      const hh = pad.halfHeight;
+      const up = axialCylinder(wasm, axis, hh, pad.r, pad.r, 32, pad.at.map((v: number, i: number) => i === primary ? splitPos + hh / 2 : v));
+      const dn = axialCylinder(wasm, axis, hh, pad.r, pad.r, 32, pad.at.map((v: number, i: number) => i === primary ? splitPos - hh / 2 : v));
+      top = top.add(up.subtract(hugCavity ?? master));
+      bottom = bottom.add(dn.subtract(hugCavity ?? master));
     }
-    for (const b of bolts) { top = top.subtract(b); bottom = bottom.subtract(b); }
-    for (const at of sealed ? [] : pins) {
-      top = top.add(rod(pinH, pinR, pinR, 16, at));
-      bottom = bottom.subtract(rod(pinH + 2 * clearance, pinR + clearance, pinR + clearance, 16, at));
+    for (const k of boltCuts) { top = top.subtract(k); bottom = bottom.subtract(k); }
+    const pinRadius_ = pinR;
+    for (const pinPos of (sealed ? [] : pinPositions)) {
+      top = top.add(
+        axialCylinder(wasm, axis, pinHeight, pinRadius_, pinRadius_, 16, pinPos),
+      );
+      bottom = bottom.subtract(
+        axialCylinder(
+          wasm, axis,
+          pinHeight + clearance * 2,
+          pinRadius_ + clearance,
+          pinRadius_ + clearance,
+          16,
+          pinPos,
+        ),
+      );
     }
     lastEnv = env;
     if (extras.pryPockets) {
       [top, bottom] = applyPryPockets(wasm, [top, bottom], {
-        axis, envMin: env.moldMin, envSize: env.moldSize, splitPos, wallThickness: wall,
+        axis, envMin: env.moldMin, envSize: env.moldSize, splitPos, wallThickness,
       });
     }
     return [top, bottom];
   };
 
-  const pieces: Solid[] = [];
-  const labels: string[] = [];
-  let siliconeVolumeCm3 = 0;
+  if (options.type === 'blockOneWay' || options.type === 'blockTwoPart') {
+    const margin = options.siliconeMarginMm ?? defaultMargin(maxExtent);
 
-  const isBlock = options.type === 'blockOneWay' || options.type === 'blockTwoPart';
-  const wantShop = !!extras.shopKit && isBlock;
-  if (wantShop && (hug || !flat)) {
-    notices.push(hug
-      ? 'The bench-ready kit (base plate, open frame, pour rods) needs a box shell, so the simple closed box was built instead.'
-      : 'The bench-ready kit needs a flat, untilted split, so the simple closed box was built instead.');
-  }
+    // Form-fit: cavity and outer wall hug the master via outward offsets
+    // instead of an analytic box. The envelope (used only for its AABB by
+    // the pour system and split/key helpers) is the outer solid's own bbox.
+    let outer: any;
+    let cavitySolid: any;
+    let cavityBox: THREE.Box3;
+    let outerEnv: any;
 
-  if (wantShop && !hug && flat) {
-    // Bench-ready kit (see SILICONE_SPEC.md): open frame that lifts off the
-    // cured block, a base plate with a locating plug, and printed rods that
-    // form the pour and vent channels in the silicone.
-    const margin = options.siliconeMarginMm ?? defaultMargin(longest);
-    const sm = extras.siliconeMargins;
-    const cavityBox = sm && (sm.top > 0 || sm.bottom > 0 || sm.sides > 0)
-      ? asymmetricCavityBox(boundingBox, axis, { top: sm.top || margin, bottom: sm.bottom || margin, sides: sm.sides || margin })
-      : boundingBox.clone().expandByScalar(margin);
-    const env = computeMoldEnvelope(cavityBox, shape, axis, wall);
-    const outer = createMoldBoxManifold(wasm, env);
-    const cavity = createMoldBoxManifold(wasm, computeMoldEnvelope(cavityBox, shape, axis, 0));
-    siliconeVolumeCm3 = Math.max(0, cm3(cavity) - cm3(master));
-    const envLo = env.moldMin.getComponent(p);
-    const envHi = envLo + env.moldSize.getComponent(p);
-    const lo = cavityBox.min.getComponent(p);
-    const hi = cavityBox.max.getComponent(p);
-    const boxAlongP = (src: THREE.Box3, a: number, b: number) => {
-      const bx = src.clone();
-      bx.min.setComponent(p, a); bx.max.setComponent(p, b);
-      return bx;
-    };
-    // Open frame: walls only, no floor or roof.
-    const through = createMoldBoxManifold(wasm, computeMoldEnvelope(boxAlongP(cavityBox, envLo - 1, envHi + 1), shape, axis, 0));
-    const frame = outer.subtract(through);
-    // Base plate: slab under the frame plus a plug that fills the frame's
-    // bottom opening up to the silicone floor.
-    const outerBox = new THREE.Box3(env.moldMin.clone(), env.moldMin.clone().add(env.moldSize));
-    const slab = createMoldBoxManifold(wasm, computeMoldEnvelope(boxAlongP(outerBox, envLo - wall, envLo), shape, axis, 0));
-    const plugBox = boxAlongP(cavityBox, envLo, lo);
-    plugBox.min.setComponent(la, plugBox.min.getComponent(la) + clearance);
-    plugBox.max.setComponent(la, plugBox.max.getComponent(la) - clearance);
-    plugBox.min.setComponent(lb, plugBox.min.getComponent(lb) + clearance);
-    plugBox.max.setComponent(lb, plugBox.max.getComponent(lb) - clearance);
-    let base = slab.add(createMoldBoxManifold(wasm, computeMoldEnvelope(plugBox, shape, axis, 0)));
-
-    const pos = clean.getAttribute('position').array as ArrayLike<number>;
-    if (options.type === 'blockOneWay') {
-      // Stand + pour funnel: a cone from the plug up into the model's lowest
-      // point. Once the block is flipped it becomes the casting's pour hole.
-      let low: number[] | null = null;
-      for (let i = 0; i < pos.length; i += 3) {
-        const v = [pos[i]!, pos[i + 1]!, pos[i + 2]!];
-        if (!low || v[p]! < low[p]!) low = v;
-      }
-      if (low) {
-        const h = low[p]! - lo + 1.5;
-        const at: P3 = [0, 0, 0];
-        at[p] = lo + h / 2; at[la] = low[la]!; at[lb] = low[lb]!;
-        // Manifold cylinders run bottom radius -> top radius along +p after rotate.
-        base = base.add(rod(h, sprueR, sprueR * 0.6, 32, at).subtract(master));
-      }
-      pieces.push(base, frame);
-      labels.push('base_plate', 'box_walls');
-      notices.push('Silicone kit: glue the model onto the cone on the base plate, slide the walls on, seal the seam with hot glue, then pour. The cone becomes the pour hole of your mold.');
-    } else {
-      const [ftop, fbottom] = splitWithLocks(frame, env, cavityBox);
-      pieces.push(base, fbottom, ftop);
-      labels.push('base_plate', 'frame_bottom', 'frame_top');
-      const sp = splitAt(cavityBox);
-      const board = partingBoard(wasm, cavity, offsetOutward(wasm, master, clearance, boundingBox), axis, sp,
-        lateralCentre, 3, Math.max(2.5, Math.min(5, margin * 0.35)), clearance);
-      if (board) {
-        pieces.push(board.board); labels.push('parting_board');
-        if (board.keys < 4) notices.push(`Only ${board.keys} of 4 key bumps fit on the parting board. Increase the silicone margin for more.`);
-      } else {
-        notices.push('The parting board could not be built for this shape; use modelling clay at the split line instead.');
-      }
-      // Pour and vent rods: from the model's high points up past the frame top.
-      const highs = cavityHighPoints(pos, axis, 4, Math.max(sprueR * 4, longest * 0.2));
-      let rods: Solid | null = null;
-      highs.forEach((q, k) => {
-        const r0 = k === 0 ? sprueR : Math.max(sprueR * 0.3, 1.2);
-        const h = envHi + 2 - q[p]! + 1;
-        const at: P3 = [0, 0, 0];
-        at[p] = q[p]! - 1 + h / 2; at[la] = q[la]!; at[lb] = q[lb]!;
-        const c = rod(h, k === 0 ? r0 * 0.6 : r0, k === 0 ? r0 : r0, k === 0 ? 32 : 12, at);
-        rods = rods ? rods.add(c) : c;
-      });
-      if (rods) { pieces.push((rods as Solid).subtract(master)); labels.push('pour_rods'); }
-      notices.push('Silicone kit: stage 1 — stack base plate, bottom frame, parting board (model pressed into it), top frame; glue the pour rods on the model and pour. Stage 2 — flip, remove the board, brush on release, refit the base plate and pour the second half.');
-    }
-  } else if (isBlock) {
-    const margin = options.siliconeMarginMm ?? defaultMargin(longest);
-    let outer: Solid, cavity: Solid, cavityBox: THREE.Box3, env: MoldEnvelope;
-    if (hug) {
-      cavity = offsetOutward(wasm, master, margin, boundingBox);
-      outer = offsetOutward(wasm, master, margin + wall, boundingBox);
-      cavityBox = boundingBox.clone().expandByScalar(margin);
-      env = envelopeAroundManifold(outer, axis, wall);
+    if (options.formFit) {
+      cavitySolid = offsetOutward(wasm, master, margin, boundingBox);
+      outer = offsetOutward(wasm, master, margin + wallThickness, boundingBox);
+      cavityBox = expandedBox(boundingBox, margin);
+      outerEnv = envelopeAroundManifold(outer, axis, wallThickness);
     } else {
       const sm = extras.siliconeMargins;
       cavityBox = sm && (sm.top > 0 || sm.bottom > 0 || sm.sides > 0)
-        ? asymmetricCavityBox(boundingBox, axis, { top: sm.top || margin, bottom: sm.bottom || margin, sides: sm.sides || margin })
-        : boundingBox.clone().expandByScalar(margin);
-      env = computeMoldEnvelope(cavityBox, shape, axis, wall);
-      outer = createMoldBoxManifold(wasm, env);
-      if (extras.wallRibs) {
-        const ribbed = buildWallRibs(wasm, outer, { axis, envMin: env.moldMin, envSize: env.moldSize, wall });
-        if (ribbed) {
-          outer = ribbed.solid;
-          notices.push(`Added stiffening ribs on ${ribbed.ribbedFaces} wide wall${ribbed.ribbedFaces > 1 ? 's' : ''} so the box does not bulge under the silicone's weight.`);
-        } else {
-          notices.push('Wall ribs were on, but every wall is under 120 mm wide, so none were needed.');
-        }
-      }
-      cavity = createMoldBoxManifold(wasm, computeMoldEnvelope(cavityBox, shape, axis, 0));
+        ? asymmetricCavityBox(boundingBox, axis, {
+            top: sm.top || margin, bottom: sm.bottom || margin, sides: sm.sides || margin,
+          })
+        : expandedBox(boundingBox, margin);
+      const innerEnv = computeMoldEnvelope(cavityBox, shape, axis, 0);
+      outerEnv = computeMoldEnvelope(cavityBox, shape, axis, wallThickness);
+      outer = createMoldBoxManifold(wasm, outerEnv);
+      cavitySolid = createMoldBoxManifold(wasm, innerEnv);
     }
-    siliconeVolumeCm3 = Math.max(0, cm3(cavity) - cm3(master));
+
+    // Silicone usage = cavity volume minus the master that displaces it.
+    siliconeVolumeCm3 = Math.max(0, volumeCm3(cavitySolid) - volumeCm3(master));
 
     if (options.type === 'blockOneWay') {
-      // Extend the cavity up through the roof so the box is open on top.
-      let open: Solid;
-      if (hug) {
-        const lo = cavityBox.min.clone();
-        lo.setComponent(p, cavityBox.max.getComponent(p));
-        const s = cavityBox.getSize(new THREE.Vector3());
-        s.setComponent(p, wall * 6 + margin);
-        open = cavity.add(Manifold.cube([s.x, s.y, s.z], false).translate([lo.x, lo.y, lo.z]));
+      // Open-top box: extend the cavity out through the top face so the
+      // caster can lower the master in and pour. For form-fit the cavity is
+      // the offset master, so we union it with a tall slab spanning the
+      // cavity's lateral bbox — same "cut the top open" effect for a shell
+      // that has no flat top face to extend through.
+      let openCavity: any;
+      if (options.formFit) {
+        const slabMin = cavityBox.min.clone();
+        slabMin.setComponent(primary, cavityBox.max.getComponent(primary));
+        const slabSize = new THREE.Vector3();
+        cavityBox.getSize(slabSize);
+        slabSize.setComponent(primary, wallThickness * 6 + margin);
+        openCavity = cavitySolid.add(
+          Manifold.cube([slabSize.x, slabSize.y, slabSize.z], false)
+            .translate([slabMin.x, slabMin.y, slabMin.z]),
+        );
       } else {
-        const tall = cavityBox.clone();
-        tall.max.setComponent(p, tall.max.getComponent(p) + wall * 6);
-        open = createMoldBoxManifold(wasm, computeMoldEnvelope(tall, shape, axis, 0));
+        const openBox = cavityBox.clone();
+        openBox.max.setComponent(
+          primary,
+          openBox.max.getComponent(primary) + wallThickness * 6,
+        );
+        openCavity = createMoldBoxManifold(
+          wasm,
+          computeMoldEnvelope(openBox, shape, axis, 0),
+        );
       }
-      pieces.push(outer.subtract(open));
+      const shell = outer.subtract(openCavity);
+      pieces.push(shell);
       labels.push('pour_box');
     } else {
-      let shell = outer.subtract(cavity);
-      if (hug) {
-        hugCavity = cavity;
+      // Closed, keyed, split box with a pour sprue and vents.
+      let shell = outer.subtract(cavitySolid);
+      if (options.formFit) {
+        hugCavity = cavitySolid;
         if ((extras.flangeMm ?? 0) > 0) {
-          const fl = flat ? buildPartingFlange(wasm, outer, axis, splitAt(cavityBox), extras.flangeMm!, flangeThickness) : null;
-          if (fl) { shell = shell.add(fl); flangeT = flangeThickness; }
-          else notices.push(flat
-            ? 'The parting flange could not be built for this shape, so it was left off.'
-            : 'The parting flange needs a flat, untilted split, so it was left off.');
+          const sp = cavityBox.min.getComponent(primary) + (cavityBox.max.getComponent(primary) - cavityBox.min.getComponent(primary)) * offset;
+          const fl = cutAngle === 0 ? buildPartingFlange(wasm, outer, axis, sp, extras.flangeMm!, Math.max(6, wallThickness * 2)) : null;
+          if (fl) { shell = shell.add(fl); flangeT = Math.max(6, wallThickness * 2); }
+          else notices.push(cutAngle !== 0 ? 'The parting flange needs a flat, untilted split, so it was left off.' : 'The parting flange could not be built for this shape, so it was left off.');
         }
       }
-      shell = drillPour(shell, env, cavityBox);
-      pieces.push(...splitWithLocks(shell, env, cavityBox));
+      shell = addPourSystem(shell, outerEnv, cavityBox);
+      const [top, bottom] = splitAndKey(shell, outerEnv, cavityBox);
+      pieces.push(top, bottom);
       labels.push('box_top', 'box_bottom');
       if (extras.partingBoard) {
-        const board = flat
-          ? partingBoard(wasm, cavity, offsetOutward(wasm, master, clearance, boundingBox), axis, splitAt(cavityBox),
-              lateralCentre, 3, Math.max(2.5, Math.min(5, margin * 0.35)), clearance)
+        const sp = cavityBox.min.getComponent(primary) + (cavityBox.max.getComponent(primary) - cavityBox.min.getComponent(primary)) * offset;
+        const c = boundingBox.getCenter(new THREE.Vector3());
+        const pb = cutAngle === 0
+          ? partingBoard(wasm, cavitySolid, offsetOutward(wasm, master, clearance, boundingBox), axis, sp,
+              { a: c.getComponent(latA), b: c.getComponent(latB) }, 3, Math.max(2.5, Math.min(5, margin * 0.35)), clearance)
           : null;
-        if (board) {
-          pieces.push(board.board);
-          labels.push('parting_board');
-          if (board.keys < 4) notices.push(board.keys === 0
+        if (pb) {
+          pieces.push(pb.board); labels.push('parting_board');
+          if (pb.keys < 4) notices.push(pb.keys === 0
             ? 'The parting board has no key bumps: the silicone around the model is too thin. Increase the silicone margin.'
-            : `Only ${board.keys} of 4 key bumps fit on the parting board. Increase the silicone margin for more.`);
-        } else {
-          notices.push(flat
-            ? 'The parting board could not be built for this shape, so it was left out.'
-            : 'The parting board needs a flat, untilted split, so it was left out.');
-        }
+            : `Only ${pb.keys} of 4 key bumps fit on the parting board. Increase the silicone margin for more.`);
+        } else notices.push(cutAngle !== 0 ? 'The parting board needs a flat, untilted split, so it was left out.' : 'The parting board could not be built for this shape, so it was left out.');
       }
     }
   } else {
-    // Skin + mother mold.
-    const skin = options.skinThicknessMm ?? defaultSkin(longest);
-    const skinOuter = offsetOutward(wasm, master, skin, boundingBox);
-    siliconeVolumeCm3 = Math.max(0, cm3(skinOuter) - cm3(master));
-    const shellBox = boundingBox.clone().expandByScalar(skin + wall * 0.5);
-    let env = computeMoldEnvelope(shellBox, shape, axis, wall);
-    let mother: Solid;
-    if (hug) {
-      const sp = splitAt(shellBox);
-      const rimW = Math.max(1.5, skin * 0.5);
-      const rim = flat ? skinRim(wasm, skinOuter, axis, sp, rimW, Math.max(2, skin * 0.6)) : null;
-      const skinSolid = rim ? skinOuter.add(rim) : skinOuter;
-      if (!rim) notices.push(flat
-        ? 'The skin registration rim could not be built for this shape, so it was left off.'
-        : 'The skin registration rim needs a flat, untilted split, so it was left off.');
-      const outer = offsetOutward(wasm, master, skin + wall + (rim ? rimW : 0), boundingBox);
-      env = envelopeAroundManifold(outer, axis, wall);
-      mother = outer.subtract(skinSolid);
-      hugCavity = skinSolid;
+    // ── Skin / glove mold with a rigid two-part mother mold ──
+    const skin = options.skinThicknessMm ?? defaultSkin(maxExtent);
+    const inflated = offsetOutward(wasm, master, skin, boundingBox);
+
+    // Silicone usage = the shell of material between master and offset.
+    siliconeVolumeCm3 = Math.max(0, volumeCm3(inflated) - volumeCm3(master));
+
+    const shellBox = expandedBox(boundingBox, skin + wallThickness * 0.5);
+    let outerEnv = computeMoldEnvelope(shellBox, shape, axis, wallThickness);
+    let mother: any;
+    if (options.formFit) {
+      // Hug mother mold: follows the skin at an even wall, with a rim on the
+      // skin at the split that keys into a groove in the mother mold.
+      const sp = shellBox.min.getComponent(primary) + (shellBox.max.getComponent(primary) - shellBox.min.getComponent(primary)) * offset;
+      let skinVol = inflated;
+      const rim = cutAngle === 0 ? skinRim(wasm, inflated, axis, sp, Math.max(1.5, skin * 0.5), Math.max(2, skin * 0.6)) : null;
+      if (rim) skinVol = inflated.add(rim);
+      else notices.push(cutAngle !== 0 ? 'The skin registration rim needs a flat, untilted split, so it was left off.' : 'The skin registration rim could not be built for this shape, so it was left off.');
+      const outerSolid = offsetOutward(wasm, master, skin + wallThickness + (rim ? Math.max(1.5, skin * 0.5) : 0), boundingBox);
+      outerEnv = envelopeAroundManifold(outerSolid, axis, wallThickness);
+      mother = outerSolid.subtract(skinVol);
+      hugCavity = skinVol;
       if ((extras.flangeMm ?? 0) > 0) {
-        const fl = flat ? buildPartingFlange(wasm, outer, axis, sp, extras.flangeMm!, flangeThickness) : null;
-        if (fl) { mother = mother.add(fl); flangeT = flangeThickness; }
+        const fl = cutAngle === 0 ? buildPartingFlange(wasm, outerSolid, axis, sp, extras.flangeMm!, Math.max(6, wallThickness * 2)) : null;
+        if (fl) { mother = mother.add(fl); flangeT = Math.max(6, wallThickness * 2); }
         else notices.push('The parting flange needs a flat, untilted split, so it was left off.');
       }
     } else {
-      mother = createMoldBoxManifold(wasm, env).subtract(skinOuter);
+      mother = createMoldBoxManifold(wasm, outerEnv).subtract(inflated);
     }
-    if (extras.coreSupport && extras.coreSupport !== 'off') {
-      const mode = extras.coreSupport === 'feet' ? 'post' : extras.coreSupport;
-      const seat = mode !== 'post' ? flatBaseSeat(wasm, master, axis, skin, wall) : null;
-      if (seat) {
-        mother = mother.add(seat.platform.add(seat.collar).subtract(master));
-        notices.push('Your model has a flat bottom, so it stands on a printed base with a low collar round its edge. Glue it down with a dab of hot glue. The bottom stays open and becomes the fill hole when you cast.');
-      } else {
-        if (mode === 'flatBase') notices.push('The model has no flat bottom, so it stands on a single post instead.');
-        const st = buildCoreStand(wasm, master, axis, skin);
-        if (st.solid) {
-          mother = mother.add(st.solid);
-          notices.push(`The model stands on one ${st.diameterMm.toFixed(0)} mm post under its lowest point. Glue it into the cup on top of the post. The hole the post leaves in the skin becomes the fill hole when you cast.`);
-          if (st.small) notices.push('This model is small, so the post is thin. A thicker skin gives it a stronger stand.');
-        } else notices.push('A stand could not be placed for this shape. Prop the model up by the skin thickness before pouring.');
-      }
-    }
-    mother = drillPour(mother, env, shellBox);
-    pieces.push(...splitWithLocks(mother, env, shellBox));
+    mother = addPourSystem(mother, outerEnv, shellBox);
+
+    const [top, bottom] = splitAndKey(mother, outerEnv, shellBox);
+    pieces.push(top, bottom);
     labels.push('mother_top', 'mother_bottom');
-    if (options.includeCore !== false) { pieces.push(master); labels.push('core'); }
+
+    if (options.includeCore !== false) {
+      // The master itself, printable as the rigid core the skin is cast on.
+      pieces.push(master);
+      labels.push('core');
+    }
   }
 
-  let outPieces = pieces;
-  let outLabels = labels;
-  const env = lastEnv as MoldEnvelope | null;
-  if ((extras.radialSegments ?? 0) >= 3 && env) {
-    const center = env.moldMin.clone().addScaledVector(env.moldSize, 0.5);
-    const cut = pieces.map((_, i) => i).filter(i => labels[i] !== 'core');
-    const r = applyRadialSplit(cut.map(i => pieces[i]), { axis, center, segments: extras.radialSegments! });
-    outPieces = r.pieces;
-    outLabels = r.pieces.map((_: Solid, k: number) => `${labels[cut[r.sourceIndex[k]!]!]}_r${r.segmentIndex[k]! + 1}`);
-    pieces.forEach((s, i) => { if (labels[i] === 'core') { outPieces.push(s); outLabels.push('core'); } });
+  // Radial split (Tier 2) — the printable core is never wedged.
+  let finalPieces = pieces;
+  let finalLabels = labels;
+  const radial = extras.radialSegments ?? 0;
+  if (radial >= 3 && lastEnv) {
+    const center = new THREE.Vector3().copy(lastEnv.moldMin).addScaledVector(lastEnv.moldSize, 0.5);
+    const cutIdx = pieces.map((_, i) => i).filter(i => labels[i] !== 'core');
+    const r = applyRadialSplit(cutIdx.map(i => pieces[i]), { axis, center, segments: radial });
+    finalPieces = r.pieces;
+    finalLabels = r.pieces.map((_, k) => `${labels[cutIdx[r.sourceIndex[k]]]}_r${r.segmentIndex[k] + 1}`);
+    pieces.forEach((p, i) => {
+      if (labels[i] === 'core') { finalPieces.push(p); finalLabels.push('core'); }
+    });
   }
 
-  return {
-    pieces: outPieces.map(s => manifoldToGeometry(s)),
-    labels: outLabels,
-    repairs,
-    siliconeVolumeCm3,
-    ...(notices.length ? { notices } : {}),
-  };
-}
-
-/**
- * Core stand for skin molds: one printed post from the jacket floor up to the
- * model's lowest point, with a cup the model sits in (post minus model).
- * Nothing else enters the skin gap; the post spot becomes the cast fill hole.
- */
-function buildCoreStand(wasm: any, master: any, axis: Axis, skin: number): { solid: any; diameterMm: number; small: boolean } {
-  const pi = primaryAxisIndex(axis);
-  const [la, lb] = lateralAxisIndices(axis);
-  const mesh = master.getMesh();
-  const vp: ArrayLike<number> = mesh.vertProperties;
-  const np: number = mesh.numProp;
-  const bb = master.boundingBox();
-  const mn = bb.min as number[], mx = bb.max as number[];
-  const lat = Math.min(mx[la]! - mn[la]!, mx[lb]! - mn[lb]!);
-  let low = Infinity, a = (mn[la]! + mx[la]!) / 2, b = (mn[lb]! + mx[lb]!) / 2;
-  for (let i = 0; i < vp.length; i += np) if (vp[i + pi]! < low) { low = vp[i + pi]!; a = vp[i + la]!; b = vp[i + lb]!; }
-  const r = Math.max(1.5, Math.min(Math.max(3, Math.min(10, lat * 0.17)), lat * 0.2));
-  const from = mn[pi]! - skin - 1;
-  const h = low - from + Math.min(2, r);
-  let c = wasm.Manifold.cylinder(h, r, r, 32);
-  if (axis === 'x') c = c.rotate([0, 90, 0]);
-  else if (axis === 'y') c = c.rotate([-90, 0, 0]);
-  const p: [number, number, number] = [0, 0, 0];
-  p[pi] = from; p[la] = a; p[lb] = b;
-  const solid = c.translate(p).subtract(master);
-  return { solid: solid.isEmpty?.() ? null : solid, diameterMm: r * 2, small: r < 3 };
+  const pieceGeos = finalPieces.map(p => manifoldToGeometry(p));
+  return { pieces: pieceGeos, labels: finalLabels, repairs, siliconeVolumeCm3, ...(notices.length ? { notices } : {}) };
 }

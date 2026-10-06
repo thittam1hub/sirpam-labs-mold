@@ -13,13 +13,11 @@ import { lateralAxisIndices, primaryAxisIndex } from './moldBox';
 export type MoldStyle = 'standard' | 'reliefTray' | 'pressMold' | 'slipCast';
 
 export interface Round6Extras {
-  curvedSplit?: boolean | undefined;
-  clampBoltMm?: 0 | 3 | 4 | 5 | undefined;
-  /** Raised round seats around each clamp bolt so washers/clamps press evenly. */
-  clampLands?: boolean | undefined;
-  autoVents?: boolean | undefined;
-  standFins?: boolean | undefined;
-  style?: MoldStyle | undefined;
+  curvedSplit?: boolean;
+  clampBoltMm?: 0 | 3 | 4 | 5;
+  autoVents?: boolean;
+  standFins?: boolean;
+  style?: MoldStyle;
 }
 
 type V3 = [number, number, number];
@@ -203,9 +201,9 @@ export function buildCurvedSplit(
 /** Bolt-on flanges on two opposite sides of the split, with through holes. */
 export function applyClampWings(
   wasm: any, top: any, bottom: any,
-  o: { axis: Axis; envMin: THREE.Vector3; envMax: THREE.Vector3; splitPos: number; wall: number; boltMm: number; cavityCut: any; lands?: boolean },
+  o: { axis: Axis; envMin: THREE.Vector3; envMax: THREE.Vector3; splitPos: number; wall: number; boltMm: number; cavityCut: any },
 ): [any, any] {
-  const { axis, envMin, envMax, splitPos, wall, boltMm, cavityCut, lands } = o;
+  const { axis, envMin, envMax, splitPos, wall, boltMm, cavityCut } = o;
   const [la, lb] = lateralAxisIndices(axis);
   // Wings stick out of the two long sides.
   const sa = envMax.getComponent(la) - envMin.getComponent(la), sb = envMax.getComponent(lb) - envMin.getComponent(lb);
@@ -233,69 +231,10 @@ export function applyClampWings(
       const [ha, hb] = mapAB(edge + side * (out / 2 + 1), y);
       const hole = axialCylinder(wasm, axis, ha, hb, splitPos - T - 1, splitPos + T + 1, boltMm / 2 + 0.2, boltMm / 2 + 0.2, 20);
       if (hole) holes.push(hole);
-      if (lands) {
-        const lr = boltMm * 1.6 + 1, lh = Math.max(1.2, T * 0.4);
-        const su = axialCylinder(wasm, axis, ha, hb, splitPos + T - 0.01, splitPos + T + lh, lr, lr, 28);
-        const sd = axialCylinder(wasm, axis, ha, hb, splitPos - T - lh, splitPos - T + 0.01, lr, lr, 28);
-        if (su) t = t.add(su);
-        if (sd) b = b.add(sd);
-      }
     }
   }
   for (const hole of holes) { t = t.subtract(hole); b = b.subtract(hole); }
   return [t, b];
-}
-
-// ─── Wall ribs ───
-
-/** A box wall wider than this bulges under the weight of poured silicone. */
-export const RIB_SPAN_THRESHOLD_MM = 120;
-
-/**
- * Vertical stiffening ribs on the outside of any box wall wider than
- * RIB_SPAN_THRESHOLD_MM. Ribs are one wall thick, two walls deep, run the
- * full height of the box, and are spaced about 50 mm apart. Returns the
- * outer solid with ribs unioned on, or null when no wall needs them.
- */
-export function buildWallRibs(
-  wasm: any, outer: any, o: { axis: Axis; envMin: THREE.Vector3; envSize: THREE.Vector3; wall: number },
-): { solid: any; ribbedFaces: number } | null {
-  const { axis, envMin, envSize, wall } = o;
-  const [la, lb] = lateralAxisIndices(axis);
-  const pi = primaryAxisIndex(axis);
-  const p0 = envMin.getComponent(pi), p1 = p0 + envSize.getComponent(pi);
-  if (p1 - p0 < 8) return null;
-  const t = Math.max(2.4, wall);
-  const depth = t * 2;
-  const spacing = 50;
-  const ribs: any[] = [];
-  let ribbedFaces = 0;
-  for (const faceAxis of [la, lb]) {
-    const span = envSize.getComponent(faceAxis);
-    if (span < RIB_SPAN_THRESHOLD_MM) continue;
-    const along = faceAxis === la ? lb : la;
-    const a0 = envMin.getComponent(along) + t, a1 = a0 + envSize.getComponent(along) - 2 * t;
-    const count = Math.max(1, Math.floor((a1 - a0) / spacing));
-    for (const side of [-1, 1]) {
-      const face = side < 0 ? envMin.getComponent(faceAxis) : envMin.getComponent(faceAxis) + span;
-      const f0 = side < 0 ? face - depth : face;
-      for (let k = 0; k <= count; k++) {
-        const c = a0 + ((a1 - a0) * k) / count;
-        const mk = (fa: number, al: number, pv: number) => {
-          const out: V3 = [0, 0, 0];
-          out[faceAxis] = fa; out[along] = al; out[pi] = pv;
-          return out;
-        };
-        const lo = mk(f0, c - t / 2, p0), hi = mk(f0 + depth, c + t / 2, p1);
-        const s = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
-        if (s.some(v => v <= 1e-6)) continue;
-        ribs.push(wasm.Manifold.cube(s, false).translate(lo));
-      }
-      ribbedFaces++;
-    }
-  }
-  if (!ribs.length) return null;
-  return { solid: outer.add(wasm.Manifold.union(ribs)), ribbedFaces };
 }
 
 // ─── Stand-fins ───

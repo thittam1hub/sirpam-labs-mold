@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { getCreditStatus, CREDITS_EVENT, LOW_BALANCE, EXPIRY_WARN_DAYS, daysUntilExpiry, type CreditStatus } from '@/lib/credits';
 import { useAppSession } from '@/components/AppSession';
 import { ChevronDown, Menu } from 'lucide-react';
-import { ReportIssue } from '@/components/ReportIssue';
 
 
 type Fmt = 'stl' | 'obj' | '3mf' | 'step';
@@ -27,7 +26,7 @@ interface Props {
 }
 
 const pill = (primary = false, disabled = false) => ({
-  padding: `${spacing.sm}px ${spacing.md}px`, borderRadius: radii.pill, border: 'none',
+  padding: `${spacing.sm}px ${spacing.md + 2}px`, borderRadius: radii.pill, border: 'none',
   cursor: disabled ? 'default' : 'pointer', whiteSpace: 'nowrap' as const, fontFamily: 'inherit',
   background: primary ? colors.primary : colors.sectionBg,
   color: primary ? '#fff' : colors.textBody,
@@ -37,7 +36,6 @@ const pill = (primary = false, disabled = false) => ({
 
 export default function TopBar(p: Props) {
   const [menu, setMenu] = useState<null | 'export' | 'more' | 'account'>(null);
-  const [reportOpen, setReportOpen] = useState(false);
   const { session, ready, signOut: appSignOut } = useAppSession();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -92,13 +90,12 @@ export default function TopBar(p: Props) {
 
   return (
     <header ref={ref} className="sirpam-topbar" style={{
-      display: 'flex', alignItems: 'center', gap: spacing.md, padding: `${spacing.sm}px ${spacing.lg}px`,
+      display: 'flex', alignItems: 'center', gap: spacing.md, padding: `${spacing.sm + 2}px ${spacing.lg}px`,
       background: colors.panelBg, boxShadow: shadows.raisedSm, zIndex: 20, fontFamily: fonts.body, minWidth: 0,
     }}>
-      <style>{`@media (max-width:1180px){.sirpam-tb-wide{display:none !important}}@media (max-width:1040px){.sirpam-tb-title{display:none !important}.sirpam-tb-mid{display:none !important}}`}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0, flexShrink: 0 }}>
         <img src="/logo.svg" alt="Sirpam logo" width={30} height={30} style={{ width: 30, height: 30, borderRadius: '50%', boxShadow: shadows.raisedSm, objectFit: 'cover' }} />
-        <h1 className="sirpam-hide-sm sirpam-tb-title" style={{ margin: 0, fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
+        <h1 className="sirpam-hide-sm" style={{ margin: 0, fontFamily: fonts.display, fontWeight: 700, fontSize: fontSizes.lg, color: colors.textPrimary, whiteSpace: 'nowrap' }}>
           Sirpam <span style={{ color: colors.primary }}>3D Labs</span> Mold
         </h1>
       </div>
@@ -108,20 +105,14 @@ export default function TopBar(p: Props) {
         </span>
       )}
       <div style={{ flex: 1 }} />
-      <div className="sirpam-hide-sm" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-        <div role="group" aria-label="File" style={{ display: 'flex', gap: spacing.sm }}>
-          <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
-          <button type="button" style={pill()} onClick={p.onSample} className="sirpam-tb-mid">Try sample</button>
-          <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
-        </div>
-        <span aria-hidden="true" className="sirpam-tb-wide" style={{ width: 1, height: spacing.xl, background: colors.borderSubtle, margin: `0 ${spacing.xs}px` }} />
-        <nav aria-label="Site" className="sirpam-tb-wide" style={{ display: 'flex', gap: spacing.sm }}>
-          <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
-          <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
-        </nav>
-        <button type="button" style={{ ...pill(), padding: `${spacing.sm}px ${spacing.md}px` }} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
-        <ThemeToggle style={{ ...pill(), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: `${spacing.sm}px ${spacing.md}px` }} className="" />
-        <span aria-hidden="true" style={{ width: 1, height: spacing.xl, background: colors.borderSubtle, margin: `0 ${spacing.xs}px` }} />
+      <div className="sirpam-hide-sm" style={{ display: 'flex', gap: spacing.sm }}>
+        <button type="button" style={pill()} onClick={p.onOpen}>Open model</button>
+        <button type="button" style={pill()} onClick={p.onSample}>Try sample</button>
+        <button type="button" style={pill()} onClick={p.onProjects}>Projects</button>
+        <Link to="/shop" style={{ ...pill(), textDecoration: 'none' }}>Shop</Link>
+        <Link to="/gallery" search={{ sort: 'new' }} style={{ ...pill(), textDecoration: 'none' }}>Gallery</Link>
+        <button type="button" style={pill()} onClick={p.onHelp} aria-label="Keyboard shortcuts">?</button>
+        <ThemeToggle style={{ ...pill(), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px 10px' }} className="" />
       </div>
       {ready && (session ? (
         <div style={{ position: 'relative', display: 'flex', gap: spacing.sm }}>
@@ -161,7 +152,6 @@ export default function TopBar(p: Props) {
               <Link role="menuitem" to="/account" search={{ tab: 'profile' }} style={linkItem}>Profile</Link>
               <Link role="menuitem" to="/pricing" style={linkItem}>Buy credits</Link>
               <Link role="menuitem" to="/gallery" search={{ sort: 'new' }} style={linkItem}>Gallery</Link>
-              <button role="menuitem" type="button" style={item} onClick={() => { setMenu(null); setReportOpen(true); }}>Report a problem</button>
               <button role="menuitem" type="button" style={item} onClick={signOut}>Sign out</button>
             </div>
           )}
@@ -179,7 +169,6 @@ export default function TopBar(p: Props) {
             <button type="button" style={item} onClick={() => { setMenu(null); p.onSample(); }}>Try sample</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onProjects(); }}>Projects</button>
             <button type="button" style={item} onClick={() => { setMenu(null); p.onHelp(); }}>Keyboard shortcuts</button>
-            <button type="button" style={item} onClick={() => { setMenu(null); setReportOpen(true); }}>Report a problem</button>
             <Link to="/shop" style={linkItem}>Shop</Link>
             <Link to="/gallery" search={{ sort: 'new' }} style={linkItem}>Gallery</Link>
             {session ? (
@@ -213,7 +202,6 @@ export default function TopBar(p: Props) {
           </div>
         )}
       </div>
-      <ReportIssue open={reportOpen} onOpenChange={setReportOpen} hideTrigger />
     </header>
   );
 }

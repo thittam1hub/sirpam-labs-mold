@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LegalFooter } from "@/components/LegalFooter";
-import { BUSINESS } from "@/lib/business";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -9,13 +8,11 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/contact")({
   staticData: { sitemap: true },
   head: () => ({
-    links: [{ rel: "canonical", href: "/contact" }],
     meta: [
       { title: "Contact us — Sirpam 3D Labs Mold" },
       { name: "description", content: "Questions about mold making, credits or your account? Contact Sirpam 3D Labs." },
       { property: "og:title", content: "Contact us — Sirpam 3D Labs Mold" },
       { property: "og:description", content: "Get in touch with Sirpam 3D Labs." },
-      { property: "og:url", content: "/contact" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -52,20 +49,13 @@ function ContactPage() {
       <main className="mx-auto max-w-2xl px-6 pb-16">
         <h1 className="text-3xl font-bold">Contact us</h1>
         <p className="mt-2 text-muted-foreground">
-          Questions about mold making, credits, or your account? Message us on WhatsApp{" "}
-          {BUSINESS.whatsapp && (
-            <a href={`https://wa.me/${BUSINESS.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-primary">
-              +91 {BUSINESS.whatsapp.slice(2)}
-            </a>
-          )}{" "}
-          or email{" "}
-          <a href={`mailto:${BUSINESS.email}`} className="text-primary">{BUSINESS.email}</a>. We print and
-          deliver within India only.
+          Questions about mold making, credits, or your account? Write to us here, or email{" "}
+          <a href="mailto:sirpam3dlabs@gmail.com" className="text-primary">sirpam3dlabs@gmail.com</a>.
         </p>
         {sent ? (
           <div className="mt-6 rounded-3xl bg-card p-6 shadow-sm">
             <p className="font-semibold">Message sent.</p>
-            <p className="mt-1 text-sm text-muted-foreground">We reply within 1 working day, on WhatsApp or email.</p>
+            <p className="mt-1 text-sm text-muted-foreground">We'll reply to your email as soon as we can.</p>
           </div>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-card p-6 shadow-sm">
@@ -82,32 +72,6 @@ function ContactPage() {
             {errorMessage && <p role="alert" className="text-sm text-destructive">{errorMessage}</p>}
           </form>
         )}
-
-        <section className="mt-10 space-y-4">
-          <h2 className="text-xl font-semibold">Before you write</h2>
-          <div className="rounded-3xl bg-card p-5 shadow-sm">
-            <h3 className="font-semibold">Problem with a mold or export?</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Use the "Report a problem" button inside the app — it attaches the page you were on and your browser details,
-              so we can find the issue faster. Include the model name and what you expected to happen.
-            </p>
-          </div>
-          <div className="rounded-3xl bg-card p-5 shadow-sm">
-            <h3 className="font-semibold">Want us to print and ship a mold?</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              We 3D print and deliver within India only. Send your STL or a screenshot of your mold design on WhatsApp
-              with your city and PIN code, and we'll reply with a price within 1 working day.
-            </p>
-          </div>
-          <div className="rounded-3xl bg-card p-5 shadow-sm">
-            <h3 className="font-semibold">Credits, payments and refunds</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Credits are added the moment a payment succeeds. If a charge succeeded but credits didn't arrive, send the
-              payment receipt or order ID and we'll fix it the same day. See the{" "}
-              <a href="/refunds" className="text-primary">refund policy</a> for what we refund.
-            </p>
-          </div>
-        </section>
       </main>
       <LegalFooter />
     </div>

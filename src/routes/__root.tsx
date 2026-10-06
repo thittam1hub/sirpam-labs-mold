@@ -5,17 +5,16 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
-  type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppSessionProvider } from "@/components/AppSession";
-import { Analytics } from "@/components/Analytics";
-import { getAnalyticsConfig } from "@/lib/analytics.functions";
+import { CLARITY_PROJECT_ID, getAnalyticsConfig } from "@/lib/analytics.functions";
 
 function NotFoundComponent() {
   return (
@@ -39,7 +38,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: ErrorComponentProps) {
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -76,9 +75,28 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
+function analyticsScripts(gaMeasurementId: string | null | undefined) {
+  const scripts: Array<Record<string, unknown>> = [
+    {
+      children: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_PROJECT_ID}");`,
+    },
+  ];
+  if (gaMeasurementId) {
+    scripts.push(
+      { src: `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`, async: true },
+      {
+        children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaMeasurementId}');`,
+      },
+    );
+  }
+  return scripts;
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   staticData: { sitemap: false },
-  head: () => ({
+  loader: () => getAnalyticsConfig(),
+  head: ({ loaderData }) => ({
+    scripts: analyticsScripts(loaderData?.gaMeasurementId),
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -111,19 +129,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
-  loader: async () => {
-    try {
-      return await getAnalyticsConfig();
-    } catch {
-      return { gaId: "", clarityId: "" };
-    }
-  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -142,12 +152,21 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const analytics = Route.useLoaderData();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const firstView = useRef(true);
+
+  useEffect(() => {
+    if (firstView.current) {
+      firstView.current = false;
+      return;
+    }
+    const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+    w.gtag?.("event", "page_view", { page_path: pathname });
+  }, [pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AppSessionProvider>
-        <Analytics gaId={analytics?.gaId} clarityId={analytics?.clarityId} />
         <Outlet />
       </AppSessionProvider>
     </QueryClientProvider>
