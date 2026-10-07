@@ -95,7 +95,7 @@ function analyticsScripts(gaMeasurementId: string | null | undefined) {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   staticData: { sitemap: false },
   head: () => ({
-    scripts: analyticsScripts(import.meta.env.VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID),
+    scripts: analyticsScripts(import.meta.env["VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID"]),
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
