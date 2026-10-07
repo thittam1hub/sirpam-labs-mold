@@ -14,7 +14,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppSessionProvider } from "@/components/AppSession";
-import { CLARITY_PROJECT_ID, getAnalyticsConfig } from "@/lib/analytics.functions";
+import { CLARITY_PROJECT_ID } from "@/lib/analytics.functions";
 
 function NotFoundComponent() {
   return (
@@ -94,9 +94,8 @@ function analyticsScripts(gaMeasurementId: string | null | undefined) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   staticData: { sitemap: false },
-  loader: () => getAnalyticsConfig(),
-  head: ({ loaderData }) => ({
-    scripts: analyticsScripts(loaderData?.gaMeasurementId),
+  head: () => ({
+    scripts: analyticsScripts(import.meta.env.VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID),
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
