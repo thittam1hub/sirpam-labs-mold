@@ -59,6 +59,8 @@ export const Route = createFileRoute("/studio")({
 function Studio() {
   const search = Route.useSearch();
   return (
+    <>
+    <h1 className="sr-only">Browser-Based 3D Mold Maker</h1>
     <ClientOnly
       fallback={<StudioLoader />}
     >
@@ -74,5 +76,6 @@ function Studio() {
         </div>
       </Suspense>
     </ClientOnly>
+    </>
   );
 }

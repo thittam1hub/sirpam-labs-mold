@@ -176,7 +176,7 @@ function AccountPage() {
               <div className="mt-4 flex flex-wrap items-center gap-5">
                 <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted shadow-sm">
                   {avatarSigned ? (
-                    <img src={avatarSigned} alt="Your photo" className="h-20 w-20 object-cover" />
+                    <img src={avatarSigned} alt="Your profile photo" className="h-20 w-20 object-cover" />
                   ) : (
                     <span className="text-2xl font-bold text-muted-foreground">
                       {(displayName || email || "?").trim().charAt(0).toUpperCase()}
